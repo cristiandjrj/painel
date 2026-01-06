@@ -50,13 +50,13 @@
 
         /* Header */
         header {
-            background: rgba(20, 27, 61, 0.6);
+            background: rgba(20, 27, 61, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 2px solid var(--border);
-            padding: 20px 0;
+            padding: 16px 0;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
             animation: slideDown 0.5s ease-out;
         }
 
@@ -79,16 +79,24 @@
             margin: 0 auto;
             padding: 0 20px;
             gap: 20px;
-            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            flex-shrink: 0;
         }
 
         .main-nav {
             display: flex;
-            gap: 5px;
+            gap: 8px;
             flex: 1;
-            max-width: 400px;
-            flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
 
         .nav-tab {
@@ -117,54 +125,177 @@
             background: rgba(255, 107, 53, 0.15);
         }
 
-        .logo {
-            font-family: 'Syne', sans-serif;
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            flex-shrink: 0;
+        /* Status de Sincronização */
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
         }
 
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0;
+        .sync-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
         }
-        
+
+        .sync-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .sync-button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+        }
+
+        /* Menu Mobile */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 28px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100%;
+            background: var(--card-bg);
+            border-right: 2px solid var(--border);
+            z-index: 1002;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            padding: 20px;
+        }
+
+        .mobile-menu.active {
+            left: 0;
+        }
+
+        .mobile-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mobile-nav .nav-tab {
+            width: 100%;
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .mobile-sync {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border);
+        }
+
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .main-nav {
+                gap: 4px;
+            }
+            
+            .nav-tab {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
         @media (max-width: 1024px) {
             .header-content {
                 justify-content: center;
             }
             
             .logo {
-                width: 100%;
-                text-align: center;
-                margin-bottom: 10px;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
             }
             
             .main-nav {
-                max-width: 100%;
+                display: none;
             }
             
-            .nav-buttons {
-                width: 100%;
-                justify-content: center;
+            .sync-status {
+                margin-left: auto;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .mobile-menu {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 12px 0;
+            }
+            
+            .logo {
+                font-size: 24px;
+            }
+            
+            .sync-text {
+                display: none;
             }
         }
         
-        @media (max-width: 768px) {
-            .nav-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            .nav-buttons .btn {
-                width: 100%;
-            }
-        }
 
         .btn {
             padding: 12px 24px;
@@ -1687,7 +1818,13 @@
 <body>
     <header>
         <div class="header-content">
+            <!-- Botão Menu Mobile -->
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            
+            <!-- Logo Centralizada -->
             <div class="logo">EventProDJ</div>
+            
+            <!-- Navegação Desktop -->
             <nav class="main-nav">
                 <button class="nav-tab active" onclick="switchTab('dashboard')">🏢 Empresa</button>
                 <button class="nav-tab" onclick="switchTab('pessoal')">👤 Pessoal</button>
@@ -1698,24 +1835,45 @@
                 <button class="nav-tab" onclick="switchTab('servicos')">📦 Serviços</button>
                 <button class="nav-tab" onclick="switchTab('configuracoes')">⚙️ Config</button>
             </nav>
-            <div class="nav-buttons">
-                <!-- Indicador de Sincronização -->
-                <div id="syncStatus" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-right: 12px;">
-                    <div id="syncIndicator" style="width: 8px; height: 8px; border-radius: 50%; background: #666;"></div>
-                    <span id="syncText" style="font-size: 12px; color: var(--text-secondary);">Offline</span>
-                    <button onclick="sincronizarAgora()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 16px; padding: 0 4px;" title="Sincronizar agora">
-                        🔄
-                    </button>
-                </div>
-                
-                <button class="btn btn-secondary" onclick="exportData()">📊 Relatórios</button>
-                <button class="btn" onclick="resetarDados()" style="background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
-                    🗑️ Resetar
-                </button>
-                <button class="btn btn-primary" onclick="openModal('receita')">+ Nova Receita</button>
+            
+            <!-- Status de Sincronização -->
+            <div class="sync-status" id="syncStatus">
+                <div class="sync-indicator" id="syncIndicator"></div>
+                <span class="sync-text" id="syncText">Offline</span>
+                <button class="sync-button" onclick="sincronizarAgora()" title="Sincronizar agora">🔄</button>
             </div>
         </div>
     </header>
+
+    <!-- Menu Mobile Lateral -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
+    <nav class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <div class="logo" style="font-size: 24px;">EventProDJ</div>
+            <button class="mobile-menu-close" onclick="closeMobileMenu()">✕</button>
+        </div>
+        
+        <div class="mobile-nav">
+            <button class="nav-tab active" onclick="switchTabMobile('dashboard')">🏢 Empresa</button>
+            <button class="nav-tab" onclick="switchTabMobile('pessoal')">👤 Pessoal</button>
+            <button class="nav-tab" onclick="switchTabMobile('eventos')">📅 Eventos</button>
+            <button class="nav-tab" onclick="switchTabMobile('clientes')">👥 Clientes</button>
+            <button class="nav-tab" onclick="switchTabMobile('financeiro')">💰 Financeiro</button>
+            <button class="nav-tab" onclick="switchTabMobile('custos')">💸 Custos</button>
+            <button class="nav-tab" onclick="switchTabMobile('servicos')">📦 Serviços</button>
+            <button class="nav-tab" onclick="switchTabMobile('configuracoes')">⚙️ Configurações</button>
+        </div>
+        
+        <div class="mobile-sync">
+            <div class="sync-status" style="width: 100%; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="sync-indicator" id="syncIndicatorMobile"></div>
+                    <span class="sync-text" id="syncTextMobile">Offline</span>
+                </div>
+                <button class="sync-button" onclick="sincronizarAgora()" title="Sincronizar agora">🔄</button>
+            </div>
+        </div>
+    </nav>
 
     <div class="container">
         <!-- Dashboard Tab -->
@@ -4682,7 +4840,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 }
                 
                 return `
-                <div class="event-card" onclick="switchTab('eventos'); setTimeout(() => editEvent(${e.id}), 100);" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="event-card" onclick="irParaEvento(${e.id})" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                     <div class="event-header">
                         <div>
                             <div class="event-title">${e.nome}</div>
@@ -6659,9 +6817,30 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             const conta = DB.get('contas').find(c => c.id === contaId);
             if (!conta) return;
             
+            // Obter filtros de período
+            const mesSelecionado = document.getElementById('filtroMesFinanceiro')?.value;
+            const anoSelecionado = document.getElementById('filtroAnoFinanceiro')?.value;
+            
+            // Função para filtrar por período
+            const filtrarPorPeriodo = (transacao) => {
+                if (!transacao.data) return false;
+                const data = new Date(transacao.data);
+                const mes = data.getMonth() + 1;
+                const ano = data.getFullYear();
+                
+                const mesMatch = mesSelecionado === 'todos' || mes === parseInt(mesSelecionado);
+                const anoMatch = anoSelecionado === 'todos' || ano === parseInt(anoSelecionado);
+                
+                return mesMatch && anoMatch;
+            };
+            
             // Comparar como string para garantir compatibilidade
-            const receitas = DB.get('receitas').filter(r => r.contaId && r.contaId.toString() === contaId.toString());
-            const despesas = DB.get('despesas').filter(d => d.contaId && d.contaId.toString() === contaId.toString());
+            const todasReceitas = DB.get('receitas').filter(r => r.contaId && r.contaId.toString() === contaId.toString());
+            const todasDespesas = DB.get('despesas').filter(d => d.contaId && d.contaId.toString() === contaId.toString());
+            
+            // Filtrar pelo período
+            const receitas = todasReceitas.filter(filtrarPorPeriodo);
+            const despesas = todasDespesas.filter(filtrarPorPeriodo);
             
             const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
             const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
@@ -7088,6 +7267,18 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             // Atualizar também a view "Por Conta" se estiver visível
             if (document.getElementById('financeiroPorConta').style.display !== 'none') {
                 renderFinanceiroPorConta();
+                
+                // Se o modal de detalhes estiver aberto, atualizar também
+                const detalhesConta = document.getElementById('detalhesConta');
+                if (detalhesConta && detalhesConta.style.display === 'block') {
+                    // Pegar o ID da conta do título
+                    const titulo = document.getElementById('detalheContaTitulo').textContent;
+                    const contas = DB.get('contas');
+                    const conta = contas.find(c => titulo.includes(c.nome));
+                    if (conta) {
+                        verDetalhesConta(conta.id);
+                    }
+                }
             }
             
             if (tipoVis === 'anual' && anoSelecionado !== 'todos') {
@@ -7655,13 +7846,13 @@ if (!DB.get('configuracoes')) {
         // ============================================
         // Cole suas credenciais do Firebase aqui:
         const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyB3isxgzmM5PJnoW9Cn0uzOmQLpHm5WABI",                    // Cole aqui: AIzaSy...
-            authDomain: "eventprodj.firebaseapp.com",                // Cole aqui: seu-projeto.firebaseapp.com
-            databaseURL: "https://eventprodj-default-rtdb.firebaseio.com",               // Cole aqui: https://seu-projeto.firebaseio.com
-            projectId: "eventprodj",                 // Cole aqui: seu-projeto
-            storageBucket: "eventprodj.firebasestorage.app",             // Cole aqui: seu-projeto.appspot.com
-            messagingSenderId: "343258228418",         // Cole aqui: 123456789
-            appId: "1:343258228418:web:3f4437336c8c35fe943d5b"                      // Cole aqui: 1:123456789:web:abc123
+            apiKey: "",                    // Cole aqui: AIzaSy...
+            authDomain: "",                // Cole aqui: seu-projeto.firebaseapp.com
+            databaseURL: "",               // Cole aqui: https://seu-projeto.firebaseio.com
+            projectId: "",                 // Cole aqui: seu-projeto
+            storageBucket: "",             // Cole aqui: seu-projeto.appspot.com
+            messagingSenderId: "",         // Cole aqui: 123456789
+            appId: ""                      // Cole aqui: 1:123456789:web:abc123
         };
         // ============================================
         
@@ -7737,40 +7928,6 @@ if (!DB.get('configuracoes')) {
                 }
                 
                 return false;
-            }
-        }
-        
-        // Atualizar indicador visual de status
-        function atualizarStatusSync(status, texto) {
-            const indicator = document.getElementById('syncIndicator');
-            const textElement = document.getElementById('syncText');
-            
-            if (!indicator || !textElement) return;
-            
-            switch(status) {
-                case 'online':
-                    indicator.style.background = 'var(--success)';
-                    indicator.style.boxShadow = '0 0 8px var(--success)';
-                    textElement.textContent = texto || 'Online';
-                    textElement.style.color = 'var(--success)';
-                    break;
-                case 'syncing':
-                    indicator.style.background = 'var(--accent)';
-                    indicator.style.boxShadow = '0 0 8px var(--accent)';
-                    textElement.textContent = texto || 'Sincronizando...';
-                    textElement.style.color = 'var(--accent)';
-                    break;
-                case 'error':
-                    indicator.style.background = 'var(--danger)';
-                    indicator.style.boxShadow = '0 0 8px var(--danger)';
-                    textElement.textContent = texto || 'Erro';
-                    textElement.style.color = 'var(--danger)';
-                    break;
-                default: // offline
-                    indicator.style.background = '#666';
-                    indicator.style.boxShadow = 'none';
-                    textElement.textContent = texto || 'Offline';
-                    textElement.style.color = 'var(--text-secondary)';
             }
         }
         
@@ -8610,6 +8767,94 @@ if (!DB.get('configuracoes')) {
         }
 
         // Tab switching
+        // ============================================
+        // MENU MOBILE
+        // ============================================
+        
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            // Prevenir scroll do body quando menu aberto
+            if (menu.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            menu.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        function switchTabMobile(tabName) {
+            switchTab(tabName);
+            closeMobileMenu();
+        }
+        
+        // Sincronizar indicadores mobile e desktop
+        function atualizarStatusSync(status, texto) {
+            const indicators = [
+                document.getElementById('syncIndicator'),
+                document.getElementById('syncIndicatorMobile')
+            ];
+            const textElements = [
+                document.getElementById('syncText'),
+                document.getElementById('syncTextMobile')
+            ];
+            
+            indicators.forEach(indicator => {
+                if (!indicator) return;
+                
+                switch(status) {
+                    case 'online':
+                        indicator.style.background = 'var(--success)';
+                        indicator.style.boxShadow = '0 0 8px var(--success)';
+                        break;
+                    case 'syncing':
+                        indicator.style.background = 'var(--accent)';
+                        indicator.style.boxShadow = '0 0 8px var(--accent)';
+                        break;
+                    case 'error':
+                        indicator.style.background = 'var(--danger)';
+                        indicator.style.boxShadow = '0 0 8px var(--danger)';
+                        break;
+                    default: // offline
+                        indicator.style.background = '#666';
+                        indicator.style.boxShadow = 'none';
+                }
+            });
+            
+            textElements.forEach(textElement => {
+                if (!textElement) return;
+                textElement.textContent = texto || 'Offline';
+                
+                switch(status) {
+                    case 'online':
+                        textElement.style.color = 'var(--success)';
+                        break;
+                    case 'syncing':
+                        textElement.style.color = 'var(--accent)';
+                        break;
+                    case 'error':
+                        textElement.style.color = 'var(--danger)';
+                        break;
+                    default:
+                        textElement.style.color = 'var(--text-secondary)';
+                }
+            });
+        }
+        
+        // ============================================
+        // TABS
+        // ============================================
+        
         function switchTab(tabName) {
             // Remove active class from all tabs
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
@@ -8711,9 +8956,27 @@ if (!DB.get('configuracoes')) {
             // Mudar para aba de eventos
             switchTab('eventos');
             
-            // Aguardar tab carregar e abrir evento
+            // Aguardar tab carregar e destacar evento
             setTimeout(() => {
-                editEvent(eventoId);
+                const evento = DB.get('eventos').find(e => e.id === eventoId);
+                if (evento) {
+                    // Filtrar para mostrar o evento
+                    currentFilter = evento.status || 'todos';
+                    renderEventsList();
+                    
+                    // Scroll até o card do evento
+                    const cards = document.querySelectorAll('.event-card-full');
+                    cards.forEach(card => {
+                        if (card.textContent.includes(evento.cliente)) {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            // Highlight temporário
+                            card.style.background = 'rgba(255, 107, 53, 0.2)';
+                            setTimeout(() => {
+                                card.style.background = '';
+                            }, 2000);
+                        }
+                    });
+                }
             }, 100);
         }
         
@@ -9120,10 +9383,6 @@ if (!DB.get('configuracoes')) {
                 const list = eventos.map(e => `• ${e.nome} - ${e.horario} (${e.cliente})`).join('\n');
                 alert(`Eventos em ${formatDate(date)}:\n\n${list}`);
             }
-        }
-
-        function editEvent(id) {
-            alert('Funcionalidade de edição em desenvolvimento!');
         }
 
         // Clients Page Functions
