@@ -10,6 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
+    <!-- jsPDF para geração de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -293,6 +296,120 @@
             
             .sync-text {
                 display: none;
+            }
+            
+            /* Dashboard mais clean no mobile */
+            .dashboard-header {
+                padding: 20px 0;
+            }
+            
+            .dashboard-title {
+                font-size: 24px;
+            }
+            
+            .dashboard-subtitle {
+                font-size: 13px;
+            }
+            
+            /* Cards menores no mobile */
+            .stat-card {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            
+            .stat-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+                margin-bottom: 12px;
+            }
+            
+            .stat-label {
+                font-size: 11px;
+                margin-bottom: 6px;
+            }
+            
+            .stat-value {
+                font-size: 22px;
+                margin-bottom: 6px;
+            }
+            
+            .stat-change {
+                font-size: 11px;
+            }
+            
+            /* Cards de conteúdo mais compactos */
+            .card {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            
+            .card-header {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+            
+            .card-title {
+                font-size: 16px;
+            }
+            
+            /* Transações menores */
+            .transaction-item {
+                padding: 12px;
+            }
+            
+            .transaction-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+            
+            .transaction-details h4 {
+                font-size: 13px;
+            }
+            
+            .transaction-date {
+                font-size: 11px;
+            }
+            
+            .transaction-amount {
+                font-size: 16px;
+            }
+            
+            /* Eventos menores */
+            .event-card {
+                padding: 12px;
+            }
+            
+            .event-title {
+                font-size: 14px;
+            }
+            
+            .event-client {
+                font-size: 12px;
+            }
+            
+            .event-detail {
+                font-size: 12px;
+            }
+            
+            /* Quick actions menores */
+            .action-btn {
+                padding: 12px;
+            }
+            
+            .action-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            
+            .action-text h4 {
+                font-size: 13px;
+            }
+            
+            .action-text p {
+                font-size: 11px;
             }
         }
         
@@ -1938,11 +2055,21 @@
 
                 <div class="stat-card">
                     <div class="stat-icon bg-accent">🎉</div>
-                    <div class="stat-label">Eventos do Mês</div>
-                    <div class="stat-value" id="totalEventos">0</div>
+                    <div class="stat-label">Eventos em Andamento</div>
+                    <div class="stat-value" id="totalEventosAndamento">0</div>
                     <div class="stat-change positive">
-                        <span>↗</span>
-                        <span id="eventosConfirmados">0</span> confirmados
+                        <span>📅</span>
+                        <span id="eventosDoMes">0</span> neste mês
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(6, 214, 160, 0.2); color: var(--success);">✅</div>
+                    <div class="stat-label">Eventos Concluídos</div>
+                    <div class="stat-value" id="totalEventosConcluidos">0</div>
+                    <div class="stat-change" style="color: var(--success);">
+                        <span>📊</span>
+                        <span id="eventosConcluidosAno">0</span> em 2026
                     </div>
                 </div>
             </div>
@@ -2036,8 +2163,8 @@
                 <div class="events-header">
                     <div class="events-filters">
                         <button class="filter-btn active" onclick="filterEvents('todos')">Todos</button>
-                        <button class="filter-btn" onclick="filterEvents('confirmado')">Confirmados</button>
-                        <button class="filter-btn" onclick="filterEvents('pendente')">Pendentes</button>
+                        <button class="filter-btn" onclick="filterEvents('andamento')">Confirmados</button>
+                        <button class="filter-btn" onclick="filterEvents('aguardando')">Pendentes</button>
                         <button class="filter-btn" onclick="filterEvents('cancelado')">Cancelados</button>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -2231,6 +2358,7 @@
                 <div id="financeiroVisaoGeral">
                     <!-- Cards de Resumo -->
                     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                        <!-- 1. Total de Receitas -->
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(6, 214, 160, 0.2), rgba(6, 214, 160, 0.05));">
                             <div class="stat-icon">💰</div>
                             <div class="stat-info">
@@ -2238,6 +2366,8 @@
                                 <div class="stat-value" id="financeiroTotalReceitas">R$ 0,00</div>
                             </div>
                         </div>
+                        
+                        <!-- 2. Valores a Receber -->
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(79, 70, 229, 0.05));">
                             <div class="stat-icon">⏳</div>
                             <div class="stat-info">
@@ -2245,13 +2375,17 @@
                                 <div class="stat-value" id="financeiroValoresAReceber">R$ 0,00</div>
                             </div>
                         </div>
+                        
+                        <!-- 3. Despesas do Mês (NOVO) -->
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(239, 71, 111, 0.2), rgba(239, 71, 111, 0.05));">
                             <div class="stat-icon">💸</div>
                             <div class="stat-info">
-                                <div class="stat-label">Total de Despesas</div>
-                                <div class="stat-value" id="financeiroTotalDespesas">R$ 0,00</div>
+                                <div class="stat-label">Despesas do Mês</div>
+                                <div class="stat-value" id="financeiroDespesasMes">R$ 0,00</div>
                             </div>
                         </div>
+                        
+                        <!-- 4. Custos de Eventos -->
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.05));">
                             <div class="stat-icon">🎯</div>
                             <div class="stat-info">
@@ -2259,18 +2393,22 @@
                                 <div class="stat-value" id="financeiroCustosEventos">R$ 0,00</div>
                             </div>
                         </div>
+                        
+                        <!-- 5. Total de Despesas -->
+                        <div class="stat-card" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-info">
+                                <div class="stat-label">Total de Despesas</div>
+                                <div class="stat-value" id="financeiroTotalDespesas">R$ 0,00</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 6. Lucro Líquido -->
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(255, 210, 63, 0.2), rgba(255, 210, 63, 0.05));">
                             <div class="stat-icon">📈</div>
                             <div class="stat-info">
                                 <div class="stat-label">Lucro Líquido</div>
                                 <div class="stat-value" id="financeiroLucro">R$ 0,00</div>
-                            </div>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, rgba(0, 78, 137, 0.2), rgba(0, 78, 137, 0.05));">
-                            <div class="stat-icon">🏦</div>
-                            <div class="stat-info">
-                                <div class="stat-label">Contas Cadastradas</div>
-                                <div class="stat-value" id="financeiroTotalContas">0</div>
                             </div>
                         </div>
                     </div>
@@ -2661,6 +2799,17 @@
                                 </div>
                             </div>
 
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Cidade</label>
+                                    <input type="text" class="form-input" id="configCidade" placeholder="Ex: Rio de Janeiro">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Estado</label>
+                                    <input type="text" class="form-input" id="configEstado" placeholder="Ex: RJ" maxlength="2">
+                                </div>
+                            </div>
+
                             <div style="background: rgba(79, 70, 229, 0.1); padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4F46E5;">
                                 <h4 style="margin-bottom: 12px; color: #4F46E5;">🌐 Redes Sociais</h4>
                                 <div class="form-row">
@@ -2697,9 +2846,10 @@
 
                 <!-- Seção: Documentos -->
                 <div id="configDocumentosSecao" style="display: none;">
-                    <div class="card">
+                    <!-- Contrato -->
+                    <div class="card" style="margin-bottom: 24px;">
                         <div class="card-header">
-                            <h2 class="card-title">📄 Cláusulas Contratuais</h2>
+                            <h2 class="card-title">📝 Contrato</h2>
                             <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
                                 Configure o texto do contrato que será enviado aos seus clientes
                             </p>
@@ -2710,7 +2860,7 @@
                                 <textarea 
                                     id="configClausulasContratuais" 
                                     class="form-input" 
-                                    rows="20" 
+                                    rows="15" 
                                     style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
                                     placeholder="Digite aqui as cláusulas do contrato...
 
@@ -2744,16 +2894,123 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
 ..."
                                 ></textarea>
                                 <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
-                                    💡 Dica: Use placeholders como [DATA], [VALOR], [CLIENTE] que serão substituídos automaticamente ao gerar o contrato
+                                    💡 Dica: Use placeholders como [DATA], [VALOR], [CLIENTE] que serão substituídos automaticamente
                                 </div>
                             </div>
 
                             <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
                                 <button onclick="salvarClausulasContratuais()" class="btn btn-primary">
-                                    ✅ Salvar Cláusulas
+                                    ✅ Salvar Contrato
                                 </button>
                                 <button onclick="resetarClausulas()" class="btn btn-secondary">
                                     🔄 Resetar para Padrão
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orçamento -->
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h2 class="card-title">💼 Orçamento</h2>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                                Configure o modelo de orçamento que será enviado aos seus clientes
+                            </p>
+                        </div>
+                        <div style="padding: 24px;">
+                            <div class="form-group">
+                                <label class="form-label">Texto do Orçamento</label>
+                                <textarea 
+                                    id="configModeloOrcamento" 
+                                    class="form-input" 
+                                    rows="15" 
+                                    style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
+                                    placeholder="Digite aqui o modelo do orçamento...
+
+Exemplo:
+
+ORÇAMENTO DE SERVIÇOS
+
+Prezado(a) [CLIENTE],
+
+Segue orçamento para os serviços solicitados:
+
+DADOS DO EVENTO:
+- Tipo: [TIPO]
+- Data: [DATA]
+- Horário: [HORARIO]
+- Local: [LOCAL]
+
+SERVIÇOS INCLUSOS:
+[SERVICOS]
+
+VALOR TOTAL: R$ [VALOR]
+
+CONDIÇÕES DE PAGAMENTO:
+- Sinal: R$ [SINAL] (50%)
+- Restante: R$ [RESTANTE] até [VENCIMENTO]
+
+VALIDADE DO ORÇAMENTO: [VALIDADE]
+
+Atenciosamente,
+[EMPRESA]"
+                                ></textarea>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                                    💡 Placeholders: [CLIENTE], [DATA], [VALOR], [EMPRESA], etc.
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                                <button onclick="salvarModeloOrcamento()" class="btn btn-primary">
+                                    ✅ Salvar Orçamento
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recibo -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🧾 Recibo</h2>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                                Configure o modelo de recibo que será emitido aos seus clientes
+                            </p>
+                        </div>
+                        <div style="padding: 24px;">
+                            <div class="form-group">
+                                <label class="form-label">Texto do Recibo</label>
+                                <textarea 
+                                    id="configModeloRecibo" 
+                                    class="form-input" 
+                                    rows="15" 
+                                    style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
+                                    placeholder="Digite aqui o modelo do recibo...
+
+Exemplo:
+
+RECIBO DE PAGAMENTO
+
+Recebi de [CLIENTE], CPF/CNPJ [CPF], a quantia de R$ [VALOR] ([VALOR_EXTENSO]), referente a [DESCRICAO].
+
+DADOS DO PAGAMENTO:
+- Forma: [FORMA_PAGAMENTO]
+- Data: [DATA]
+- Referente a: [EVENTO]
+
+Local e Data: [CIDADE], [DATA_COMPLETA]
+
+_______________________________
+[EMPRESA]
+CNPJ: [CNPJ]"
+                                ></textarea>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                                    💡 Placeholders: [CLIENTE], [VALOR], [DATA], [EMPRESA], [CNPJ], etc.
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                                <button onclick="salvarModeloRecibo()" class="btn btn-primary">
+                                    ✅ Salvar Recibo
                                 </button>
                             </div>
                         </div>
@@ -3163,6 +3420,37 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
     </div>
 
     <!-- Modal Financeiro do Cliente -->
+    <!-- Modal Gerar Documentos -->
+    <div id="modalDocumentos" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">📄 Gerar Documento</h2>
+                <button class="close-btn" onclick="closeModal('documentos')">×</button>
+            </div>
+            <div style="margin-bottom: 20px; padding: 12px; background: rgba(255, 107, 53, 0.1); border-radius: 8px;">
+                <strong id="documentosClienteNome" style="color: var(--primary); font-size: 16px;">Cliente</strong>
+            </div>
+            <input type="hidden" id="documentosClienteId">
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" onclick="gerarDocumento('orcamento')" style="padding: 16px; font-size: 16px; display: flex; align-items: center; gap: 12px; justify-content: center;">
+                    <span style="font-size: 24px;">💼</span>
+                    <span>Gerar Orçamento</span>
+                </button>
+                
+                <button class="btn btn-primary" onclick="gerarDocumento('contrato')" style="padding: 16px; font-size: 16px; display: flex; align-items: center; gap: 12px; justify-content: center;">
+                    <span style="font-size: 24px;">📝</span>
+                    <span>Gerar Contrato</span>
+                </button>
+                
+                <button class="btn btn-primary" onclick="gerarDocumento('recibo')" style="padding: 16px; font-size: 16px; display: flex; align-items: center; gap: 12px; justify-content: center;">
+                    <span style="font-size: 24px;">🧾</span>
+                    <span>Emitir Recibo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="modalFinanceiro" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -3358,10 +3646,15 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                             <option value="outros">📌 Outros</option>
                         </select>
                     </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Valor</label>
                         <input type="number" step="0.01" class="form-input" id="custoGeralValor" required placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-input" id="custoGeralData" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Conta Bancária 🏦</label>
@@ -3370,10 +3663,6 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                             <!-- Será preenchido dinamicamente -->
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Data</label>
-                    <input type="date" class="form-input" id="custoGeralData" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Observações</label>
@@ -3416,10 +3705,15 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                             <option value="outros">📌 Outros</option>
                         </select>
                     </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Valor</label>
                         <input type="number" step="0.01" class="form-input" id="custoEventoValor" required placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-input" id="custoEventoData" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Conta Bancária 🏦</label>
@@ -3428,10 +3722,6 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                             <!-- Será preenchido dinamicamente -->
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Data</label>
-                    <input type="date" class="form-input" id="custoEventoData" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Observações</label>
@@ -4019,8 +4309,9 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                     <div class="form-group">
                         <label class="form-label">Status do Evento</label>
                         <select class="form-select" id="orcStatus" required>
-                            <option value="confirmado">✅ Confirmado</option>
-                            <option value="pendente" selected>⏳ Pendente</option>
+                            <option value="aguardando" selected>⏳ Aguardando Aprovação</option>
+                            <option value="andamento">🔄 Em Andamento</option>
+                            <option value="concluido">✅ Concluído</option>
                             <option value="cancelado">❌ Cancelado</option>
                         </select>
                     </div>
@@ -4670,6 +4961,11 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         function renderBirthdayAlerts(aniversariantes) {
             const container = document.getElementById('birthdayAlertsCompact');
             
+            if (!container) {
+                console.warn('Container birthdayAlertsCompact não encontrado');
+                return;
+            }
+            
             if (aniversariantes.length === 0) {
                 container.innerHTML = '';
                 return;
@@ -4726,12 +5022,23 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         // Update dashboard stats
         function updateStats() {
             const receitas = DB.get('receitas');
-            const despesas = DB.get('despesas');
+            const todasDespesas = DB.get('despesas');
             const custosGerais = DB.get('custosGerais') || [];
             const custosEventos = DB.get('custosEventos') || [];
             const eventos = DB.get('eventos');
             const clientes = DB.get('clientes');
 
+            // Separar despesas gerais de despesas de eventos
+            // Identifica por flag OU pela descrição (para dados antigos)
+            const despesas = todasDespesas.filter(d => {
+                // Se tem flag, usar a flag
+                if (d.tipoDespesa) {
+                    return d.tipoDespesa !== 'custo_evento';
+                }
+                // Se não tem flag, verificar pela descrição
+                return !d.descricao.includes('[Custo Evento:');
+            });
+            
             const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
             const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
             const totalCustosGerais = custosGerais.reduce((sum, c) => sum + c.valor, 0);
@@ -4760,16 +5067,36 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             // Lucro = Receitas - Despesas - Custos Gerais - Custos Eventos
             const lucro = totalReceitas - totalDespesas - totalCustosGerais - totalCustosEventos;
             const margemLucro = totalReceitas > 0 ? ((lucro / totalReceitas) * 100).toFixed(1) : 0;
-            const eventosConfirmados = eventos.filter(e => e.status === 'confirmado' || e.status === 'andamento').length;
+            
+            // Eventos em andamento (aguardando + em andamento)
+            const eventosAndamento = eventos.filter(e => e.status === 'aguardando' || e.status === 'andamento');
+            const eventosAndamentoMes = eventosAndamento.filter(e => {
+                const dataEvento = new Date(e.data);
+                return dataEvento.getMonth() === mesAtual && dataEvento.getFullYear() === anoAtual;
+            });
+            
+            // Eventos concluídos do ano atual
+            const eventosConcluidos = eventos.filter(e => {
+                if (e.status !== 'concluido') return false;
+                const dataEvento = new Date(e.data);
+                return dataEvento.getFullYear() === anoAtual;
+            });
 
-            document.getElementById('totalReceitas').textContent = formatMoney(totalReceitas);
-            document.getElementById('totalDespesas').textContent = formatMoney(totalDespesas + totalCustosGerais);
-            document.getElementById('totalCustosEventos').textContent = formatMoney(totalCustosEventos);
-            document.getElementById('numeroCustosEventos').textContent = custosEventos.length;
-            document.getElementById('lucroLiquido').textContent = formatMoney(lucro);
-            document.getElementById('totalEventos').textContent = eventos.length;
-            document.getElementById('percentLucro').textContent = margemLucro;
-            document.getElementById('eventosConfirmados').textContent = eventosConfirmados;
+            const el = (id) => document.getElementById(id);
+            
+            if (el('totalReceitas')) el('totalReceitas').textContent = formatMoney(totalReceitas);
+            // Despesas do mês = apenas despesas (custos gerais com conta já viraram despesas)
+            if (el('totalDespesas')) el('totalDespesas').textContent = formatMoney(totalDespesas);
+            if (el('totalCustosEventos')) el('totalCustosEventos').textContent = formatMoney(totalCustosEventos);
+            if (el('numeroCustosEventos')) el('numeroCustosEventos').textContent = custosEventos.length;
+            if (el('lucroLiquido')) el('lucroLiquido').textContent = formatMoney(lucro);
+            if (el('percentLucro')) el('percentLucro').textContent = margemLucro;
+            
+            // Atualizar novos cards de eventos
+            if (el('totalEventosAndamento')) el('totalEventosAndamento').textContent = eventosAndamento.length;
+            if (el('eventosDoMes')) el('eventosDoMes').textContent = eventosAndamentoMes.length;
+            if (el('totalEventosConcluidos')) el('totalEventosConcluidos').textContent = eventosConcluidos.length;
+            if (el('eventosConcluidosAno')) el('eventosConcluidosAno').textContent = eventosConcluidos.length;
             
             // Atualizar valores a receber
             if (document.getElementById('valoresAReceberDashboard')) {
@@ -4784,14 +5111,12 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         function renderTransactions() {
             const receitas = DB.get('receitas');
             const despesas = DB.get('despesas');
-            const custosGerais = DB.get('custosGerais') || [];
-            const custosEventos = DB.get('custosEventos') || [];
             
+            // Não incluir custos gerais e de eventos diretamente
+            // pois eles já aparecem como despesas quando têm conta bancária
             const transactions = [
                 ...receitas.map(r => ({ ...r, type: 'receita' })),
-                ...despesas.map(d => ({ ...d, type: 'despesa' })),
-                ...custosGerais.map(c => ({ ...c, type: 'custo', descricao: `Custo: ${c.descricao}` })),
-                ...custosEventos.map(c => ({ ...c, type: 'custo', descricao: `Custo Evento: ${c.descricao}` }))
+                ...despesas.map(d => ({ ...d, type: 'despesa' }))
             ].sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 6);
 
             const html = transactions.map(t => `
@@ -5235,6 +5560,9 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             // Atualizar interface
             checkBirthdays();
             updateOrigemStats();
+            updateDashboard(); // ✅ Atualizar dashboard
+            renderClientsList(); // ✅ Atualizar lista de clientes
+            updateClientsStats(); // ✅ Atualizar stats
             
             // Ir para aba clientes
             switchTabProgramatically('clientes');
@@ -6566,6 +6894,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             closeModal('conta');
             renderFinanceiro();
             carregarContasNosSelects();
+            updateDashboard(); // ✅ Atualizar dashboard
             alert('✅ Conta bancária cadastrada com sucesso!');
         }
         
@@ -6995,11 +7324,15 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         }
 
         function updateDashboard() {
-            updateStats();
-            renderTransactions();
-            renderEvents();
-            checkBirthdays();
-            updateOrigemStats();
+            try {
+                updateStats();
+                renderTransactions();
+                renderEvents();
+                checkBirthdays();
+                updateOrigemStats();
+            } catch (error) {
+                console.error('Erro ao atualizar dashboard:', error);
+            }
         }
 
         // ========================================
@@ -7200,10 +7533,21 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             const tipoVis = document.getElementById('tipoVisualizacao')?.value || 'mensal';
             
             const receitas = DB.get('receitas');
-            const despesas = DB.get('despesas');
+            const todasDespesas = DB.get('despesas');
             const custosGerais = DB.get('custosGerais') || [];
             const custosEventos = DB.get('custosEventos') || [];
             const clientes = DB.get('clientes');
+            
+            // Separar despesas gerais de despesas de eventos
+            // Identifica por flag OU pela descrição (para dados antigos)
+            const despesas = todasDespesas.filter(d => {
+                // Se tem flag, usar a flag
+                if (d.tipoDespesa) {
+                    return d.tipoDespesa !== 'custo_evento';
+                }
+                // Se não tem flag, verificar pela descrição
+                return !d.descricao.includes('[Custo Evento:');
+            });
             
             const filtrarPorPeriodo = (transacao) => {
                 if (!transacao.data) return false;
@@ -7249,17 +7593,22 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             if (document.getElementById('financeiroTotalReceitas')) {
                 document.getElementById('financeiroTotalReceitas').textContent = formatMoney(totalReceitas);
             }
-            if (document.getElementById('financeiroTotalDespesas')) {
-                document.getElementById('financeiroTotalDespesas').textContent = formatMoney(totalDespesas);
-            }
-            if (document.getElementById('financeiroLucro')) {
-                document.getElementById('financeiroLucro').textContent = formatMoney(lucro);
-            }
             if (document.getElementById('financeiroValoresAReceber')) {
                 document.getElementById('financeiroValoresAReceber').textContent = formatMoney(valoresAReceber);
             }
+            // Despesas do Mês (só despesas gerais, sem custos de eventos)
+            if (document.getElementById('financeiroDespesasMes')) {
+                document.getElementById('financeiroDespesasMes').textContent = formatMoney(totalDespesas);
+            }
             if (document.getElementById('financeiroCustosEventos')) {
                 document.getElementById('financeiroCustosEventos').textContent = formatMoney(totalCustosEventos);
+            }
+            // Total de Despesas (despesas + custos gerais + custos eventos)
+            if (document.getElementById('financeiroTotalDespesas')) {
+                document.getElementById('financeiroTotalDespesas').textContent = formatMoney(totalDespesas + totalCustosGerais + totalCustosEventos);
+            }
+            if (document.getElementById('financeiroLucro')) {
+                document.getElementById('financeiroLucro').textContent = formatMoney(lucro);
             }
             
             atualizarOrigemPagamentos(clientes, mesSelecionado, anoSelecionado);
@@ -7603,11 +7952,25 @@ function carregarConfigEmpresa() {
     document.getElementById('configTelefone').value = config.telefone || '';
     document.getElementById('configWhatsapp').value = config.whatsapp || '';
     document.getElementById('configEmail').value = config.email || '';
+    if (document.getElementById('configCidade')) {
+        document.getElementById('configCidade').value = config.cidade || '';
+    }
+    if (document.getElementById('configEstado')) {
+        document.getElementById('configEstado').value = config.estado || '';
+    }
     document.getElementById('configInstagram').value = config.instagram || '';
     document.getElementById('configFacebook').value = config.facebook || '';
     document.getElementById('configYoutube').value = config.youtube || '';
     document.getElementById('configSite').value = config.site || '';
     document.getElementById('configClausulasContratuais').value = config.clausulasContratuais || '';
+    
+    // Carregar modelos de documentos
+    if (document.getElementById('configModeloOrcamento')) {
+        document.getElementById('configModeloOrcamento').value = config.modeloOrcamento || '';
+    }
+    if (document.getElementById('configModeloRecibo')) {
+        document.getElementById('configModeloRecibo').value = config.modeloRecibo || '';
+    }
     
     // Carregar logo se existir
     if (config.logoBase64) {
@@ -7627,6 +7990,8 @@ function salvarConfigEmpresa(e) {
         telefone: document.getElementById('configTelefone').value,
         whatsapp: document.getElementById('configWhatsapp').value,
         email: document.getElementById('configEmail').value,
+        cidade: document.getElementById('configCidade')?.value || '',
+        estado: document.getElementById('configEstado')?.value || '',
         instagram: document.getElementById('configInstagram').value,
         facebook: document.getElementById('configFacebook').value,
         youtube: document.getElementById('configYoutube').value,
@@ -7638,6 +8003,8 @@ function salvarConfigEmpresa(e) {
     if (configExistente) {
         config.logoBase64 = configExistente.logoBase64 || null;
         config.clausulasContratuais = configExistente.clausulasContratuais || '';
+        config.modeloOrcamento = configExistente.modeloOrcamento || '';
+        config.modeloRecibo = configExistente.modeloRecibo || '';
     }
     
     // Salvar (sobrescrever ou criar)
@@ -7664,6 +8031,36 @@ function salvarClausulasContratuais() {
     }
     
     alert('✅ Cláusulas contratuais salvas com sucesso!');
+}
+
+// Salvar modelo de orçamento
+function salvarModeloOrcamento() {
+    const texto = document.getElementById('configModeloOrcamento').value;
+    
+    const configuracoes = DB.get('configuracoes');
+    if (configuracoes.length > 0) {
+        configuracoes[0].modeloOrcamento = texto;
+        DB.set('configuracoes', configuracoes);
+    } else {
+        DB.set('configuracoes', [{ modeloOrcamento: texto }]);
+    }
+    
+    alert('✅ Modelo de orçamento salvo com sucesso!');
+}
+
+// Salvar modelo de recibo
+function salvarModeloRecibo() {
+    const texto = document.getElementById('configModeloRecibo').value;
+    
+    const configuracoes = DB.get('configuracoes');
+    if (configuracoes.length > 0) {
+        configuracoes[0].modeloRecibo = texto;
+        DB.set('configuracoes', configuracoes);
+    } else {
+        DB.set('configuracoes', [{ modeloRecibo: texto }]);
+    }
+    
+    alert('✅ Modelo de recibo salvo com sucesso!');
 }
 
 function resetarClausulas() {
@@ -7846,13 +8243,13 @@ if (!DB.get('configuracoes')) {
         // ============================================
         // Cole suas credenciais do Firebase aqui:
         const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyB3isxgzmM5PJnoW9Cn0uzOmQLpHm5WABI",                    // Cole aqui: AIzaSy...
-            authDomain: "eventprodj.firebaseapp.com",                // Cole aqui: seu-projeto.firebaseapp.com
-            databaseURL: "https://eventprodj-default-rtdb.firebaseio.com",               // Cole aqui: https://seu-projeto.firebaseio.com
-            projectId: "eventprodj",                 // Cole aqui: seu-projeto
-            storageBucket: "eventprodj.firebasestorage.app",             // Cole aqui: seu-projeto.appspot.com
-            messagingSenderId: "343258228418",         // Cole aqui: 123456789
-            appId: "1:343258228418:web:3f4437336c8c35fe943d5b"                      // Cole aqui: 1:123456789:web:abc123
+            apiKey: "",                    // Cole aqui: AIzaSy...
+            authDomain: "",                // Cole aqui: seu-projeto.firebaseapp.com
+            databaseURL: "",               // Cole aqui: https://seu-projeto.firebaseio.com
+            projectId: "",                 // Cole aqui: seu-projeto
+            storageBucket: "",             // Cole aqui: seu-projeto.appspot.com
+            messagingSenderId: "",         // Cole aqui: 123456789
+            appId: ""                      // Cole aqui: 1:123456789:web:abc123
         };
         // ============================================
         
@@ -8071,6 +8468,7 @@ if (!DB.get('configuracoes')) {
         // Mostrar diálogo perguntando qual versão usar
         function mostrarDialogoSincronizacao() {
             const modal = document.createElement('div');
+            modal.id = 'syncModal';
             modal.style.cssText = `
                 position: fixed;
                 top: 0;
@@ -8095,15 +8493,15 @@ if (!DB.get('configuracoes')) {
                     </div>
                     
                     <div style="display: grid; gap: 12px;">
-                        <button onclick="baixarDaNuvemSilencioso().then(() => document.body.removeChild(this.closest('div').parentElement))" class="btn btn-primary" style="width: 100%;">
+                        <button onclick="baixarDaNuvemEFechar()" class="btn btn-primary" style="width: 100%;">
                             ☁️ Baixar da Nuvem
                             <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Substituir dados locais pelos da nuvem</div>
                         </button>
-                        <button onclick="sincronizarAgora().then(() => document.body.removeChild(this.closest('div').parentElement))" class="btn btn-secondary" style="width: 100%;">
+                        <button onclick="enviarParaNuvemEFechar()" class="btn btn-secondary" style="width: 100%;">
                             ⬆️ Enviar para Nuvem
                             <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Manter dados locais e enviar para nuvem</div>
                         </button>
-                        <button onclick="document.body.removeChild(this.closest('div').parentElement); localStorage.setItem('lastSyncLocal', new Date().toISOString())" class="btn" style="width: 100%; background: transparent; border: 1px solid var(--border);">
+                        <button onclick="fecharModalSync()" class="btn" style="width: 100%; background: transparent; border: 1px solid var(--border);">
                             ❌ Manter Local
                             <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Não sincronizar agora</div>
                         </button>
@@ -8112,6 +8510,27 @@ if (!DB.get('configuracoes')) {
             `;
             
             document.body.appendChild(modal);
+        }
+        
+        // Fechar modal de sincronização
+        function fecharModalSync() {
+            const modal = document.getElementById('syncModal');
+            if (modal) {
+                modal.remove();
+            }
+            localStorage.setItem('lastSyncLocal', new Date().toISOString());
+        }
+        
+        // Baixar da nuvem e fechar modal
+        async function baixarDaNuvemEFechar() {
+            await baixarDaNuvemSilencioso();
+            fecharModalSync();
+        }
+        
+        // Enviar para nuvem e fechar modal
+        async function enviarParaNuvemEFechar() {
+            await sincronizarAgora();
+            fecharModalSync();
         }
         
         // Baixar dados da nuvem
@@ -8378,6 +8797,28 @@ if (!DB.get('configuracoes')) {
                 
                 // Initialize data
                 initSampleData();
+                
+                // 🔄 Migração de dados: adicionar tipoDespesa nas despesas antigas
+                console.log('🔄 Verificando migração de dados...');
+                const despesas = DB.get('despesas');
+                let migrados = 0;
+                despesas.forEach(despesa => {
+                    if (!despesa.tipoDespesa) {
+                        // Identificar tipo pela descrição
+                        if (despesa.descricao.includes('[Custo Evento:')) {
+                            despesa.tipoDespesa = 'custo_evento';
+                            migrados++;
+                        } else if (despesa.descricao.includes('[Custo Geral]')) {
+                            despesa.tipoDespesa = 'custo_geral';
+                            migrados++;
+                        }
+                    }
+                });
+                if (migrados > 0) {
+                    DB.set('despesas', despesas);
+                    console.log(`✅ ${migrados} despesas migradas com sucesso`);
+                }
+                
                 carregarContasNosSelects();
                 inicializarFiltrosFinanceiro();
                 updateDashboard();
@@ -8669,20 +9110,38 @@ if (!DB.get('configuracoes')) {
             e.preventDefault();
             const contaId = document.getElementById('custoGeralConta').value;
             const valor = parseFloat(document.getElementById('custoGeralValor').value);
+            const descricao = document.getElementById('custoGeralDescricao').value;
+            const categoria = document.getElementById('custoGeralCategoria').value;
+            const data = document.getElementById('custoGeralData').value;
+            const observacoes = document.getElementById('custoGeralObs').value;
             
             const custo = {
-                descricao: document.getElementById('custoGeralDescricao').value,
-                categoria: document.getElementById('custoGeralCategoria').value,
+                descricao: descricao,
+                categoria: categoria,
                 valor: valor,
-                data: document.getElementById('custoGeralData').value,
-                observacoes: document.getElementById('custoGeralObs').value,
+                data: data,
+                observacoes: observacoes,
                 contaId: contaId || null
             };
             
             DB.add('custosGerais', custo);
             
-            // Atualizar saldo da conta se foi selecionada
+            // Se foi selecionada uma conta, criar uma despesa correspondente
             if (contaId && contaId !== '') {
+                const despesa = {
+                    descricao: `[Custo Geral] ${descricao}`,
+                    valor: valor,
+                    data: data,
+                    categoria: categoria,
+                    contaId: contaId,
+                    formaPagamento: 'transferencia',
+                    observacoes: observacoes || 'Custo geral da empresa',
+                    tipoDespesa: 'custo_geral' // ✅ Flag para identificar tipo
+                };
+                
+                DB.add('despesas', despesa);
+                
+                // Atualizar saldo da conta
                 atualizarSaldoConta(contaId, valor, 'debito');
             }
             
@@ -8692,6 +9151,12 @@ if (!DB.get('configuracoes')) {
             renderCustosGerais();
             updateCustosGeraisStats();
             updateDashboard();
+            
+            // Atualizar financeiro se estiver visível
+            if (document.getElementById('financeiroTab').classList.contains('active')) {
+                renderFinanceiro();
+                atualizarFinanceiroPorPeriodo();
+            }
         }
 
         // Add custo evento
@@ -8700,21 +9165,44 @@ if (!DB.get('configuracoes')) {
             const eventoId = parseInt(document.getElementById('custoEventoId').value);
             const contaId = document.getElementById('custoEventoConta').value;
             const valor = parseFloat(document.getElementById('custoEventoValor').value);
+            const descricao = document.getElementById('custoEventoDescricao').value;
+            const categoria = document.getElementById('custoEventoCategoria').value;
+            const data = document.getElementById('custoEventoData').value;
+            const observacoes = document.getElementById('custoEventoObs').value;
+            
+            // Buscar nome do evento
+            const eventos = DB.get('eventos');
+            const evento = eventos.find(e => e.id === eventoId);
+            const nomeEvento = evento ? evento.nome || evento.cliente : 'Evento';
             
             const custo = {
                 eventoId: eventoId,
-                descricao: document.getElementById('custoEventoDescricao').value,
-                categoria: document.getElementById('custoEventoCategoria').value,
+                descricao: descricao,
+                categoria: categoria,
                 valor: valor,
-                data: document.getElementById('custoEventoData').value,
-                observacoes: document.getElementById('custoEventoObs').value,
+                data: data,
+                observacoes: observacoes,
                 contaId: contaId || null
             };
             
             DB.add('custosEventos', custo);
             
-            // Atualizar saldo da conta se foi selecionada
+            // Se foi selecionada uma conta, criar uma despesa correspondente
             if (contaId && contaId !== '') {
+                const despesa = {
+                    descricao: `[Custo Evento: ${nomeEvento}] ${descricao}`,
+                    valor: valor,
+                    data: data,
+                    categoria: categoria,
+                    contaId: contaId,
+                    formaPagamento: 'transferencia',
+                    observacoes: observacoes || `Custo do evento ${nomeEvento}`,
+                    tipoDespesa: 'custo_evento' // ✅ Flag para identificar tipo
+                };
+                
+                DB.add('despesas', despesa);
+                
+                // Atualizar saldo da conta
                 atualizarSaldoConta(contaId, valor, 'debito');
             }
             
@@ -8723,24 +9211,98 @@ if (!DB.get('configuracoes')) {
             e.target.reset();
             renderCustosEvento();
             updateDashboard();
+            
+            // Atualizar financeiro se estiver visível
+            if (document.getElementById('financeiroTab').classList.contains('active')) {
+                renderFinanceiro();
+                atualizarFinanceiroPorPeriodo();
+            }
         }
 
         // Delete custo geral
         function deleteCustoGeral(id) {
             if (confirm('Deseja realmente excluir este custo?')) {
-                const custos = DB.get('custosGerais').filter(c => c.id !== id);
-                DB.set('custosGerais', custos);
+                const custosGerais = DB.get('custosGerais');
+                const custo = custosGerais.find(c => c.id === id);
+                
+                if (custo) {
+                    // Se tinha conta, remover despesa correspondente e restaurar saldo
+                    if (custo.contaId) {
+                        // Remover despesa correspondente
+                        const despesas = DB.get('despesas');
+                        const despesaIndex = despesas.findIndex(d => 
+                            d.descricao.includes('[Custo Geral]') && 
+                            d.valor === custo.valor && 
+                            d.data === custo.data &&
+                            d.contaId === custo.contaId
+                        );
+                        
+                        if (despesaIndex !== -1) {
+                            despesas.splice(despesaIndex, 1);
+                            DB.set('despesas', despesas);
+                        }
+                        
+                        // Restaurar saldo da conta
+                        atualizarSaldoConta(custo.contaId, custo.valor, 'credito');
+                    }
+                    
+                    // Remover custo
+                    const novoscustos = custosGerais.filter(c => c.id !== id);
+                    DB.set('custosGerais', novoscustos);
+                }
+                
                 renderCustosGerais();
                 updateCustosGeraisStats();
+                updateDashboard();
+                
+                // Atualizar financeiro se estiver visível
+                if (document.getElementById('financeiroTab').classList.contains('active')) {
+                    renderFinanceiro();
+                    atualizarFinanceiroPorPeriodo();
+                }
             }
         }
 
         // Delete custo evento
         function deleteCustoEvento(id) {
             if (confirm('Deseja realmente excluir este custo?')) {
-                const custos = DB.get('custosEventos').filter(c => c.id !== id);
-                DB.set('custosEventos', custos);
+                const custosEventos = DB.get('custosEventos');
+                const custo = custosEventos.find(c => c.id === id);
+                
+                if (custo) {
+                    // Se tinha conta, remover despesa correspondente e restaurar saldo
+                    if (custo.contaId) {
+                        // Remover despesa correspondente
+                        const despesas = DB.get('despesas');
+                        const despesaIndex = despesas.findIndex(d => 
+                            d.descricao.includes('[Custo Evento:') && 
+                            d.valor === custo.valor && 
+                            d.data === custo.data &&
+                            d.contaId === custo.contaId
+                        );
+                        
+                        if (despesaIndex !== -1) {
+                            despesas.splice(despesaIndex, 1);
+                            DB.set('despesas', despesas);
+                        }
+                        
+                        // Restaurar saldo da conta
+                        atualizarSaldoConta(custo.contaId, custo.valor, 'credito');
+                    }
+                    
+                    // Remover custo
+                    const novoscustos = custosEventos.filter(c => c.id !== id);
+                    DB.set('custosEventos', novoscustos);
+                }
+                
                 renderCustosEvento();
+                updateDashboard();
+                
+                // Atualizar financeiro se estiver visível
+                if (document.getElementById('financeiroTab').classList.contains('active')) {
+                    renderFinanceiro();
+                    atualizarFinanceiroPorPeriodo();
+                }
             }
         }
 
@@ -9095,12 +9657,21 @@ if (!DB.get('configuracoes')) {
         function renderKanbanView() {
             const eventos = DB.get('eventos');
             
-            ['pendente', 'confirmado', 'cancelado'].forEach(status => {
+            const statusMap = {
+                'aguardando': { label: 'Pendente', id: 'Pendente' },
+                'andamento': { label: 'Confirmado', id: 'Confirmado' },
+                'cancelado': { label: 'Cancelado', id: 'Cancelado' }
+            };
+            
+            ['aguardando', 'andamento', 'cancelado'].forEach(status => {
+                const statusInfo = statusMap[status];
                 const statusEvents = eventos.filter(e => e.status === status);
-                const container = document.getElementById('kanban' + status.charAt(0).toUpperCase() + status.slice(1));
-                const countEl = document.getElementById('kanban' + status.charAt(0).toUpperCase() + status.slice(1) + 'Count');
+                const container = document.getElementById('kanban' + statusInfo.id);
+                const countEl = document.getElementById('kanban' + statusInfo.id + 'Count');
                 
-                countEl.textContent = statusEvents.length;
+                if (countEl) countEl.textContent = statusEvents.length;
+                
+                if (!container) return;
                 
                 if (statusEvents.length === 0) {
                     container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 13px;">Nenhum evento</div>';
@@ -9232,12 +9803,15 @@ if (!DB.get('configuracoes')) {
             
             if (!evento) return;
             
-            // Ciclo de status: aguardando → andamento → concluído
-            if (evento.status === 'aguardando' || evento.status === 'pendente') {
+            // Ciclo de status: aguardando → andamento → concluído → aguardando
+            if (evento.status === 'aguardando') {
                 evento.status = 'andamento';
-            } else if (evento.status === 'andamento' || evento.status === 'confirmado') {
+            } else if (evento.status === 'andamento') {
                 evento.status = 'concluido';
             } else if (evento.status === 'concluido') {
+                evento.status = 'aguardando';
+            } else {
+                // Se tiver status antigo/inválido, corrigir para aguardando
                 evento.status = 'aguardando';
             }
             
@@ -9581,6 +10155,7 @@ if (!DB.get('configuracoes')) {
                         ` : ''}
                         
                         <div class="client-actions">
+                            <button class="client-action-btn" onclick="event.stopPropagation(); abrirModalDocumentos(${c.id})">📄 Gerar Documento</button>
                             <button class="client-action-btn" onclick="event.stopPropagation(); openFinanceiroModal(${c.id})">💰 Financeiro</button>
                             <button class="client-action-btn" onclick="event.stopPropagation(); createEventForClient(${c.id})">🎉 Novo Evento</button>
                             <button class="client-action-btn" onclick="event.stopPropagation(); sendMessage(${c.id})">💬 Mensagem</button>
@@ -9627,6 +10202,472 @@ if (!DB.get('configuracoes')) {
         }
 
         // Client actions
+        // ========================================
+        // FUNÇÕES DE DOCUMENTOS
+        // ========================================
+        
+        function abrirModalDocumentos(clienteId) {
+            const cliente = DB.get('clientes').find(c => c.id === clienteId);
+            if (!cliente) return;
+            
+            document.getElementById('documentosClienteId').value = clienteId;
+            document.getElementById('documentosClienteNome').textContent = cliente.nome;
+            
+            openModal('documentos');
+        }
+        
+        async function gerarDocumento(tipo) {
+            const clienteId = parseInt(document.getElementById('documentosClienteId').value);
+            const cliente = DB.get('clientes').find(c => c.id === clienteId);
+            if (!cliente) return;
+            
+            const configuracoes = DB.get('configuracoes');
+            const config = configuracoes.length > 0 ? configuracoes[0] : {};
+            
+            // Buscar evento do cliente
+            const eventos = DB.get('eventos');
+            const evento = eventos.find(e => e.cliente === cliente.nome);
+            
+            let nomeArquivo = '';
+            
+            try {
+                if (tipo === 'orcamento') {
+                    // Usar função específica para orçamento profissional
+                    nomeArquivo = `Orcamento_${cliente.nome.replace(/\s/g, '_')}.pdf`;
+                    await gerarOrcamentoProfissional(cliente, evento, config, nomeArquivo);
+                } else if (tipo === 'contrato') {
+                    const conteudo = gerarConteudoContrato(cliente, evento, config);
+                    nomeArquivo = `Contrato_${cliente.nome.replace(/\s/g, '_')}.pdf`;
+                    await gerarPDF(conteudo, nomeArquivo, config);
+                } else if (tipo === 'recibo') {
+                    const conteudo = gerarConteudoRecibo(cliente, evento, config);
+                    nomeArquivo = `Recibo_${cliente.nome.replace(/\s/g, '_')}.pdf`;
+                    await gerarPDF(conteudo, nomeArquivo, config);
+                }
+                
+                closeModal('documentos');
+            } catch (error) {
+                console.error('Erro ao gerar documento:', error);
+                alert('❌ Erro ao gerar documento. Verifique os dados e tente novamente.');
+            }
+        }
+        
+        // Função para gerar orçamento profissional (modelo completo)
+        async function gerarOrcamentoProfissional(cliente, evento, config, nomeArquivo) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const dataAtual = new Date().toLocaleDateString('pt-BR');
+            
+            // CABEÇALHO
+            let y = 15;
+            
+            // Logo (se existir)
+            if (config.logoBase64) {
+                try {
+                    doc.addImage(config.logoBase64, 'PNG', 15, y, 35, 35);
+                } catch (e) {
+                    console.log('Logo não adicionada');
+                }
+            }
+            
+            // Nome da empresa no topo direito
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'EVENTPRODJ', 200, y + 5, { align: 'right' });
+            
+            // Dados da empresa
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            y += 10;
+            
+            if (config.cnpj) {
+                doc.text(`CNPJ: ${config.cnpj}`, 200, y, { align: 'right' });
+                y += 4;
+            }
+            if (config.email) {
+                doc.text(`✉ ${config.email}`, 200, y, { align: 'right' });
+                y += 4;
+            }
+            if (config.telefone) {
+                doc.text(`📞 ${config.telefone}`, 200, y, { align: 'right' });
+                y += 4;
+            }
+            if (config.whatsapp) {
+                doc.text(`📱 ${config.whatsapp}`, 200, y, { align: 'right' });
+                y += 4;
+            }
+            
+            // Data no canto superior direito
+            doc.text(`📅 ${dataAtual}`, 200, y, { align: 'right' });
+            
+            // Redes sociais (abaixo do logo)
+            y = 55;
+            doc.setFontSize(7);
+            if (config.instagram) doc.text(`📷 ${config.instagram}`, 15, y);
+            if (config.facebook) doc.text(`👥 ${config.facebook}`, 55, y);
+            if (config.youtube) doc.text(`🎥 ${config.youtube}`, 95, y);
+            if (config.site) doc.text(`🌐 ${config.site}`, 135, y);
+            
+            // TÍTULO DO ORÇAMENTO
+            y = 70;
+            doc.setFillColor(220, 220, 220);
+            doc.rect(15, y, 180, 8, 'F');
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Orçamento', 17, y + 5.5);
+            
+            // DADOS DO CLIENTE
+            y += 15;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Cliente: ${cliente.nome}`, 15, y);
+            
+            y += 5;
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            if (cliente.cpf) {
+                doc.text(`CPF: ${cliente.cpf}`, 15, y);
+                y += 4;
+            }
+            if (cliente.endereco) {
+                const endLines = doc.splitTextToSize(cliente.endereco, 90);
+                doc.text(endLines, 15, y);
+                y += (endLines.length * 4);
+            }
+            if (cliente.cep) {
+                doc.text(`CEP ${cliente.cep}`, 15, y);
+                y += 4;
+            }
+            if (cliente.telefone) {
+                doc.text(`📞 ${cliente.telefone}`, 15, y);
+            }
+            
+            // INFORMAÇÕES BÁSICAS DO EVENTO
+            y += 10;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(15, y, 180, 7, 'F');
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Informações básicas', 17, y + 5);
+            
+            y += 12;
+            doc.setFontSize(9);
+            
+            // Coluna 1
+            doc.setFont('helvetica', 'bold');
+            doc.text('Horário de início e término', 15, y);
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir', 15, y + 4);
+            
+            // Coluna 2
+            doc.setFont('helvetica', 'bold');
+            doc.text('Tipo de evento', 110, y);
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? evento.tipo : 'A definir', 110, y + 4);
+            
+            y += 10;
+            
+            // Coluna 1
+            doc.setFont('helvetica', 'bold');
+            doc.text('Local do evento', 15, y);
+            doc.setFont('helvetica', 'normal');
+            const localLines = doc.splitTextToSize(evento ? evento.local : 'A definir', 90);
+            doc.text(localLines, 15, y + 4);
+            
+            // Coluna 2
+            doc.setFont('helvetica', 'bold');
+            doc.text('Duração do serviço', 110, y);
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento && evento.duracao ? evento.duracao : '5 hrs', 110, y + 4);
+            
+            // DADOS DO EVENTO (destaque)
+            y += 15;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(evento ? evento.tipo : 'Evento', 15, y);
+            y += 4;
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Data: ${evento ? formatDate(evento.data) : 'A definir'}`, 15, y);
+            y += 4;
+            doc.text(`Horário: ${evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir'}`, 15, y);
+            
+            // SERVIÇOS
+            y += 10;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(15, y, 180, 7, 'F');
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Serviços', 17, y + 5);
+            
+            y += 12;
+            
+            // Cabeçalho da tabela
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Descrição', 15, y);
+            doc.text('Preço', 180, y, { align: 'right' });
+            
+            y += 5;
+            doc.setLineWidth(0.3);
+            doc.line(15, y, 195, y);
+            
+            // Itens (pode pegar dos custos do evento ou valor fixo)
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            
+            // Descrição do serviço (pode vir do modelo de orçamento ou ser padrão)
+            const descricaoServico = config.modeloOrcamento || 'Estrutura completa para o evento.\nInclui: som, iluminação e DJ profissional.';
+            const descLines = doc.splitTextToSize(descricaoServico, 140);
+            doc.text(descLines, 15, y);
+            
+            const valorServico = cliente.financeiro?.valorTotal || 0;
+            doc.setFont('helvetica', 'bold');
+            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
+            
+            y += (descLines.length * 4) + 8;
+            
+            // Subtotais
+            doc.setLineWidth(0.3);
+            doc.line(120, y, 195, y);
+            y += 5;
+            
+            doc.setFont('helvetica', 'normal');
+            doc.text('Serviços', 120, y);
+            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
+            
+            y += 5;
+            doc.text('Deslocamento', 120, y);
+            doc.text('R$ 0,00', 195, y, { align: 'right' });
+            
+            y += 5;
+            doc.text('Subtotal', 120, y);
+            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
+            
+            y += 6;
+            doc.setLineWidth(0.5);
+            doc.line(120, y, 195, y);
+            y += 5;
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.text('Total', 120, y);
+            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
+            
+            // PAGAMENTO
+            y += 10;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(15, y, 180, 7, 'F');
+            doc.setFontSize(10);
+            doc.text('Pagamento', 17, y + 5);
+            
+            y += 12;
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Meios de pagamento', 15, y);
+            y += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.text('Transferência bancária, dinheiro, cartão de crédito, cartão de débito ou pix.', 15, y);
+            
+            // ASSINATURAS
+            y += 20;
+            doc.text(dataAtual, 105, y, { align: 'center' });
+            
+            y += 15;
+            doc.setLineWidth(0.3);
+            doc.line(15, y, 95, y);
+            doc.line(115, y, 195, y);
+            
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'EVENTPRODJ', 55, y, { align: 'center' });
+            doc.text(cliente.nome, 155, y, { align: 'center' });
+            
+            y += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            if (config.nomeCorporativo) {
+                doc.text(config.nomeCorporativo, 55, y, { align: 'center' });
+            }
+            doc.text(cliente.cpf ? `CPF ${cliente.cpf}` : '', 155, y, { align: 'center' });
+            
+            // RODAPÉ
+            doc.setFontSize(8);
+            doc.text(`Página 1/1`, 105, 285, { align: 'center' });
+            
+            // Salvar
+            doc.save(nomeArquivo);
+            alert(`✅ ${nomeArquivo} gerado com sucesso!`);
+        }
+        
+        function gerarConteudoOrcamento(cliente, evento, config) {
+            let modelo = config.modeloOrcamento || `ORÇAMENTO DE SERVIÇOS
+
+Prezado(a) [CLIENTE],
+
+Segue orçamento para os serviços solicitados:
+
+DADOS DO EVENTO:
+- Tipo: [TIPO]
+- Data: [DATA]
+- Horário: [HORARIO]
+- Local: [LOCAL]
+
+VALOR TOTAL: R$ [VALOR]
+
+CONDIÇÕES DE PAGAMENTO:
+- Sinal: R$ [SINAL] (50%)
+- Restante: R$ [RESTANTE] até [VENCIMENTO]
+
+VALIDADE DO ORÇAMENTO: [VALIDADE]
+
+Atenciosamente,
+[EMPRESA]`;
+            
+            // Substituir placeholders
+            modelo = modelo.replace(/\[CLIENTE\]/g, cliente.nome);
+            modelo = modelo.replace(/\[TIPO\]/g, evento ? evento.tipo : 'Não especificado');
+            modelo = modelo.replace(/\[DATA\]/g, evento ? formatDate(evento.data) : 'A definir');
+            modelo = modelo.replace(/\[HORARIO\]/g, evento ? `${evento.horaInicio} às ${evento.horaFim}` : 'A definir');
+            modelo = modelo.replace(/\[LOCAL\]/g, evento ? evento.local : cliente.endereco || 'A definir');
+            modelo = modelo.replace(/\[VALOR\]/g, cliente.financeiro?.valorTotal ? formatMoney(cliente.financeiro.valorTotal) : 'R$ 0,00');
+            modelo = modelo.replace(/\[SINAL\]/g, cliente.financeiro?.sinalValor ? formatMoney(cliente.financeiro.sinalValor) : 'R$ 0,00');
+            modelo = modelo.replace(/\[RESTANTE\]/g, cliente.financeiro?.valorPagar ? formatMoney(cliente.financeiro.valorPagar) : 'R$ 0,00');
+            modelo = modelo.replace(/\[VENCIMENTO\]/g, cliente.financeiro?.vencimento ? formatDate(cliente.financeiro.vencimento) : 'A definir');
+            modelo = modelo.replace(/\[VALIDADE\]/g, '30 dias');
+            modelo = modelo.replace(/\[EMPRESA\]/g, config.nomeEmpresa || 'EventProDJ');
+            
+            return modelo;
+        }
+        
+        function gerarConteudoContrato(cliente, evento, config) {
+            let modelo = config.clausulasContratuais || `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE EVENTOS
+
+1. DO OBJETO
+O presente contrato tem por objeto a prestação de serviços pela CONTRATADA em favor do CONTRATANTE.
+
+2. DAS CONDIÇÕES
+2.1. Data do Evento: [DATA]
+2.2. Horário: [HORARIO]
+2.3. Local: [LOCAL]
+
+3. DO VALOR E FORMA DE PAGAMENTO
+3.1. O valor total do serviço é de R$ [VALOR]
+3.2. Sinal de R$ [SINAL] 
+3.3. Restante de R$ [RESTANTE] até [VENCIMENTO]`;
+            
+            // Substituir placeholders
+            modelo = modelo.replace(/\[CLIENTE\]/g, cliente.nome);
+            modelo = modelo.replace(/\[DATA\]/g, evento ? formatDate(evento.data) : 'A definir');
+            modelo = modelo.replace(/\[HORARIO\]/g, evento ? `${evento.horaInicio} às ${evento.horaFim}` : 'A definir');
+            modelo = modelo.replace(/\[LOCAL\]/g, evento ? evento.local : cliente.endereco || 'A definir');
+            modelo = modelo.replace(/\[VALOR\]/g, cliente.financeiro?.valorTotal ? formatMoney(cliente.financeiro.valorTotal) : 'R$ 0,00');
+            modelo = modelo.replace(/\[SINAL\]/g, cliente.financeiro?.sinalValor ? formatMoney(cliente.financeiro.sinalValor) : 'R$ 0,00');
+            modelo = modelo.replace(/\[RESTANTE\]/g, cliente.financeiro?.valorPagar ? formatMoney(cliente.financeiro.valorPagar) : 'R$ 0,00');
+            modelo = modelo.replace(/\[VENCIMENTO\]/g, cliente.financeiro?.vencimento ? formatDate(cliente.financeiro.vencimento) : 'A definir');
+            modelo = modelo.replace(/\[TIPO\]/g, evento ? evento.tipo : 'Evento');
+            modelo = modelo.replace(/\[EMPRESA\]/g, config.nomeEmpresa || 'EventProDJ');
+            
+            return modelo;
+        }
+        
+        function gerarConteudoRecibo(cliente, evento, config) {
+            let modelo = config.modeloRecibo || `RECIBO DE PAGAMENTO
+
+Recebi de [CLIENTE], a quantia de R$ [VALOR], referente a [DESCRICAO].
+
+DADOS DO PAGAMENTO:
+- Data: [DATA]
+- Referente a: [EVENTO]
+
+Local e Data: [DATA_COMPLETA]
+
+_______________________________
+[EMPRESA]`;
+            
+            // Substituir placeholders
+            const valorRecebido = cliente.financeiro?.sinalValor || 0;
+            modelo = modelo.replace(/\[CLIENTE\]/g, cliente.nome);
+            modelo = modelo.replace(/\[VALOR\]/g, formatMoney(valorRecebido));
+            modelo = modelo.replace(/\[DESCRICAO\]/g, evento ? `Sinal para ${evento.tipo}` : 'Serviços prestados');
+            modelo = modelo.replace(/\[DATA\]/g, cliente.financeiro?.sinalData ? formatDate(cliente.financeiro.sinalData) : formatDate(new Date().toISOString().split('T')[0]));
+            modelo = modelo.replace(/\[EVENTO\]/g, evento ? evento.tipo : 'Serviços');
+            modelo = modelo.replace(/\[DATA_COMPLETA\]/g, new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }));
+            modelo = modelo.replace(/\[EMPRESA\]/g, config.nomeEmpresa || 'EventProDJ');
+            modelo = modelo.replace(/\[CNPJ\]/g, config.cnpj || '');
+            
+            return modelo;
+        }
+        
+        async function gerarPDF(conteudo, nomeArquivo, config) {
+            // Importar jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Adicionar logo se existir
+            if (config.logoBase64) {
+                try {
+                    doc.addImage(config.logoBase64, 'PNG', 15, 10, 40, 20);
+                } catch (e) {
+                    console.log('Erro ao adicionar logo:', e);
+                }
+            }
+            
+            // Adicionar cabeçalho da empresa
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'EventProDJ', 15, config.logoBase64 ? 40 : 20);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            let yPos = config.logoBase64 ? 45 : 25;
+            
+            if (config.telefone) {
+                doc.text(`Tel: ${config.telefone}`, 15, yPos);
+                yPos += 4;
+            }
+            if (config.email) {
+                doc.text(`Email: ${config.email}`, 15, yPos);
+                yPos += 4;
+            }
+            
+            // Linha separadora
+            yPos += 5;
+            doc.setLineWidth(0.5);
+            doc.line(15, yPos, 195, yPos);
+            yPos += 10;
+            
+            // Adicionar conteúdo
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
+            const linhas = doc.splitTextToSize(conteudo, 180);
+            linhas.forEach(linha => {
+                if (yPos > 280) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                doc.text(linha, 15, yPos);
+                yPos += 5;
+            });
+            
+            // Adicionar rodapé
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Página ${i} de ${totalPages}`, 105, 290, { align: 'center' });
+                doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 15, 290);
+            }
+            
+            // Salvar PDF
+            doc.save(nomeArquivo);
+            
+            alert(`✅ ${nomeArquivo} gerado com sucesso!`);
+        }
+
         function viewClientDetails(id) {
             const cliente = DB.get('clientes').find(c => c.id === id);
             if (!cliente) return;
