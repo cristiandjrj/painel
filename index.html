@@ -2236,7 +2236,7 @@
                     </div>
 
                     <!-- Stats Custos Gerais -->
-                    <div class="stats-grid" style="margin-bottom: 25px;">
+                    <div class="stats-grid" style="margin-bottom: 25px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                         <div class="stat-card">
                             <div class="stat-icon bg-danger">💸</div>
                             <div class="stat-label">Total do Mês</div>
@@ -2251,6 +2251,11 @@
                             <div class="stat-icon bg-secondary">📋</div>
                             <div class="stat-label">Impostos</div>
                             <div class="stat-value" id="totalImpostos">R$ 0,00</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(79, 70, 229, 0.2); color: #4F46E5;">📣</div>
+                            <div class="stat-label">Marketing</div>
+                            <div class="stat-value" id="totalMarketing">R$ 0,00</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon bg-primary">🏪</div>
@@ -3782,6 +3787,21 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                     <div class="form-group">
                         <label class="form-label">Outras Taxas 📋</label>
                         <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+                            <!-- Taxa Deslocamento Pré-preenchida -->
+                            <div style="background: rgba(255, 210, 63, 0.1); border: 1px solid var(--accent); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 4px;">
+                                            🚗 Deslocamento
+                                        </div>
+                                        <input type="number" step="0.01" class="form-input" id="taxaDeslocamentoValor" placeholder="Valor (R$)" oninput="atualizarTaxaDeslocamento()" style="background: rgba(255, 255, 255, 0.05);">
+                                    </div>
+                                    <button type="button" onclick="removerTaxaDeslocamento()" style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 20px; padding: 8px;">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <div id="outrasTaxasList">
                                 <!-- Taxas adicionadas aparecerão aqui -->
                             </div>
@@ -3940,7 +3960,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">E-mail</label>
-                        <input type="email" class="form-input" id="clienteEmail" required placeholder="email@exemplo.com">
+                        <input type="email" class="form-input" id="clienteEmail" placeholder="email@exemplo.com (opcional)">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Telefone</label>
@@ -4559,13 +4579,23 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             const totalCustosGerais = custosGerais.reduce((sum, c) => sum + c.valor, 0);
             const totalCustosEventos = custosEventos.reduce((sum, c) => sum + c.valor, 0);
             
-            // Calcular valores a receber
+            // Calcular valores a receber APENAS do mês atual
+            const hoje = new Date();
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
+            
             let valoresAReceber = 0;
             let clientesPendentes = 0;
             clientes.forEach(cliente => {
                 if (cliente.financeiro && cliente.financeiro.valorPagar > 0) {
-                    valoresAReceber += cliente.financeiro.valorPagar;
-                    clientesPendentes++;
+                    // Verificar se o vencimento é do mês atual
+                    if (cliente.financeiro.vencimento) {
+                        const dataVenc = new Date(cliente.financeiro.vencimento + 'T00:00:00');
+                        if (dataVenc.getMonth() === mesAtual && dataVenc.getFullYear() === anoAtual) {
+                            valoresAReceber += cliente.financeiro.valorPagar;
+                            clientesPendentes++;
+                        }
+                    }
                 }
             });
             
@@ -4596,9 +4626,14 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         function renderTransactions() {
             const receitas = DB.get('receitas');
             const despesas = DB.get('despesas');
+            const custosGerais = DB.get('custosGerais') || [];
+            const custosEventos = DB.get('custosEventos') || [];
+            
             const transactions = [
                 ...receitas.map(r => ({ ...r, type: 'receita' })),
-                ...despesas.map(d => ({ ...d, type: 'despesa' }))
+                ...despesas.map(d => ({ ...d, type: 'despesa' })),
+                ...custosGerais.map(c => ({ ...c, type: 'custo', descricao: `Custo: ${c.descricao}` })),
+                ...custosEventos.map(c => ({ ...c, type: 'custo', descricao: `Custo Evento: ${c.descricao}` }))
             ].sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 6);
 
             const html = transactions.map(t => `
@@ -5378,6 +5413,34 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         // Variável global para taxas
         let taxasCounter = 0;
         let outrasTaxas = [];
+        let taxaDeslocamentoIncluida = true; // Controla se a taxa de deslocamento está ativa
+
+        // Atualizar taxa de deslocamento
+        function atualizarTaxaDeslocamento() {
+            const valorInput = document.getElementById('taxaDeslocamentoValor');
+            const valor = parseFloat(valorInput.value) || 0;
+            
+            // Remover taxa de deslocamento antiga
+            outrasTaxas = outrasTaxas.filter(t => t.id !== 'taxa_deslocamento');
+            
+            // Adicionar nova se tiver valor
+            if (valor > 0) {
+                outrasTaxas.push({ id: 'taxa_deslocamento', descricao: 'Deslocamento', valor });
+                taxaDeslocamentoIncluida = true;
+            }
+            
+            calcularTotalOrcamento();
+        }
+        
+        // Remover taxa de deslocamento
+        function removerTaxaDeslocamento() {
+            if (confirm('Deseja remover a taxa de deslocamento?')) {
+                document.getElementById('taxaDeslocamentoValor').value = '';
+                outrasTaxas = outrasTaxas.filter(t => t.id !== 'taxa_deslocamento');
+                taxaDeslocamentoIncluida = false;
+                calcularTotalOrcamento();
+            }
+        }
 
         // Adicionar nova taxa
         function adicionarTaxa() {
@@ -6538,8 +6601,29 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         // Render Por Conta
         function renderFinanceiroPorConta() {
             const contas = DB.get('contas').filter(c => c.ativa);
-            const receitas = DB.get('receitas');
-            const despesas = DB.get('despesas');
+            const todasReceitas = DB.get('receitas');
+            const todasDespesas = DB.get('despesas');
+            
+            // Obter filtros de período
+            const mesSelecionado = document.getElementById('filtroMesFinanceiro')?.value;
+            const anoSelecionado = document.getElementById('filtroAnoFinanceiro')?.value;
+            
+            // Função para filtrar por período
+            const filtrarPorPeriodo = (transacao) => {
+                if (!transacao.data) return false;
+                const data = new Date(transacao.data);
+                const mes = data.getMonth() + 1;
+                const ano = data.getFullYear();
+                
+                const mesMatch = mesSelecionado === 'todos' || mes === parseInt(mesSelecionado);
+                const anoMatch = anoSelecionado === 'todos' || ano === parseInt(anoSelecionado);
+                
+                return mesMatch && anoMatch;
+            };
+            
+            // Filtrar receitas e despesas pelo período
+            const receitas = todasReceitas.filter(filtrarPorPeriodo);
+            const despesas = todasDespesas.filter(filtrarPorPeriodo);
             
             const listaDiv = document.getElementById('listaContasComSaldo');
             listaDiv.innerHTML = contas.map(c => {
@@ -6562,7 +6646,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                                 <div style="font-size: 24px; font-weight: 700; color: ${saldo >= 0 ? 'var(--success)' : 'var(--danger)'};">
                                     ${formatMoney(saldo)}
                                 </div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">Saldo Atual</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">Saldo do Período</div>
                             </div>
                         </div>
                     </div>
@@ -7000,6 +7084,11 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             }
             
             atualizarOrigemPagamentos(clientes, mesSelecionado, anoSelecionado);
+            
+            // Atualizar também a view "Por Conta" se estiver visível
+            if (document.getElementById('financeiroPorConta').style.display !== 'none') {
+                renderFinanceiroPorConta();
+            }
             
             if (tipoVis === 'anual' && anoSelecionado !== 'todos') {
                 mostrarBreakdownAnual(anoSelecionado);
@@ -7561,17 +7650,49 @@ if (!DB.get('configuracoes')) {
         let isFirebaseConnected = false;
         let autoSyncEnabled = true;
         
-        // Inicializar Firebase com configurações salvas
+        // ============================================
+        // ⚠️ CONFIGURAÇÃO DO FIREBASE
+        // ============================================
+        // Cole suas credenciais do Firebase aqui:
+        const FIREBASE_CONFIG = {
+            apiKey: "",                    // Cole aqui: AIzaSy...
+            authDomain: "",                // Cole aqui: seu-projeto.firebaseapp.com
+            databaseURL: "",               // Cole aqui: https://seu-projeto.firebaseio.com
+            projectId: "",                 // Cole aqui: seu-projeto
+            storageBucket: "",             // Cole aqui: seu-projeto.appspot.com
+            messagingSenderId: "",         // Cole aqui: 123456789
+            appId: ""                      // Cole aqui: 1:123456789:web:abc123
+        };
+        // ============================================
+        
+        // Inicializar Firebase com configurações embutidas ou localStorage
         function initFirebase() {
-            const config = localStorage.getItem('firebaseConfig');
-            if (!config) {
-                console.log('Firebase não configurado');
-                atualizarStatusSync('offline', 'Não configurado');
-                return false;
+            // Verificar se há config embutida no código
+            const hasEmbeddedConfig = FIREBASE_CONFIG.apiKey && 
+                                     FIREBASE_CONFIG.databaseURL && 
+                                     FIREBASE_CONFIG.projectId;
+            
+            let firebaseConfig;
+            
+            if (hasEmbeddedConfig) {
+                // Usar config embutida
+                console.log('✅ Usando configuração Firebase embutida no código');
+                firebaseConfig = FIREBASE_CONFIG;
+                
+                // Salvar no localStorage para aparecer na interface
+                localStorage.setItem('firebaseConfig', JSON.stringify(FIREBASE_CONFIG));
+            } else {
+                // Tentar pegar do localStorage (config manual)
+                const config = localStorage.getItem('firebaseConfig');
+                if (!config) {
+                    console.log('Firebase não configurado');
+                    atualizarStatusSync('offline', 'Não configurado');
+                    return false;
+                }
+                firebaseConfig = JSON.parse(config);
             }
             
             try {
-                const firebaseConfig = JSON.parse(config);
                 
                 // Validar configuração mínima
                 if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL || !firebaseConfig.projectId) {
@@ -7594,6 +7715,9 @@ if (!DB.get('configuracoes')) {
                         isFirebaseConnected = true;
                         atualizarStatusSync('online', 'Conectado');
                         console.log('✅ Firebase conectado');
+                        
+                        // Verificar se deve baixar dados da nuvem ao conectar
+                        verificarSincronizacaoInicial();
                     } else {
                         isFirebaseConnected = false;
                         atualizarStatusSync('offline', 'Desconectado');
@@ -7680,6 +7804,9 @@ if (!DB.get('configuracoes')) {
                 // Enviar para Firebase
                 await firebaseDatabase.ref('eventprodj').set(dados);
                 
+                // Salvar timestamp local
+                localStorage.setItem('lastSyncLocal', dados.lastSync);
+                
                 atualizarStatusSync('online', 'Sincronizado');
                 
                 console.log('✅ Dados sincronizados com sucesso!');
@@ -7694,6 +7821,140 @@ if (!DB.get('configuracoes')) {
                 atualizarStatusSync('error', 'Erro');
                 alert('❌ Erro ao sincronizar dados:\n\n' + error.message + '\n\nVerifique sua conexão e as configurações do Firebase.');
             }
+        }
+        
+        // Verificar se deve sincronizar ao inicializar
+        async function verificarSincronizacaoInicial() {
+            // Verificar se há dados locais
+            const eventosLocais = DB.get('eventos');
+            const clientesLocais = DB.get('clientes');
+            const temDadosLocais = eventosLocais.length > 0 || clientesLocais.length > 0;
+            
+            try {
+                // Verificar se há dados na nuvem
+                const snapshot = await firebaseDatabase.ref('eventprodj/lastSync').once('value');
+                const lastSync = snapshot.val();
+                
+                if (!lastSync) {
+                    // Não há dados na nuvem
+                    console.log('Nuvem vazia');
+                    
+                    if (temDadosLocais) {
+                        // Tem dados locais, enviar para nuvem
+                        console.log('Enviando dados locais para nuvem...');
+                        await sincronizarAgora();
+                    }
+                } else {
+                    // Há dados na nuvem
+                    console.log('Dados encontrados na nuvem, última sync:', lastSync);
+                    
+                    if (!temDadosLocais) {
+                        // Não tem dados locais, baixar da nuvem automaticamente
+                        console.log('Baixando dados da nuvem automaticamente...');
+                        await baixarDaNuvemSilencioso();
+                    } else {
+                        // Tem dados locais e na nuvem
+                        // Verificar qual é mais recente
+                        const lastSyncLocal = localStorage.getItem('lastSyncLocal');
+                        
+                        if (!lastSyncLocal || new Date(lastSync) > new Date(lastSyncLocal)) {
+                            // Nuvem mais recente
+                            mostrarDialogoSincronizacao();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar sincronização:', error);
+            }
+        }
+        
+        // Baixar dados da nuvem sem confirmação (usado na inicialização)
+        async function baixarDaNuvemSilencioso() {
+            try {
+                const snapshot = await firebaseDatabase.ref('eventprodj').once('value');
+                const dados = snapshot.val();
+                
+                if (!dados) {
+                    console.log('Nenhum dado na nuvem');
+                    return;
+                }
+                
+                // Restaurar todos os dados
+                if (dados.eventos) DB.set('eventos', dados.eventos);
+                if (dados.clientes) DB.set('clientes', dados.clientes);
+                if (dados.receitas) DB.set('receitas', dados.receitas);
+                if (dados.despesas) DB.set('despesas', dados.despesas);
+                if (dados.contas) DB.set('contas', dados.contas);
+                if (dados.servicos) DB.set('servicos', dados.servicos);
+                if (dados.custosGerais) DB.set('custosGerais', dados.custosGerais);
+                if (dados.custosEventos) DB.set('custosEventos', dados.custosEventos);
+                if (dados.receitasPessoais) DB.set('receitasPessoais', dados.receitasPessoais);
+                if (dados.despesasPessoais) DB.set('despesasPessoais', dados.despesasPessoais);
+                if (dados.contasPessoais) DB.set('contasPessoais', dados.contasPessoais);
+                if (dados.configuracoes) DB.set('configuracoes', dados.configuracoes);
+                
+                // Salvar timestamp local
+                localStorage.setItem('lastSyncLocal', dados.lastSync || new Date().toISOString());
+                
+                // Atualizar interface
+                updateDashboard();
+                renderClientsList();
+                renderEventsList();
+                atualizarFinanceiroPorPeriodo();
+                
+                console.log('✅ Dados baixados da nuvem automaticamente');
+                
+                // Mostrar notificação discreta
+                atualizarStatusSync('online', 'Sincronizado');
+            } catch (error) {
+                console.error('Erro ao baixar dados:', error);
+            }
+        }
+        
+        // Mostrar diálogo perguntando qual versão usar
+        function mostrarDialogoSincronizacao() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg); border-radius: 16px; padding: 32px; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 64px; margin-bottom: 16px;">☁️</div>
+                        <h2 style="font-family: 'Syne', sans-serif; margin-bottom: 8px;">Dados Encontrados na Nuvem</h2>
+                        <p style="color: var(--text-secondary); font-size: 14px;">
+                            Encontramos dados mais recentes na nuvem. O que deseja fazer?
+                        </p>
+                    </div>
+                    
+                    <div style="display: grid; gap: 12px;">
+                        <button onclick="baixarDaNuvemSilencioso().then(() => document.body.removeChild(this.closest('div').parentElement))" class="btn btn-primary" style="width: 100%;">
+                            ☁️ Baixar da Nuvem
+                            <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Substituir dados locais pelos da nuvem</div>
+                        </button>
+                        <button onclick="sincronizarAgora().then(() => document.body.removeChild(this.closest('div').parentElement))" class="btn btn-secondary" style="width: 100%;">
+                            ⬆️ Enviar para Nuvem
+                            <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Manter dados locais e enviar para nuvem</div>
+                        </button>
+                        <button onclick="document.body.removeChild(this.closest('div').parentElement); localStorage.setItem('lastSyncLocal', new Date().toISOString())" class="btn" style="width: 100%; background: transparent; border: 1px solid var(--border);">
+                            ❌ Manter Local
+                            <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Não sincronizar agora</div>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
         }
         
         // Baixar dados da nuvem
@@ -7732,6 +7993,9 @@ if (!DB.get('configuracoes')) {
                 if (dados.despesasPessoais) DB.set('despesasPessoais', dados.despesasPessoais);
                 if (dados.contasPessoais) DB.set('contasPessoais', dados.contasPessoais);
                 if (dados.configuracoes) DB.set('configuracoes', dados.configuracoes);
+                
+                // Salvar timestamp local
+                localStorage.setItem('lastSyncLocal', dados.lastSync || new Date().toISOString());
                 
                 // Atualizar interface
                 updateDashboard();
@@ -8233,11 +8497,13 @@ if (!DB.get('configuracoes')) {
             const total = custosMes.reduce((sum, c) => sum + c.valor, 0);
             const combustivel = custosMes.filter(c => c.categoria === 'combustivel').reduce((sum, c) => sum + c.valor, 0);
             const impostos = custosMes.filter(c => c.categoria === 'impostos').reduce((sum, c) => sum + c.valor, 0);
-            const outros = total - combustivel - impostos;
+            const marketing = custosMes.filter(c => c.categoria === 'marketing').reduce((sum, c) => sum + c.valor, 0);
+            const outros = total - combustivel - impostos - marketing;
             
             document.getElementById('totalCustosGeraisMes').textContent = formatMoney(total);
             document.getElementById('totalCombustivel').textContent = formatMoney(combustivel);
             document.getElementById('totalImpostos').textContent = formatMoney(impostos);
+            document.getElementById('totalMarketing').textContent = formatMoney(marketing);
             document.getElementById('totalOutrosCustos').textContent = formatMoney(outros);
         }
 
@@ -8437,6 +8703,17 @@ if (!DB.get('configuracoes')) {
                     searchInput.value = nomeCliente;
                     renderClientsList(nomeCliente);
                 }
+            }, 100);
+        }
+        
+        // Ir para aba de eventos e abrir evento específico
+        function irParaEvento(eventoId) {
+            // Mudar para aba de eventos
+            switchTab('eventos');
+            
+            // Aguardar tab carregar e abrir evento
+            setTimeout(() => {
+                editEvent(eventoId);
             }, 100);
         }
         
@@ -8906,6 +9183,10 @@ if (!DB.get('configuracoes')) {
                 const aniversario = c.aniversario ? new Date(c.aniversario + 'T00:00:00') : null;
                 const isBirthdayMonth = aniversario && aniversario.getMonth() === hoje.getMonth();
                 
+                // Buscar evento do cliente
+                const eventos = DB.get('eventos');
+                const eventoCliente = eventos.find(e => e.cliente === c.nome);
+                
                 const origemLabels = {
                     'facebook': '📘 Facebook',
                     'instagram': '📸 Instagram',
@@ -8994,7 +9275,12 @@ if (!DB.get('configuracoes')) {
                                 <div class="client-avatar">${initials}</div>
                                 <div class="client-details-main">
                                     <h3>${c.nome}</h3>
-                                    <div class="client-email">📧 ${c.email}</div>
+                                    ${eventoCliente ? `
+                                        <div onclick="event.stopPropagation(); irParaEvento(${eventoCliente.id});" style="font-size: 13px; color: var(--primary); margin-top: 4px; cursor: pointer; text-decoration: underline;">
+                                            🎉 ${eventoCliente.tipo || eventoCliente.nome}
+                                        </div>
+                                    ` : ''}
+                                    <div class="client-email">📧 ${c.email || 'Não informado'}</div>
                                     <div class="client-phone">📱 ${c.telefone}</div>
                                 </div>
                             </div>
