@@ -525,18 +525,16 @@
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(10, 14, 39, 0.9);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999999;
             align-items: center;
             justify-content: center;
-            animation: fadeIn 0.3s ease-out;
         }
 
         .modal.active {
-            display: flex;
+            display: flex !important;
         }
 
         .modal-content {
@@ -1686,7 +1684,8 @@
         <div class="header-content">
             <div class="logo">EventPro</div>
             <nav class="main-nav">
-                <button class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</button>
+                <button class="nav-tab active" onclick="switchTab('dashboard')">🏢 Empresa</button>
+                <button class="nav-tab" onclick="switchTab('pessoal')">👤 Pessoal</button>
                 <button class="nav-tab" onclick="switchTab('eventos')">Eventos</button>
                 <button class="nav-tab" onclick="switchTab('clientes')">Clientes</button>
                 <button class="nav-tab" onclick="switchTab('financeiro')">💰 Financeiro</button>
@@ -2607,6 +2606,238 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             </div>
         </div>
         <!-- End Configurações Tab -->
+        <!-- Pessoal Tab -->
+        <div id="pessoalTab" class="tab-content">
+            <div class="dashboard">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">👤 Financeiro Pessoal</h1>
+                    <p class="dashboard-subtitle">Controle suas finanças pessoais separado da empresa</p>
+                </div>
+
+                <!-- Stats Cards Pessoal -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">💵</div>
+                        <div class="stat-label">Receitas Pessoais</div>
+                        <div class="stat-value" id="receitasPessoais">R$ 0,00</div>
+                        <div class="stat-change positive">
+                            <span>↗</span>
+                            Este mês
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon bg-danger">💳</div>
+                        <div class="stat-label">Despesas Pessoais</div>
+                        <div class="stat-value" id="despesasPessoais">R$ 0,00</div>
+                        <div class="stat-change negative">
+                            <span>↘</span>
+                            Este mês
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(255, 107, 53, 0.2); color: var(--primary);">📊</div>
+                        <div class="stat-label">Saldo Pessoal</div>
+                        <div class="stat-value" id="saldoPessoal">R$ 0,00</div>
+                        <div class="stat-change" style="color: var(--primary);">
+                            <span>💰</span>
+                            Disponível
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon bg-accent">🏦</div>
+                        <div class="stat-label">Contas/Cartões</div>
+                        <div class="stat-value" id="totalContasPessoais">0</div>
+                        <div class="stat-change" style="color: var(--accent);">
+                            <span>📋</span>
+                            Ativas
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="content-grid" style="margin-top: 30px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">💰 Receitas Pessoais</h2>
+                            <button class="btn btn-primary" onclick="openModal('receitaPessoal')">+ Nova Receita</button>
+                        </div>
+                        <div id="listaReceitasPessoais"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">💳 Despesas Pessoais</h2>
+                            <button class="btn" style="background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);" onclick="openModal('despesaPessoal')">+ Nova Despesa</button>
+                        </div>
+                        <div id="listaDespesasPessoais"></div>
+                    </div>
+                </div>
+
+                <!-- Contas e Cartões Pessoais -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">🏦 Minhas Contas e Cartões</h2>
+                        <button class="btn btn-primary" onclick="openModal('contaPessoal')">+ Nova Conta/Cartão</button>
+                    </div>
+                    <div id="listaContasPessoais"></div>
+                </div>
+
+                <!-- Despesas por Categoria -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 Despesas por Categoria</h2>
+                    </div>
+                    <div id="despesasPorCategoria" style="padding: 20px;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- End Pessoal Tab -->
+    </div>
+
+    <!-- Modal Receita Pessoal -->
+    <div id="modalReceitaPessoal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">💵 Nova Receita Pessoal</h2>
+                <button class="close-btn" onclick="closeModal('receitaPessoal')">×</button>
+            </div>
+            <form onsubmit="addReceitaPessoal(event)">
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <input type="text" class="form-input" id="receitaPessoalDesc" required placeholder="Ex: Salário, Freelance, Venda">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="receitaPessoalCategoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="salario">💼 Salário</option>
+                            <option value="freelance">💻 Freelance</option>
+                            <option value="investimentos">📈 Investimentos</option>
+                            <option value="aluguel">🏠 Aluguel Recebido</option>
+                            <option value="venda">💰 Venda</option>
+                            <option value="retirada_empresa">🏢 Retirada da Empresa</option>
+                            <option value="outros">📌 Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Valor</label>
+                        <input type="number" step="0.01" class="form-input" id="receitaPessoalValor" required placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-input" id="receitaPessoalData" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Conta/Cartão</label>
+                        <select class="form-select" id="receitaPessoalConta">
+                            <option value="">Não informado</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Adicionar Receita</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Despesa Pessoal -->
+    <div id="modalDespesaPessoal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">💳 Nova Despesa Pessoal</h2>
+                <button class="close-btn" onclick="closeModal('despesaPessoal')">×</button>
+            </div>
+            <form onsubmit="addDespesaPessoal(event)">
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <input type="text" class="form-input" id="despesaPessoalDesc" required placeholder="Ex: Mercado, Conta de Luz, Aluguel">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="despesaPessoalCategoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="moradia">🏠 Moradia</option>
+                            <option value="alimentacao">🍔 Alimentação</option>
+                            <option value="transporte">🚗 Transporte</option>
+                            <option value="saude">⚕️ Saúde</option>
+                            <option value="educacao">📚 Educação</option>
+                            <option value="lazer">🎮 Lazer</option>
+                            <option value="vestuario">👕 Vestuário</option>
+                            <option value="contas">📄 Contas e Serviços</option>
+                            <option value="cartao">💳 Cartão de Crédito</option>
+                            <option value="prestacao">📊 Prestação/Parcelamento</option>
+                            <option value="outros">📌 Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Valor</label>
+                        <input type="number" step="0.01" class="form-input" id="despesaPessoalValor" required placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-input" id="despesaPessoalData" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Conta/Cartão</label>
+                        <select class="form-select" id="despesaPessoalConta">
+                            <option value="">Não informado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observações</label>
+                    <textarea class="form-textarea" id="despesaPessoalObs" placeholder="Detalhes adicionais..." rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Adicionar Despesa</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Conta Pessoal -->
+    <div id="modalContaPessoal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🏦 Nova Conta/Cartão Pessoal</h2>
+                <button class="close-btn" onclick="closeModal('contaPessoal')">×</button>
+            </div>
+            <form onsubmit="addContaPessoal(event)">
+                <div class="form-group">
+                    <label class="form-label">Nome da Conta/Cartão</label>
+                    <input type="text" class="form-input" id="contaPessoalNome" required placeholder="Ex: Conta Corrente, Cartão Nubank">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="contaPessoalTipo" required>
+                            <option value="">Selecione...</option>
+                            <option value="corrente">🏦 Conta Corrente</option>
+                            <option value="poupanca">💰 Poupança</option>
+                            <option value="cartao_credito">💳 Cartão de Crédito</option>
+                            <option value="cartao_debito">💳 Cartão de Débito</option>
+                            <option value="investimento">📈 Investimento</option>
+                            <option value="dinheiro">💵 Dinheiro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Saldo Inicial</label>
+                        <input type="number" step="0.01" class="form-input" id="contaPessoalSaldo" placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Banco/Instituição</label>
+                    <input type="text" class="form-input" id="contaPessoalBanco" placeholder="Ex: Nubank, Inter, Banco do Brasil">
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Adicionar Conta/Cartão</button>
+            </form>
+        </div>
     </div>
 
     <!-- Modal Financeiro do Cliente -->
@@ -2793,6 +3024,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                         <label class="form-label">Categoria</label>
                         <select class="form-select" id="custoGeralCategoria" required>
                             <option value="">Selecione...</option>
+                            <option value="retirada_lucros">💰 Retirada de Lucros</option>
                             <option value="combustivel">⛽ Combustível</option>
                             <option value="impostos">📋 Impostos e Taxas</option>
                             <option value="aluguel">🏢 Aluguel/Espaço</option>
@@ -3448,6 +3680,15 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                     </h3>
                     
                     <div class="form-group">
+                        <label class="form-label">Status do Evento</label>
+                        <select class="form-select" id="orcStatus" required>
+                            <option value="confirmado">✅ Confirmado</option>
+                            <option value="pendente" selected>⏳ Pendente</option>
+                            <option value="cancelado">❌ Cancelado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                         <label class="form-label">Observações do Orçamento</label>
                         <textarea class="form-textarea" id="orcObservacoes" placeholder="Detalhes, condições especiais, etc..."></textarea>
                     </div>
@@ -3697,6 +3938,318 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             }
         };
 
+        // ============================================
+        // FUNÇÕES DO FINANCEIRO PESSOAL
+        // ============================================
+
+        function addReceitaPessoal(e) {
+            e.preventDefault();
+            
+            const receita = {
+                descricao: document.getElementById('receitaPessoalDesc').value,
+                categoria: document.getElementById('receitaPessoalCategoria').value,
+                valor: parseFloat(document.getElementById('receitaPessoalValor').value),
+                data: document.getElementById('receitaPessoalData').value,
+                contaId: document.getElementById('receitaPessoalConta').value || null
+            };
+            
+            DB.add('receitasPessoais', receita);
+            
+            // Atualizar saldo da conta se selecionada
+            if (receita.contaId) {
+                const contas = DB.get('contasPessoais');
+                const conta = contas.find(c => c.id === parseInt(receita.contaId));
+                if (conta) {
+                    conta.saldoAtual = (conta.saldoAtual || conta.saldoInicial || 0) + receita.valor;
+                    DB.set('contasPessoais', contas);
+                }
+            }
+            
+            alert('✅ Receita pessoal adicionada com sucesso!');
+            closeModal('receitaPessoal');
+            e.target.reset();
+            renderReceitasPessoais();
+            updateStatsPessoal();
+        }
+        
+        function addDespesaPessoal(e) {
+            e.preventDefault();
+            
+            const despesa = {
+                descricao: document.getElementById('despesaPessoalDesc').value,
+                categoria: document.getElementById('despesaPessoalCategoria').value,
+                valor: parseFloat(document.getElementById('despesaPessoalValor').value),
+                data: document.getElementById('despesaPessoalData').value,
+                contaId: document.getElementById('despesaPessoalConta').value || null,
+                observacoes: document.getElementById('despesaPessoalObs').value
+            };
+            
+            DB.add('despesasPessoais', despesa);
+            
+            // Atualizar saldo da conta se selecionada
+            if (despesa.contaId) {
+                const contas = DB.get('contasPessoais');
+                const conta = contas.find(c => c.id === parseInt(despesa.contaId));
+                if (conta) {
+                    conta.saldoAtual = (conta.saldoAtual || conta.saldoInicial || 0) - despesa.valor;
+                    DB.set('contasPessoais', contas);
+                }
+            }
+            
+            alert('✅ Despesa pessoal adicionada com sucesso!');
+            closeModal('despesaPessoal');
+            e.target.reset();
+            renderDespesasPessoais();
+            updateStatsPessoal();
+            renderDespesasPorCategoria();
+        }
+        
+        function addContaPessoal(e) {
+            e.preventDefault();
+            
+            const conta = {
+                nome: document.getElementById('contaPessoalNome').value,
+                tipo: document.getElementById('contaPessoalTipo').value,
+                saldoInicial: parseFloat(document.getElementById('contaPessoalSaldo').value) || 0,
+                saldoAtual: parseFloat(document.getElementById('contaPessoalSaldo').value) || 0,
+                banco: document.getElementById('contaPessoalBanco').value,
+                ativa: true
+            };
+            
+            DB.add('contasPessoais', conta);
+            
+            alert('✅ Conta/Cartão adicionado com sucesso!');
+            closeModal('contaPessoal');
+            e.target.reset();
+            renderContasPessoais();
+            carregarContasPessoaisNosSelects();
+            updateStatsPessoal();
+        }
+        
+        function renderReceitasPessoais() {
+            const receitas = DB.get('receitasPessoais');
+            const container = document.getElementById('listaReceitasPessoais');
+            
+            if (!container) return;
+            
+            if (receitas.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Nenhuma receita pessoal cadastrada.</p>';
+                return;
+            }
+            
+            // Ordenar por data decrescente
+            const receitasOrdenadas = receitas.sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 10);
+            
+            container.innerHTML = receitasOrdenadas.map(r => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
+                    <div>
+                        <div style="font-weight: 600;">${r.descricao}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${formatDate(r.data)} • ${getCategoriaLabelPessoal(r.categoria, 'receita')}</div>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: var(--success);">
+                        + ${formatMoney(r.valor)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderDespesasPessoais() {
+            const despesas = DB.get('despesasPessoais');
+            const container = document.getElementById('listaDespesasPessoais');
+            
+            if (!container) return;
+            
+            if (despesas.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Nenhuma despesa pessoal cadastrada.</p>';
+                return;
+            }
+            
+            // Ordenar por data decrescente
+            const despesasOrdenadas = despesas.sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 10);
+            
+            container.innerHTML = despesasOrdenadas.map(d => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
+                    <div>
+                        <div style="font-weight: 600;">${d.descricao}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${formatDate(d.data)} • ${getCategoriaLabelPessoal(d.categoria, 'despesa')}</div>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: var(--danger);">
+                        - ${formatMoney(d.valor)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderContasPessoais() {
+            const contas = DB.get('contasPessoais');
+            const container = document.getElementById('listaContasPessoais');
+            
+            if (!container) return;
+            
+            if (contas.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Nenhuma conta/cartão cadastrado.</p>';
+                return;
+            }
+            
+            container.innerHTML = contas.map(c => {
+                const saldoColor = c.saldoAtual >= 0 ? 'var(--success)' : 'var(--danger)';
+                const tipoIcons = {
+                    'corrente': '🏦',
+                    'poupanca': '💰',
+                    'cartao_credito': '💳',
+                    'cartao_debito': '💳',
+                    'investimento': '📈',
+                    'dinheiro': '💵'
+                };
+                
+                return `
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                            <div style="flex: 1;">
+                                <h4 style="margin-bottom: 8px;">${tipoIcons[c.tipo] || '🏦'} ${c.nome}</h4>
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    ${c.banco || 'Sem banco informado'}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 24px; font-weight: 700; color: ${saldoColor};">
+                                    ${formatMoney(c.saldoAtual || 0)}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">Saldo Atual</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderDespesasPorCategoria() {
+            const despesas = DB.get('despesasPessoais');
+            const container = document.getElementById('despesasPorCategoria');
+            
+            if (!container) return;
+            
+            if (despesas.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Nenhuma despesa para análise.</p>';
+                return;
+            }
+            
+            // Agrupar por categoria
+            const porCategoria = {};
+            let totalDespesas = 0;
+            
+            despesas.forEach(d => {
+                if (!porCategoria[d.categoria]) {
+                    porCategoria[d.categoria] = 0;
+                }
+                porCategoria[d.categoria] += d.valor;
+                totalDespesas += d.valor;
+            });
+            
+            // Ordenar por valor
+            const categorias = Object.entries(porCategoria)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            container.innerHTML = categorias.map(([cat, valor]) => {
+                const percent = ((valor / totalDespesas) * 100).toFixed(1);
+                return `
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">${getCategoriaLabelPessoal(cat, 'despesa')}</span>
+                            <span style="color: var(--danger); font-weight: 700;">${formatMoney(valor)} (${percent}%)</span>
+                        </div>
+                        <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${percent}%; height: 100%; background: var(--danger); transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateStatsPessoal() {
+            const receitas = DB.get('receitasPessoais');
+            const despesas = DB.get('despesasPessoais');
+            const contas = DB.get('contasPessoais');
+            
+            const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
+            const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
+            const saldo = totalReceitas - totalDespesas;
+            
+            const receitasEl = document.getElementById('receitasPessoais');
+            const despesasEl = document.getElementById('despesasPessoais');
+            const saldoEl = document.getElementById('saldoPessoal');
+            const contasEl = document.getElementById('totalContasPessoais');
+            
+            if (receitasEl) receitasEl.textContent = formatMoney(totalReceitas);
+            if (despesasEl) despesasEl.textContent = formatMoney(totalDespesas);
+            if (saldoEl) {
+                saldoEl.textContent = formatMoney(saldo);
+                saldoEl.style.color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
+            }
+            if (contasEl) contasEl.textContent = contas.filter(c => c.ativa).length;
+        }
+        
+        function carregarContasPessoaisNosSelects() {
+            const contas = DB.get('contasPessoais').filter(c => c.ativa);
+            
+            const selectReceita = document.getElementById('receitaPessoalConta');
+            const selectDespesa = document.getElementById('despesaPessoalConta');
+            
+            if (selectReceita) {
+                selectReceita.innerHTML = '<option value="">Não informado</option>';
+                contas.forEach(c => {
+                    selectReceita.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+                });
+            }
+            
+            if (selectDespesa) {
+                selectDespesa.innerHTML = '<option value="">Não informado</option>';
+                contas.forEach(c => {
+                    selectDespesa.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+                });
+            }
+        }
+        
+        function getCategoriaLabelPessoal(categoria, tipo) {
+            const labelsReceita = {
+                'salario': '💼 Salário',
+                'freelance': '💻 Freelance',
+                'investimentos': '📈 Investimentos',
+                'aluguel': '🏠 Aluguel',
+                'venda': '💰 Venda',
+                'retirada_empresa': '🏢 Retirada da Empresa',
+                'outros': '📌 Outros'
+            };
+            
+            const labelsDespesa = {
+                'moradia': '🏠 Moradia',
+                'alimentacao': '🍔 Alimentação',
+                'transporte': '🚗 Transporte',
+                'saude': '⚕️ Saúde',
+                'educacao': '📚 Educação',
+                'lazer': '🎮 Lazer',
+                'vestuario': '👕 Vestuário',
+                'contas': '📄 Contas',
+                'cartao': '💳 Cartão',
+                'prestacao': '📊 Prestação',
+                'outros': '📌 Outros'
+            };
+            
+            return tipo === 'receita' ? (labelsReceita[categoria] || categoria) : (labelsDespesa[categoria] || categoria);
+        }
+        
+        // Inicializar dados pessoais se não existirem
+        if (!DB.get('receitasPessoais') || DB.get('receitasPessoais').length === 0) {
+            DB.set('receitasPessoais', []);
+        }
+        if (!DB.get('despesasPessoais') || DB.get('despesasPessoais').length === 0) {
+            DB.set('despesasPessoais', []);
+        }
+        if (!DB.get('contasPessoais') || DB.get('contasPessoais').length === 0) {
+            DB.set('contasPessoais', []);
+        }
+        
         // Initialize sample data if empty
         function initSampleData() {
             // Inicializar estruturas vazias - SEM dados de exemplo
@@ -4055,7 +4608,14 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 contaId: parseInt(document.getElementById('despesaConta').value),
                 observacoes: document.getElementById('despesaObservacoes').value
             };
+            
             DB.add('despesas', despesa);
+            
+            // ✅ Atualizar saldo da conta (DÉBITO)
+            if (despesa.contaId && !isNaN(despesa.contaId)) {
+                atualizarSaldoConta(despesa.contaId.toString(), despesa.valor, 'debito');
+            }
+            
             e.target.reset();
             closeModal('despesa');
             updateDashboard();
@@ -4179,6 +4739,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             const observacoes = document.getElementById('orcObservacoes').value;
             const dataCriacao = document.getElementById('orcDataCriacao').value;
             const validade = document.getElementById('orcValidade').value;
+            const status = document.getElementById('orcStatus').value; // ✅ Novo campo
             
             // Criar orçamento
             const orcamento = {
@@ -4200,7 +4761,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 observacoes,
                 dataCriacao,
                 validade,
-                status: 'pendente'
+                status: status // ✅ Usar status selecionado
             };
             
             // Salvar orçamento (opcional - pode criar tabela de orçamentos)
@@ -4220,7 +4781,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 cep, rua, numero, complemento, bairro, cidade, estado,
                 valor: valorTotal,
                 servicos: servicosSelecionados, // ✅ Adicionar serviços ao evento
-                status: 'aguardando', // Aguardando aprovação
+                status: status, // ✅ Usar status do orçamento
                 observacoes: `Orçamento criado em ${formatDate(dataCriacao)}\n\nServiços:\n${servicosSelecionados.map(s => `• ${s.nome} - ${formatMoney(s.valor)}`).join('\n')}${outrasTaxas.length > 0 ? '\n\nOutras Taxas:\n' + outrasTaxas.map(t => `• ${t.descricao} - ${formatMoney(t.valor)}`).join('\n') : ''}${observacoes ? '\n\nObservações:\n' + observacoes : ''}`
             };
             
@@ -4511,13 +5072,6 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         }
 
         // Adicionar listeners para calcular duração
-        document.addEventListener('DOMContentLoaded', function() {
-            const horaInicio = document.getElementById('eventoHoraInicio');
-            const horaFim = document.getElementById('eventoHoraFim');
-            
-            if (horaInicio) horaInicio.addEventListener('change', calcularDuracaoEvento);
-            if (horaFim) horaFim.addEventListener('change', calcularDuracaoEvento);
-        });
 
         // Buscar CEP para evento
         let cepEventoTimeout;
@@ -4646,25 +5200,6 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         }
 
         // Adicionar listener para verificar valor do cliente ao digitar
-        document.addEventListener('DOMContentLoaded', function() {
-            const clienteInput = document.getElementById('eventoCliente');
-            if (clienteInput) {
-                clienteInput.addEventListener('blur', carregarValorCliente);
-            }
-            
-            // Definir datas automáticas ao abrir modal de orçamento
-            const orcamentoModal = document.getElementById('modalOrcamento');
-            if (orcamentoModal) {
-                const observer = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (mutation.target.classList.contains('active')) {
-                            definirDatasOrcamento();
-                        }
-                    });
-                });
-                observer.observe(orcamentoModal, { attributes: true, attributeFilter: ['class'] });
-            }
-        });
 
         // Definir datas do orçamento automaticamente
         function definirDatasOrcamento() {
@@ -5507,43 +6042,116 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
 
         // Modal functions
         function openModal(type) {
-            if (type === 'servico') {
-                renderServicos();
-            } else if (type === 'orcamento') {
-                renderOrcamentoServicos();
-                
-                // Adicionar taxa Deslocamento padrão se não existir
-                setTimeout(() => {
-                    const taxaNomeInput = document.getElementById('orcTaxaNome');
-                    if (taxaNomeInput && !taxaNomeInput.value) {
-                        taxaNomeInput.value = 'Deslocamento';
+            console.log('🔵 openModal chamada com type:', type);
+            
+            try {
+                if (type === 'servico') {
+                    console.log('  → Renderizando serviços...');
+                    renderServicos();
+                } else if (type === 'orcamento') {
+                    console.log('  → Renderizando orçamento...');
+                    renderOrcamentoServicos();
+                    
+                    // Adicionar taxa Deslocamento padrão se não existir
+                    setTimeout(() => {
+                        const taxaNomeInput = document.getElementById('orcTaxaNome');
+                        if (taxaNomeInput && !taxaNomeInput.value) {
+                            taxaNomeInput.value = 'Deslocamento';
+                        }
+                    }, 100);
+                } else if (type === 'cliente') {
+                    console.log('  → Preparando modal de cliente...');
+                    // Reset indicação field
+                    const indicacaoField = document.getElementById('indicacaoDetalhes');
+                    if (indicacaoField) {
+                        indicacaoField.style.display = 'none';
                     }
-                }, 100);
-            } else if (type === 'cliente') {
-                // Reset indicação field
-                document.getElementById('indicacaoDetalhes').style.display = 'none';
-            } else if (type === 'evento') {
-                // Carregar lista de clientes
-                carregarClientesNoEvento();
+                } else if (type === 'evento') {
+                    console.log('  → Carregando clientes no evento...');
+                    // Carregar lista de clientes
+                    carregarClientesNoEvento();
+                } else if (type === 'custoGeral' || type === 'custoEvento') {
+                    console.log('  → Carregando contas...');
+                    // Carregar contas nos selects de custo
+                    carregarContasNosSelects();
+                } else if (type === 'receitaPessoal' || type === 'despesaPessoal') {
+                    console.log('  → Carregando contas pessoais...');
+                    // Carregar contas pessoais nos selects
+                    carregarContasPessoaisNosSelects();
+                }
+                
+                // Construir ID do modal
+                const modalId = 'modal' + type.charAt(0).toUpperCase() + type.slice(1);
+                console.log('  → Procurando modal com ID:', modalId);
+                
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    console.log('  → ✅ Modal encontrado, abrindo...');
+                    
+                    // Adicionar classe
+                    modalElement.classList.add('active');
+                    
+                    // Forçar estilos
+                    modalElement.style.cssText = `
+                        display: flex !important;
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        z-index: 999999 !important;
+                        background: rgba(0, 0, 0, 0.9) !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                    `;
+                    
+                    console.log('  → ✅ Modal aberto com sucesso!');
+                } else {
+                    console.error('  → ❌ ERRO: Modal não encontrado! ID:', modalId);
+                }
+            } catch (error) {
+                console.error('❌ Erro em openModal:', error);
+                alert('Erro ao abrir modal: ' + error.message);
             }
-            document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
         }
 
         function closeModal(type) {
-            document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).classList.remove('active');
+            console.log('🔵 Fechando modal:', type);
+            
+            const modalId = 'modal' + type.charAt(0).toUpperCase() + type.slice(1);
+            const modalElement = document.getElementById(modalId);
+            
+            if (modalElement) {
+                // Remover classe active
+                modalElement.classList.remove('active');
+                
+                // Forçar display none com !important via cssText
+                modalElement.style.cssText = 'display: none !important;';
+                
+                console.log('✅ Modal fechado:', modalId);
+            } else {
+                console.error('❌ Modal não encontrado:', modalId);
+            }
             
             // Resetar campos específicos ao fechar modal de cliente
             if (type === 'cliente') {
-                document.getElementById('indicacaoDetalhes').style.display = 'none';
+                const indicacaoField = document.getElementById('indicacaoDetalhes');
+                if (indicacaoField) indicacaoField.style.display = 'none';
+                
                 limparCamposEndereco();
-                document.getElementById('cepLoading').style.display = 'none';
-                document.getElementById('cepError').style.display = 'none';
-                document.getElementById('cepSuccess').style.display = 'none';
+                
+                const cepLoading = document.getElementById('cepLoading');
+                const cepError = document.getElementById('cepError');
+                const cepSuccess = document.getElementById('cepSuccess');
+                if (cepLoading) cepLoading.style.display = 'none';
+                if (cepError) cepError.style.display = 'none';
+                if (cepSuccess) cepSuccess.style.display = 'none';
             }
             
             // Resetar campos ao fechar modal financeiro
             if (type === 'financeiro') {
-                document.getElementById('resumoFinanceiroModal').style.display = 'none';
+                const resumo = document.getElementById('resumoFinanceiroModal');
+                if (resumo) resumo.style.display = 'none';
             }
             
             // Resetar modal de evento ao fechar
@@ -5590,6 +6198,8 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             const selectDespesa = document.getElementById('despesaConta');
             const selectSinalConta = document.getElementById('financeiroSinalConta');
             const selectPagamentoConta = document.getElementById('financeiroContaPagamentoRestante');
+            const selectCustoGeral = document.getElementById('custoGeralConta');
+            const selectCustoEvento = document.getElementById('custoEventoConta');
             
             if (selectReceita) {
                 selectReceita.innerHTML = '<option value="">Selecione a conta...</option>';
@@ -5617,6 +6227,21 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 selectPagamentoConta.innerHTML = '<option value="">Selecione a conta...</option>';
                 contasAtivas.forEach(c => {
                     selectPagamentoConta.innerHTML += `<option value="${c.id}">${c.nome} - ${c.banco}</option>`;
+                });
+            }
+            
+            // Carregar nos selects de custo
+            if (selectCustoGeral) {
+                selectCustoGeral.innerHTML = '<option value="">Não informado</option>';
+                contasAtivas.forEach(c => {
+                    selectCustoGeral.innerHTML += `<option value="${c.id}">${c.nome} - ${c.banco}</option>`;
+                });
+            }
+            
+            if (selectCustoEvento) {
+                selectCustoEvento.innerHTML = '<option value="">Não informado</option>';
+                contasAtivas.forEach(c => {
+                    selectCustoEvento.innerHTML += `<option value="${c.id}">${c.nome} - ${c.banco}</option>`;
                 });
             }
         }
@@ -6728,16 +7353,127 @@ function formatTelefone(input) {
 if (!DB.get('configuracoes')) {
     DB.set('configuracoes', []);
 }
-        // Initialize
-        initSampleData();
-        carregarContasNosSelects();
-        inicializarFiltrosFinanceiro();
-        updateDashboard();
-        atualizarFinanceiroPorPeriodo();
+        // Aguardar DOM estar completamente carregado
+        // ============================================
+        // FUNÇÃO DE TESTE GLOBAL
+        // ============================================
+        window.testarModal = function() {
+            console.log('🧪 TESTE MANUAL DE MODAL');
+            const modal = document.getElementById('modalCliente');
+            
+            if (!modal) {
+                console.error('❌ Modal não encontrado!');
+                return;
+            }
+            
+            console.log('✅ Modal encontrado');
+            
+            // Aplicar estilos agressivos
+            console.log('Aplicando estilos...');
+            modal.style.cssText = `
+                display: flex !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                z-index: 999999 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                background: red !important;
+                align-items: center !important;
+                justify-content: center !important;
+            `;
+            
+            console.log('✅ Estilos aplicados');
+            console.log('VOCÊ VÊ UMA TELA VERMELHA?');
+        };
         
-        // Renderizar clientes inicialmente (caso o usuário vá direto para a aba)
-        renderClientsList();
-        updateClientsStats();
+        console.log('💡 Para testar: digite testarModal() no console');
+        
+        // ============================================
+        // INICIALIZAÇÃO DO SISTEMA
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('🚀 Inicializando EventPro...');
+                
+                // MOVER TODOS OS MODAIS PARA O FINAL DO BODY
+                // Isso garante que fiquem na frente de tudo
+                console.log('📦 Movendo modais para frente...');
+                document.querySelectorAll('.modal').forEach(modal => {
+                    document.body.appendChild(modal);
+                });
+                console.log('✅ Modais reposicionados');
+                
+                // Initialize data
+                initSampleData();
+                carregarContasNosSelects();
+                inicializarFiltrosFinanceiro();
+                updateDashboard();
+                atualizarFinanceiroPorPeriodo();
+                
+                // Renderizar clientes inicialmente
+                renderClientsList();
+                updateClientsStats();
+                
+                // Event listeners para cálculo de duração
+                const horaInicio = document.getElementById('eventoHoraInicio');
+                const horaFim = document.getElementById('eventoHoraFim');
+                if (horaInicio) horaInicio.addEventListener('change', calcularDuracaoEvento);
+                if (horaFim) horaFim.addEventListener('change', calcularDuracaoEvento);
+                
+                // Event listener para carregar valor do cliente
+                const clienteInput = document.getElementById('eventoCliente');
+                if (clienteInput) {
+                    clienteInput.addEventListener('blur', carregarValorCliente);
+                }
+                
+                // Observer para orçamento
+                const orcamentoModal = document.getElementById('modalOrcamento');
+                if (orcamentoModal) {
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.target.classList.contains('active')) {
+                                definirDatasOrcamento();
+                            }
+                        });
+                    });
+                    observer.observe(orcamentoModal, { attributes: true, attributeFilter: ['class'] });
+                }
+                
+                // Toggle indicação field
+                const clienteOrigemSelect = document.getElementById('clienteOrigem');
+                if (clienteOrigemSelect) {
+                    clienteOrigemSelect.addEventListener('change', function(e) {
+                        const indicacaoField = document.getElementById('indicacaoDetalhes');
+                        if (e.target.value === 'indicacao') {
+                            indicacaoField.style.display = 'block';
+                        } else {
+                            indicacaoField.style.display = 'none';
+                            document.getElementById('clienteIndicacao').value = '';
+                        }
+                    });
+                }
+
+                // Close modal on outside click
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.classList.remove('active');
+                            modal.style.display = 'none';
+                        }
+                    });
+                });
+                
+                console.log('✅ EventPro inicializado com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar EventPro:', error);
+                alert('Erro ao inicializar o sistema. Por favor, recarregue a página.\n\nErro: ' + error.message);
+            }
+        });
 
         // Função utilitária para remover clientes duplicados (pode ser chamada no console)
         window.limparClientesDuplicados = function() {
@@ -7109,6 +7845,12 @@ if (!DB.get('configuracoes')) {
                 renderServicosPerformance();
             } else if (tabName === 'configuracoes') {
                 carregarConfigEmpresa();
+            } else if (tabName === 'pessoal') {
+                renderReceitasPessoais();
+                renderDespesasPessoais();
+                renderContasPessoais();
+                renderDespesasPorCategoria();
+                updateStatsPessoal();
             }
         }
 
@@ -7912,25 +8654,7 @@ if (!DB.get('configuracoes')) {
             }
         }
 
-        // Toggle indicação field
-        document.getElementById('clienteOrigem').addEventListener('change', function(e) {
-            const indicacaoField = document.getElementById('indicacaoDetalhes');
-            if (e.target.value === 'indicacao') {
-                indicacaoField.style.display = 'block';
-            } else {
-                indicacaoField.style.display = 'none';
-                document.getElementById('clienteIndicacao').value = '';
-            }
-        });
-
-        // Close modal on outside click
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                }
-            });
-        });
+        // Aguardar DOM estar pronto antes de adicionar event listeners
     </script>
 </body>
 </html>
