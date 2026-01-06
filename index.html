@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EventPro - Gestão Financeira para Eventos</title>
+    <title>EventProDJ - Gestão Financeira para Eventos</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -1682,7 +1687,7 @@
 <body>
     <header>
         <div class="header-content">
-            <div class="logo">EventPro</div>
+            <div class="logo">EventProDJ</div>
             <nav class="main-nav">
                 <button class="nav-tab active" onclick="switchTab('dashboard')">🏢 Empresa</button>
                 <button class="nav-tab" onclick="switchTab('pessoal')">👤 Pessoal</button>
@@ -1694,6 +1699,15 @@
                 <button class="nav-tab" onclick="switchTab('configuracoes')">⚙️ Config</button>
             </nav>
             <div class="nav-buttons">
+                <!-- Indicador de Sincronização -->
+                <div id="syncStatus" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-right: 12px;">
+                    <div id="syncIndicator" style="width: 8px; height: 8px; border-radius: 50%; background: #666;"></div>
+                    <span id="syncText" style="font-size: 12px; color: var(--text-secondary);">Offline</span>
+                    <button onclick="sincronizarAgora()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 16px; padding: 0 4px;" title="Sincronizar agora">
+                        🔄
+                    </button>
+                </div>
+                
                 <button class="btn btn-secondary" onclick="exportData()">📊 Relatórios</button>
                 <button class="btn" onclick="resetarDados()" style="background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
                     🗑️ Resetar
@@ -2258,12 +2272,34 @@
 
                 <!-- Custos por Evento View -->
                 <div id="custosEventosView" style="display: none;">
+                    <!-- Card de Total Geral -->
+                    <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.05));">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="font-family: 'Syne', sans-serif; font-size: 18px; margin-bottom: 4px; color: var(--primary);">
+                                    📊 Total Geral de Custos
+                                </h3>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                                    Soma de todos os custos de eventos
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 28px; font-weight: 700; color: var(--primary);" id="totalGeralCustosEventos">
+                                    R$ 0,00
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary);" id="quantidadeEventosComCustos">
+                                    0 eventos com custos
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="events-header" style="margin-bottom: 20px;">
                         <h2 style="font-family: 'Syne', sans-serif; font-size: 22px; color: var(--primary);">
-                            🎉 Custos por Evento
+                            🎉 Detalhes por Evento
                         </h2>
                         <select class="form-select" id="eventoSelecionado" onchange="renderCustosEvento()" style="max-width: 400px; background: var(--bg-card); color: var(--text-primary);">
-                            <option value="">Selecione um evento...</option>
+                            <option value="">Selecione um evento específico...</option>
                         </select>
                     </div>
 
@@ -2417,6 +2453,9 @@
                     <button class="btn btn-secondary" id="btnConfigLogo" onclick="mostrarConfigSecao('logo')" style="flex: 1; min-width: 150px;">
                         🎨 Logo
                     </button>
+                    <button class="btn btn-secondary" id="btnConfigSync" onclick="mostrarConfigSecao('sync')" style="flex: 1; min-width: 150px;">
+                        ☁️ Sincronização
+                    </button>
                 </div>
 
                 <!-- Seção: Perfil da Empresa -->
@@ -2429,11 +2468,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Nome da Empresa *</label>
-                                    <input type="text" class="form-input" id="configNomeEmpresa" required placeholder="Ex: EventPro Produções">
+                                    <input type="text" class="form-input" id="configNomeEmpresa" required placeholder="Ex: EventProDJ Produções">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Nome Corporativo</label>
-                                    <input type="text" class="form-input" id="configNomeCorporativo" placeholder="Ex: EventPro Produções LTDA">
+                                    <input type="text" class="form-input" id="configNomeCorporativo" placeholder="Ex: EventProDJ Produções LTDA">
                                 </div>
                             </div>
 
@@ -2598,6 +2637,126 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                                     <li>Tamanho máximo: 2MB</li>
                                     <li>Recomendado: Fundo transparente (PNG)</li>
                                     <li>Proporção ideal: 2:1 (horizontal)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Seção: Sincronização com Nuvem -->
+                <div id="configSyncSecao" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">☁️ Sincronização com Nuvem</h2>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                                Configure o Firebase para sincronizar seus dados na nuvem e acessar de qualquer dispositivo
+                            </p>
+                        </div>
+                        <div style="padding: 24px;">
+                            <!-- Status da Conexão -->
+                            <div id="firebaseStatus" style="background: rgba(239, 71, 111, 0.1); padding: 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid var(--danger);">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="font-size: 32px;">❌</div>
+                                    <div>
+                                        <div style="font-weight: 600; margin-bottom: 4px;">Firebase não configurado</div>
+                                        <div style="font-size: 13px; color: var(--text-secondary);">
+                                            Preencha os dados abaixo para ativar a sincronização
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Instruções -->
+                            <div style="background: rgba(79, 70, 229, 0.1); padding: 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #4F46E5;">
+                                <h4 style="margin-bottom: 12px; color: #4F46E5;">📖 Como Configurar:</h4>
+                                <ol style="margin: 0 0 0 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                                    <li>Acesse <a href="https://console.firebase.google.com" target="_blank" style="color: var(--primary);">Firebase Console</a></li>
+                                    <li>Crie um novo projeto ou selecione um existente</li>
+                                    <li>Vá em "Realtime Database" e crie um banco de dados</li>
+                                    <li>Em "Configurações do Projeto" → "Geral", role até "Seus aplicativos"</li>
+                                    <li>Clique em "Adicionar app" → Web (&lt;/&gt;)</li>
+                                    <li>Copie as credenciais do Firebase Config</li>
+                                    <li>Cole os valores nos campos abaixo</li>
+                                </ol>
+                            </div>
+
+                            <!-- Formulário de Configuração -->
+                            <form onsubmit="salvarConfigFirebase(event)">
+                                <div class="form-group">
+                                    <label class="form-label">API Key *</label>
+                                    <input type="text" class="form-input" id="firebaseApiKey" placeholder="AIzaSy...">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Auth Domain *</label>
+                                    <input type="text" class="form-input" id="firebaseAuthDomain" placeholder="seu-projeto.firebaseapp.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Database URL *</label>
+                                    <input type="text" class="form-input" id="firebaseDatabaseURL" placeholder="https://seu-projeto.firebaseio.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Project ID *</label>
+                                    <input type="text" class="form-input" id="firebaseProjectId" placeholder="seu-projeto">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Storage Bucket</label>
+                                    <input type="text" class="form-input" id="firebaseStorageBucket" placeholder="seu-projeto.appspot.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Messaging Sender ID</label>
+                                    <input type="text" class="form-input" id="firebaseMessagingSenderId" placeholder="123456789">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">App ID *</label>
+                                    <input type="text" class="form-input" id="firebaseAppId" placeholder="1:123456789:web:abc123">
+                                </div>
+
+                                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                        💾 Salvar e Conectar
+                                    </button>
+                                    <button type="button" onclick="testarConexaoFirebase()" class="btn btn-secondary" style="flex: 1;">
+                                        🔌 Testar Conexão
+                                    </button>
+                                    <button type="button" onclick="limparConfigFirebase()" class="btn" style="background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
+                                        🗑️ Limpar
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Ações de Sincronização -->
+                            <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid var(--border);">
+                                <h4 style="margin-bottom: 16px;">⚡ Ações Rápidas</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                    <button onclick="sincronizarAgora()" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        🔄 Sincronizar Agora
+                                    </button>
+                                    <button onclick="baixarDaNuvem()" class="btn btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        ☁️ Baixar da Nuvem
+                                    </button>
+                                    <button onclick="enviarParaNuvem()" class="btn btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        ⬆️ Enviar para Nuvem
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Info sobre Sincronização Automática -->
+                            <div style="background: rgba(6, 214, 160, 0.1); padding: 16px; border-radius: 8px; margin-top: 24px; border-left: 4px solid var(--success);">
+                                <strong style="color: var(--success);">✨ Sincronização Automática:</strong>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                                    Quando conectado, seus dados serão sincronizados automaticamente sempre que você:
+                                </p>
+                                <ul style="margin: 8px 0 0 20px; font-size: 13px; color: var(--text-secondary);">
+                                    <li>Adicionar ou editar um evento</li>
+                                    <li>Cadastrar ou modificar um cliente</li>
+                                    <li>Registrar receitas ou despesas</li>
+                                    <li>Alterar configurações</li>
                                 </ul>
                             </div>
                         </div>
@@ -7394,11 +7553,399 @@ if (!DB.get('configuracoes')) {
         console.log('💡 Para testar: digite testarModal() no console');
         
         // ============================================
+        // SISTEMA DE SINCRONIZAÇÃO COM FIREBASE
+        // ============================================
+        
+        let firebaseApp = null;
+        let firebaseDatabase = null;
+        let isFirebaseConnected = false;
+        let autoSyncEnabled = true;
+        
+        // Inicializar Firebase com configurações salvas
+        function initFirebase() {
+            const config = localStorage.getItem('firebaseConfig');
+            if (!config) {
+                console.log('Firebase não configurado');
+                atualizarStatusSync('offline', 'Não configurado');
+                return false;
+            }
+            
+            try {
+                const firebaseConfig = JSON.parse(config);
+                
+                // Validar configuração mínima
+                if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL || !firebaseConfig.projectId) {
+                    console.error('Configuração Firebase incompleta');
+                    atualizarStatusSync('error', 'Config inválida');
+                    return false;
+                }
+                
+                // Inicializar Firebase apenas uma vez
+                if (!firebaseApp) {
+                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    firebaseDatabase = firebase.database();
+                    
+                    console.log('Firebase inicializado');
+                }
+                
+                // Testar conexão
+                firebaseDatabase.ref('.info/connected').on('value', (snapshot) => {
+                    if (snapshot.val() === true) {
+                        isFirebaseConnected = true;
+                        atualizarStatusSync('online', 'Conectado');
+                        console.log('✅ Firebase conectado');
+                    } else {
+                        isFirebaseConnected = false;
+                        atualizarStatusSync('offline', 'Desconectado');
+                        console.log('⚠️ Firebase desconectado');
+                    }
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Erro ao inicializar Firebase:', error);
+                atualizarStatusSync('error', 'Erro');
+                
+                // Mostrar erro detalhado apenas uma vez
+                if (error.code === 'app/duplicate-app') {
+                    console.log('Firebase já foi inicializado anteriormente');
+                    return true;
+                }
+                
+                return false;
+            }
+        }
+        
+        // Atualizar indicador visual de status
+        function atualizarStatusSync(status, texto) {
+            const indicator = document.getElementById('syncIndicator');
+            const textElement = document.getElementById('syncText');
+            
+            if (!indicator || !textElement) return;
+            
+            switch(status) {
+                case 'online':
+                    indicator.style.background = 'var(--success)';
+                    indicator.style.boxShadow = '0 0 8px var(--success)';
+                    textElement.textContent = texto || 'Online';
+                    textElement.style.color = 'var(--success)';
+                    break;
+                case 'syncing':
+                    indicator.style.background = 'var(--accent)';
+                    indicator.style.boxShadow = '0 0 8px var(--accent)';
+                    textElement.textContent = texto || 'Sincronizando...';
+                    textElement.style.color = 'var(--accent)';
+                    break;
+                case 'error':
+                    indicator.style.background = 'var(--danger)';
+                    indicator.style.boxShadow = '0 0 8px var(--danger)';
+                    textElement.textContent = texto || 'Erro';
+                    textElement.style.color = 'var(--danger)';
+                    break;
+                default: // offline
+                    indicator.style.background = '#666';
+                    indicator.style.boxShadow = 'none';
+                    textElement.textContent = texto || 'Offline';
+                    textElement.style.color = 'var(--text-secondary)';
+            }
+        }
+        
+        // Sincronizar todos os dados
+        async function sincronizarAgora() {
+            if (!firebaseDatabase || !isFirebaseConnected) {
+                alert('⚠️ Firebase não está conectado!\n\nConfigure o Firebase em Configurações → Sincronização');
+                return;
+            }
+            
+            atualizarStatusSync('syncing', 'Sincronizando...');
+            
+            try {
+                // Pegar todos os dados do localStorage
+                const dados = {
+                    eventos: DB.get('eventos') || [],
+                    clientes: DB.get('clientes') || [],
+                    receitas: DB.get('receitas') || [],
+                    despesas: DB.get('despesas') || [],
+                    contas: DB.get('contas') || [],
+                    servicos: DB.get('servicos') || [],
+                    custosGerais: DB.get('custosGerais') || [],
+                    custosEventos: DB.get('custosEventos') || [],
+                    receitasPessoais: DB.get('receitasPessoais') || [],
+                    despesasPessoais: DB.get('despesasPessoais') || [],
+                    contasPessoais: DB.get('contasPessoais') || [],
+                    configuracoes: DB.get('configuracoes') || {},
+                    lastSync: new Date().toISOString()
+                };
+                
+                // Enviar para Firebase
+                await firebaseDatabase.ref('eventprodj').set(dados);
+                
+                atualizarStatusSync('online', 'Sincronizado');
+                
+                console.log('✅ Dados sincronizados com sucesso!');
+                
+                // Mostrar feedback visual se houver botão
+                setTimeout(() => {
+                    alert('✅ Dados sincronizados com sucesso!');
+                }, 100);
+                
+            } catch (error) {
+                console.error('Erro ao sincronizar:', error);
+                atualizarStatusSync('error', 'Erro');
+                alert('❌ Erro ao sincronizar dados:\n\n' + error.message + '\n\nVerifique sua conexão e as configurações do Firebase.');
+            }
+        }
+        
+        // Baixar dados da nuvem
+        async function baixarDaNuvem() {
+            if (!isFirebaseConnected) {
+                alert('⚠️ Firebase não está conectado!');
+                return;
+            }
+            
+            if (!confirm('⚠️ ATENÇÃO!\n\nIsso vai SUBSTITUIR todos os seus dados locais pelos dados da nuvem.\n\nDeseja continuar?')) {
+                return;
+            }
+            
+            atualizarStatusSync('syncing', 'Baixando...');
+            
+            try {
+                const snapshot = await firebaseDatabase.ref('eventprodj').once('value');
+                const dados = snapshot.val();
+                
+                if (!dados) {
+                    alert('ℹ️ Não há dados na nuvem para baixar.');
+                    atualizarStatusSync('online', 'Conectado');
+                    return;
+                }
+                
+                // Restaurar todos os dados
+                if (dados.eventos) DB.set('eventos', dados.eventos);
+                if (dados.clientes) DB.set('clientes', dados.clientes);
+                if (dados.receitas) DB.set('receitas', dados.receitas);
+                if (dados.despesas) DB.set('despesas', dados.despesas);
+                if (dados.contas) DB.set('contas', dados.contas);
+                if (dados.servicos) DB.set('servicos', dados.servicos);
+                if (dados.custosGerais) DB.set('custosGerais', dados.custosGerais);
+                if (dados.custosEventos) DB.set('custosEventos', dados.custosEventos);
+                if (dados.receitasPessoais) DB.set('receitasPessoais', dados.receitasPessoais);
+                if (dados.despesasPessoais) DB.set('despesasPessoais', dados.despesasPessoais);
+                if (dados.contasPessoais) DB.set('contasPessoais', dados.contasPessoais);
+                if (dados.configuracoes) DB.set('configuracoes', dados.configuracoes);
+                
+                // Atualizar interface
+                updateDashboard();
+                renderClientsList();
+                renderEventsList();
+                atualizarFinanceiroPorPeriodo();
+                
+                atualizarStatusSync('online', 'Conectado');
+                alert('✅ Dados baixados da nuvem com sucesso!\n\nÚltima sincronização: ' + (dados.lastSync ? new Date(dados.lastSync).toLocaleString('pt-BR') : 'Desconhecido'));
+            } catch (error) {
+                console.error('Erro ao baixar dados:', error);
+                atualizarStatusSync('error', 'Erro ao baixar');
+                alert('❌ Erro ao baixar dados:\n\n' + error.message);
+            }
+        }
+        
+        // Enviar dados para nuvem
+        async function enviarParaNuvem() {
+            if (!isFirebaseConnected) {
+                alert('⚠️ Firebase não está conectado!');
+                return;
+            }
+            
+            await sincronizarAgora();
+        }
+        
+        // Salvar configuração do Firebase
+        function salvarConfigFirebase(e) {
+            e.preventDefault();
+            
+            const config = {
+                apiKey: document.getElementById('firebaseApiKey').value.trim(),
+                authDomain: document.getElementById('firebaseAuthDomain').value.trim(),
+                databaseURL: document.getElementById('firebaseDatabaseURL').value.trim(),
+                projectId: document.getElementById('firebaseProjectId').value.trim(),
+                storageBucket: document.getElementById('firebaseStorageBucket').value.trim(),
+                messagingSenderId: document.getElementById('firebaseMessagingSenderId').value.trim(),
+                appId: document.getElementById('firebaseAppId').value.trim()
+            };
+            
+            // Validar campos obrigatórios
+            if (!config.apiKey || !config.databaseURL || !config.projectId || !config.appId) {
+                alert('❌ Preencha todos os campos obrigatórios (*)');
+                return;
+            }
+            
+            // Salvar no localStorage
+            localStorage.setItem('firebaseConfig', JSON.stringify(config));
+            
+            // Tentar conectar
+            if (initFirebase()) {
+                alert('✅ Configuração salva com sucesso!\n\nFirebase conectado e pronto para sincronizar.');
+                atualizarStatusFirebase();
+            } else {
+                alert('⚠️ Configuração salva, mas houve um erro ao conectar.\n\nVerifique os dados e tente novamente.');
+            }
+        }
+        
+        // Testar conexão
+        async function testarConexaoFirebase() {
+            const config = localStorage.getItem('firebaseConfig');
+            if (!config) {
+                alert('⚠️ Configure o Firebase primeiro!');
+                return;
+            }
+            
+            if (isFirebaseConnected) {
+                alert('✅ Firebase está conectado e funcionando!');
+            } else {
+                alert('❌ Firebase não está conectado.\n\nVerifique as configurações e sua conexão com a internet.');
+            }
+        }
+        
+        // Limpar configuração
+        function limparConfigFirebase() {
+            if (!confirm('⚠️ Isso vai remover a configuração do Firebase.\n\nSeus dados locais não serão afetados.\n\nDeseja continuar?')) {
+                return;
+            }
+            
+            localStorage.removeItem('firebaseConfig');
+            
+            // Limpar campos
+            document.getElementById('firebaseApiKey').value = '';
+            document.getElementById('firebaseAuthDomain').value = '';
+            document.getElementById('firebaseDatabaseURL').value = '';
+            document.getElementById('firebaseProjectId').value = '';
+            document.getElementById('firebaseStorageBucket').value = '';
+            document.getElementById('firebaseMessagingSenderId').value = '';
+            document.getElementById('firebaseAppId').value = '';
+            
+            isFirebaseConnected = false;
+            atualizarStatusSync('offline', 'Não configurado');
+            atualizarStatusFirebase();
+            
+            alert('✅ Configuração removida!');
+        }
+        
+        // Atualizar status visual na página de configurações
+        function atualizarStatusFirebase() {
+            const statusDiv = document.getElementById('firebaseStatus');
+            if (!statusDiv) return;
+            
+            const config = localStorage.getItem('firebaseConfig');
+            
+            if (config && isFirebaseConnected) {
+                statusDiv.style.backgroundColor = 'rgba(6, 214, 160, 0.1)';
+                statusDiv.style.borderLeftColor = 'var(--success)';
+                statusDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 32px;">✅</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color: var(--success);">Firebase Conectado</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">
+                                Seus dados estão sendo sincronizados automaticamente
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (config) {
+                statusDiv.style.backgroundColor = 'rgba(255, 210, 63, 0.1)';
+                statusDiv.style.borderLeftColor = 'var(--accent)';
+                statusDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 32px;">⏳</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color: var(--accent);">Conectando...</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">
+                                Firebase configurado, aguardando conexão
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusDiv.style.backgroundColor = 'rgba(239, 71, 111, 0.1)';
+                statusDiv.style.borderLeftColor = 'var(--danger)';
+                statusDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 32px;">❌</div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">Firebase não configurado</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">
+                                Preencha os dados abaixo para ativar a sincronização
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Carregar configurações do Firebase nos campos
+        function carregarConfigFirebase() {
+            const config = localStorage.getItem('firebaseConfig');
+            if (!config) return;
+            
+            try {
+                const dados = JSON.parse(config);
+                document.getElementById('firebaseApiKey').value = dados.apiKey || '';
+                document.getElementById('firebaseAuthDomain').value = dados.authDomain || '';
+                document.getElementById('firebaseDatabaseURL').value = dados.databaseURL || '';
+                document.getElementById('firebaseProjectId').value = dados.projectId || '';
+                document.getElementById('firebaseStorageBucket').value = dados.storageBucket || '';
+                document.getElementById('firebaseMessagingSenderId').value = dados.messagingSenderId || '';
+                document.getElementById('firebaseAppId').value = dados.appId || '';
+            } catch (error) {
+                console.error('Erro ao carregar config Firebase:', error);
+            }
+        }
+        
+        // Função para alternar seção de config (adicionar sync)
+        function mostrarConfigSecao(secao) {
+            // Esconder todas as seções
+            document.getElementById('configPerfilSecao').style.display = 'none';
+            document.getElementById('configDocumentosSecao').style.display = 'none';
+            document.getElementById('configLogoSecao').style.display = 'none';
+            document.getElementById('configSyncSecao').style.display = 'none';
+            
+            // Remover active de todos os botões
+            document.getElementById('btnConfigPerfil').classList.remove('btn-primary');
+            document.getElementById('btnConfigPerfil').classList.add('btn-secondary');
+            document.getElementById('btnConfigDocumentos').classList.remove('btn-primary');
+            document.getElementById('btnConfigDocumentos').classList.add('btn-secondary');
+            document.getElementById('btnConfigLogo').classList.remove('btn-primary');
+            document.getElementById('btnConfigLogo').classList.add('btn-secondary');
+            document.getElementById('btnConfigSync').classList.remove('btn-primary');
+            document.getElementById('btnConfigSync').classList.add('btn-secondary');
+            
+            // Mostrar seção selecionada
+            if (secao === 'perfil') {
+                document.getElementById('configPerfilSecao').style.display = 'block';
+                document.getElementById('btnConfigPerfil').classList.add('btn-primary');
+                document.getElementById('btnConfigPerfil').classList.remove('btn-secondary');
+            } else if (secao === 'documentos') {
+                document.getElementById('configDocumentosSecao').style.display = 'block';
+                document.getElementById('btnConfigDocumentos').classList.add('btn-primary');
+                document.getElementById('btnConfigDocumentos').classList.remove('btn-secondary');
+            } else if (secao === 'logo') {
+                document.getElementById('configLogoSecao').style.display = 'block';
+                document.getElementById('btnConfigLogo').classList.add('btn-primary');
+                document.getElementById('btnConfigLogo').classList.remove('btn-secondary');
+            } else if (secao === 'sync') {
+                document.getElementById('configSyncSecao').style.display = 'block';
+                document.getElementById('btnConfigSync').classList.add('btn-primary');
+                document.getElementById('btnConfigSync').classList.remove('btn-secondary');
+                carregarConfigFirebase();
+                atualizarStatusFirebase();
+            }
+        }
+        
+        // ============================================
         // INICIALIZAÇÃO DO SISTEMA
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             try {
-                console.log('🚀 Inicializando EventPro...');
+                console.log('🚀 Inicializando EventProDJ...');
                 
                 // MOVER TODOS OS MODAIS PARA O FINAL DO BODY
                 // Isso garante que fiquem na frente de tudo
@@ -7468,9 +8015,13 @@ if (!DB.get('configuracoes')) {
                     });
                 });
                 
-                console.log('✅ EventPro inicializado com sucesso!');
+                // Inicializar Firebase
+                console.log('🔥 Inicializando Firebase...');
+                initFirebase();
+                
+                console.log('✅ EventProDJ inicializado com sucesso!');
             } catch (error) {
-                console.error('❌ Erro ao inicializar EventPro:', error);
+                console.error('❌ Erro ao inicializar EventProDJ:', error);
                 alert('Erro ao inicializar o sistema. Por favor, recarregue a página.\n\nErro: ' + error.message);
             }
         });
@@ -7542,6 +8093,14 @@ if (!DB.get('configuracoes')) {
 
         // Render custos do evento
         function renderCustosEvento() {
+            // ✅ CALCULAR TOTAL GERAL DE TODOS OS EVENTOS
+            const todosCustosEventos = DB.get('custosEventos');
+            const totalGeral = todosCustosEventos.reduce((sum, c) => sum + c.valor, 0);
+            const eventosComCustos = [...new Set(todosCustosEventos.map(c => c.eventoId))].length;
+            
+            document.getElementById('totalGeralCustosEventos').textContent = formatMoney(totalGeral);
+            document.getElementById('quantidadeEventosComCustos').textContent = `${eventosComCustos} evento${eventosComCustos !== 1 ? 's' : ''} com custos`;
+            
             const eventoId = parseInt(document.getElementById('eventoSelecionado').value);
             
             if (!eventoId) {
@@ -7774,40 +8333,14 @@ if (!DB.get('configuracoes')) {
 
         // Open custos do evento direto (atalho da aba eventos)
         function openCustosEventoDireto(eventoId) {
-            // Mudar para aba de custos
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // ✅ Abrir DIRETAMENTE o modal de adicionar custo
+            currentEventoId = eventoId;
             
-            // Ativar aba custos
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                if (tab.textContent.toLowerCase().includes('custos')) {
-                    tab.classList.add('active');
-                }
-            });
-            document.getElementById('custosTab').classList.add('active');
+            // Preencher o evento no modal
+            document.getElementById('custoEventoId').value = eventoId;
             
-            // Mudar para view de custos por evento
-            currentCustosView = 'eventos';
-            document.getElementById('custosGeraisView').style.display = 'none';
-            document.getElementById('custosEventosView').style.display = 'block';
-            
-            // Atualizar botões de toggle
-            document.querySelectorAll('#custosTab .filter-btn').forEach(btn => {
-                if (btn.textContent.includes('Evento')) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            
-            // Popular select de eventos
-            populateEventosSelect();
-            
-            // Selecionar o evento específico
-            document.getElementById('eventoSelecionado').value = eventoId;
-            
-            // Renderizar custos do evento
-            renderCustosEvento();
+            // Abrir o modal
+            openModal('custoEvento');
         }
 
         // Tab switching
@@ -7891,6 +8424,22 @@ if (!DB.get('configuracoes')) {
         }
 
         // Render events list
+        // Ir para aba de clientes e filtrar por nome
+        function irParaCliente(nomeCliente) {
+            // Mudar para aba de clientes
+            switchTab('clientes');
+            
+            // Aguardar tab carregar
+            setTimeout(() => {
+                // Filtrar por nome do cliente
+                const searchInput = document.getElementById('clientSearch');
+                if (searchInput) {
+                    searchInput.value = nomeCliente;
+                    renderClientsList(nomeCliente);
+                }
+            }, 100);
+        }
+        
         function renderEventsList() {
             const eventos = DB.get('eventos');
             const container = document.getElementById('eventsListFull');
@@ -7946,7 +8495,9 @@ if (!DB.get('configuracoes')) {
                         <div class="event-card-main">
                             <div class="event-card-info">
                                 <h3>${e.tipo || e.nome}</h3>
-                                <div class="event-card-client">👤 ${e.cliente}</div>
+                                <div class="event-card-client" onclick="event.stopPropagation(); irParaCliente('${e.cliente.replace(/'/g, "\\'")}');" style="cursor: pointer; text-decoration: underline;">
+                                    👤 ${e.cliente}
+                                </div>
                                 <div class="event-card-details">
                                     <div class="event-detail-item">
                                         📅 <strong>${formatDate(e.data)}</strong>
