@@ -34,6 +34,38 @@
             --text-secondary: #A0AEC0;
             --border: #2D3561;
         }
+        
+        /* TEMA CLARO */
+        [data-theme="light"] {
+            --primary: #FF6B35;
+            --primary-dark: #E85A2B;
+            --secondary: #004E89;
+            --accent: #FFD23F;
+            --success: #06D6A0;
+            --danger: #EF476F;
+            --bg-dark: #F5F7FA;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F0F2F5;
+            --text-primary: #1A202C;
+            --text-secondary: #718096;
+            --border: #E2E8F0;
+        }
+        
+        /* TEMA ESCURO (padrão) */
+        [data-theme="dark"] {
+            --primary: #FF6B35;
+            --primary-dark: #E85A2B;
+            --secondary: #004E89;
+            --accent: #FFD23F;
+            --success: #06D6A0;
+            --danger: #EF476F;
+            --bg-dark: #0A0E27;
+            --bg-card: #141B3D;
+            --bg-card-hover: #1A2249;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0AEC0;
+            --border: #2D3561;
+        }
 
         body {
             font-family: 'IBM Plex Mono', monospace;
@@ -410,6 +442,418 @@
             
             .action-text p {
                 font-size: 11px;
+            }
+        }
+        
+        /* OTIMIZAÇÃO ESPECÍFICA PARA iPHONE 15 / 15 Pro Max */
+        @media (max-width: 430px) {
+            .container {
+                padding: 12px;
+            }
+            
+            /* Stats grid - 1 coluna no mobile */
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+            
+            /* Cards ainda mais compactos */
+            .stat-card {
+                padding: 14px !important;
+                border-radius: 10px !important;
+            }
+            
+            .stat-icon {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 16px !important;
+                margin-bottom: 10px !important;
+            }
+            
+            .stat-label {
+                font-size: 10px !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .stat-value {
+                font-size: 20px !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .stat-change {
+                font-size: 10px !important;
+            }
+            
+            /* Cards principais */
+            .card {
+                padding: 14px !important;
+                border-radius: 10px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .card-header {
+                margin-bottom: 12px !important;
+                padding-bottom: 10px !important;
+            }
+            
+            .card-title {
+                font-size: 15px !important;
+            }
+            
+            /* Dashboard header compacto */
+            .dashboard-header {
+                padding: 16px 0 !important;
+            }
+            
+            .dashboard-title {
+                font-size: 22px !important;
+            }
+            
+            .dashboard-subtitle {
+                font-size: 12px !important;
+            }
+            
+            /* Transações ultra compactas */
+            .transaction-item {
+                padding: 10px !important;
+                border-radius: 8px !important;
+            }
+            
+            .transaction-icon {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 14px !important;
+            }
+            
+            .transaction-details {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .transaction-details h4 {
+                font-size: 12px !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .transaction-date {
+                font-size: 10px !important;
+            }
+            
+            .transaction-amount {
+                font-size: 14px !important;
+                white-space: nowrap;
+            }
+            
+            /* Event cards compactos */
+            .event-card {
+                padding: 10px !important;
+                border-radius: 8px !important;
+            }
+            
+            .event-title {
+                font-size: 13px !important;
+            }
+            
+            .event-client {
+                font-size: 11px !important;
+            }
+            
+            .event-detail {
+                font-size: 11px !important;
+            }
+            
+            /* Client cards */
+            /* Client cards otimizados */
+            .client-card {
+                padding: 14px !important;
+                border-radius: 10px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .client-card-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .client-main-info {
+                width: 100% !important;
+                margin-bottom: 10px !important;
+            }
+            
+            .client-avatar {
+                width: 42px !important;
+                height: 42px !important;
+                font-size: 18px !important;
+                margin-right: 12px !important;
+            }
+            
+            .client-details-main h3 {
+                font-size: 15px !important;
+                line-height: 1.3 !important;
+            }
+            
+            .client-email, .client-phone {
+                font-size: 11px !important;
+                display: block !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            
+            .client-badges {
+                width: 100% !important;
+                justify-content: flex-start !important;
+            }
+            
+            .client-badge {
+                font-size: 10px !important;
+                padding: 4px 8px !important;
+            }
+            
+            .client-info-grid {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+                margin-top: 12px !important;
+                padding-top: 12px !important;
+            }
+            
+            .client-info-item {
+                font-size: 11px !important;
+            }
+            
+            .client-actions {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+                margin-top: 12px !important;
+                padding-top: 12px !important;
+            }
+            
+            .client-action-btn {
+                padding: 10px 8px !important;
+                font-size: 11px !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+            }
+            
+            /* Botões menores */
+            .btn {
+                padding: 10px 18px !important;
+                font-size: 12px !important;
+            }
+            
+            /* Action buttons */
+            .action-btn {
+                padding: 10px !important;
+            }
+            
+            .action-icon {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 16px !important;
+            }
+            
+            .action-text h4 {
+                font-size: 12px !important;
+            }
+            
+            .action-text p {
+                font-size: 10px !important;
+            }
+            
+            /* Form inputs menores */
+            .form-input, .form-select {
+                padding: 10px 12px !important;
+                font-size: 13px !important;
+            }
+            
+            .form-label {
+                font-size: 11px !important;
+                margin-bottom: 6px !important;
+            }
+            
+            /* Modal mais compacto */
+            .modal-content {
+                padding: 16px !important;
+                margin: 20px 12px !important;
+                max-height: calc(100vh - 40px) !important;
+            }
+            
+            .modal-title {
+                font-size: 18px !important;
+            }
+            
+            /* Tabs menores */
+            .nav-tab {
+                padding: 10px 14px !important;
+                font-size: 12px !important;
+            }
+            
+            /* Calendário responsivo otimizado */
+            .calendar-header {
+                flex-direction: column !important;
+                gap: 12px !important;
+                margin-bottom: 16px !important;
+            }
+            
+            .calendar-month {
+                font-size: 20px !important;
+            }
+            
+            .calendar-nav {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            
+            .calendar-nav-btn {
+                padding: 10px 20px !important;
+                font-size: 14px !important;
+            }
+            
+            .calendar-grid {
+                gap: 4px !important;
+            }
+            
+            .calendar-day-header {
+                padding: 8px 4px !important;
+                font-size: 10px !important;
+            }
+            
+            .calendar-day {
+                aspect-ratio: 1 !important;
+                padding: 4px !important;
+                border-radius: 6px !important;
+                min-height: 45px !important;
+            }
+            
+            .calendar-day-number {
+                font-size: 13px !important;
+                margin-bottom: 2px !important;
+            }
+            
+            .calendar-day-events {
+                font-size: 8px !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                overflow: hidden !important;
+            }
+            
+            .calendar-event-dot {
+                width: 4px !important;
+                height: 4px !important;
+            }
+            
+            /* Event cards na lista */
+            .event-card-full {
+                padding: 12px !important;
+            }
+            
+            .event-card-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+            
+            .event-info h3 {
+                font-size: 14px !important;
+            }
+            
+            .event-info p {
+                font-size: 11px !important;
+            }
+            
+            .event-details-grid {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            
+            .event-detail-item {
+                font-size: 11px !important;
+            }
+            
+            /* Financial cards compactos */
+            .client-financial {
+                padding: 12px !important;
+                border-radius: 8px !important;
+                margin-top: 12px !important;
+            }
+            
+            .financial-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+                margin-bottom: 10px !important;
+                padding-bottom: 10px !important;
+            }
+            
+            .financial-title {
+                font-size: 13px !important;
+            }
+            
+            .financial-status {
+                font-size: 10px !important;
+                padding: 3px 8px !important;
+            }
+            
+            .financial-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+            }
+            
+            .financial-item {
+                padding: 10px !important;
+                background: rgba(255, 255, 255, 0.02) !important;
+                border-radius: 6px !important;
+            }
+            
+            .financial-label {
+                font-size: 10px !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .financial-value {
+                font-size: 14px !important;
+                font-weight: 600 !important;
+            }
+            
+            .progress-bar {
+                margin-top: 10px !important;
+                height: 6px !important;
+            }
+            
+            .progress-fill {
+                height: 6px !important;
+            }
+            
+            /* Filtros e controles */
+            .filters-row {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            
+            .filter-group {
+                width: 100% !important;
+            }
+            
+            /* Empty state */
+            .empty-state {
+                padding: 40px 20px !important;
+            }
+            
+            .empty-state-icon {
+                font-size: 60px !important;
+            }
+            
+            .empty-state-title {
+                font-size: 18px !important;
+            }
+            
+            .empty-state-text {
+                font-size: 13px !important;
             }
         }
         
@@ -1930,6 +2374,61 @@
             border-radius: 10px;
             transition: width 0.5s ease;
         }
+        
+        /* THEME SWITCH TOGGLE */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .theme-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: 0.4s;
+            border-radius: 30px;
+        }
+        
+        .theme-slider:before {
+            position: absolute;
+            content: "🌙";
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--bg-card);
+            transition: 0.4s;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .theme-switch input:checked + .theme-slider {
+            background-color: var(--primary);
+        }
+        
+        .theme-switch input:checked + .theme-slider:before {
+            content: "🌙";
+            transform: translateX(30px);
+        }
+        
+        .theme-switch input:not(:checked) + .theme-slider:before {
+            content: "☀️";
+        }
     </style>
 </head>
 <body>
@@ -2754,6 +3253,9 @@
                     <button class="btn btn-secondary" id="btnConfigLogo" onclick="mostrarConfigSecao('logo')" style="flex: 1; min-width: 150px;">
                         🎨 Logo
                     </button>
+                    <button class="btn btn-secondary" id="btnConfigTema" onclick="mostrarConfigSecao('tema')" style="flex: 1; min-width: 150px;">
+                        🌓 Tema
+                    </button>
                     <button class="btn btn-secondary" id="btnConfigSync" onclick="mostrarConfigSecao('sync')" style="flex: 1; min-width: 150px;">
                         ☁️ Sincronização
                     </button>
@@ -3058,6 +3560,68 @@ CNPJ: [CNPJ]"
                                     <li>Recomendado: Fundo transparente (PNG)</li>
                                     <li>Proporção ideal: 2:1 (horizontal)</li>
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Seção: Tema -->
+                <div id="configTemaSecao" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🌓 Aparência do Sistema</h2>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                                Escolha entre tema claro ou escuro para uma melhor experiência visual
+                            </p>
+                        </div>
+                        <div style="padding: 24px;">
+                            <!-- Toggle de Tema -->
+                            <div style="background: rgba(79, 70, 229, 0.1); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <div>
+                                        <h3 style="font-family: 'Syne', sans-serif; font-size: 18px; margin-bottom: 8px;">
+                                            Modo Escuro
+                                        </h3>
+                                        <p style="font-size: 13px; color: var(--text-secondary);">
+                                            Ative para reduzir o cansaço visual em ambientes com pouca luz
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Switch Toggle -->
+                                    <label class="theme-switch">
+                                        <input type="checkbox" id="themeToggle" onchange="toggleTheme()" checked>
+                                        <span class="theme-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <!-- Preview dos Temas -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;">
+                                    <!-- Tema Claro -->
+                                    <div style="border: 2px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="setTheme('light')">
+                                        <div style="background: #F5F7FA; padding: 16px; text-align: center;">
+                                            <div style="font-size: 32px; margin-bottom: 8px;">☀️</div>
+                                            <div style="font-weight: 600; color: #1A202C;">Tema Claro</div>
+                                            <div style="font-size: 11px; color: #718096; margin-top: 4px;">Ideal para ambientes claros</div>
+                                        </div>
+                                        <div style="background: #FFFFFF; padding: 12px;">
+                                            <div style="background: #E2E8F0; height: 4px; border-radius: 2px; margin-bottom: 6px;"></div>
+                                            <div style="background: #E2E8F0; height: 4px; border-radius: 2px; width: 70%;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Tema Escuro -->
+                                    <div style="border: 2px solid var(--primary); border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="setTheme('dark')">
+                                        <div style="background: #0A0E27; padding: 16px; text-align: center;">
+                                            <div style="font-size: 32px; margin-bottom: 8px;">🌙</div>
+                                            <div style="font-weight: 600; color: #FFFFFF;">Tema Escuro</div>
+                                            <div style="font-size: 11px; color: #A0AEC0; margin-top: 4px;">Reduz cansaço visual</div>
+                                        </div>
+                                        <div style="background: #141B3D; padding: 12px;">
+                                            <div style="background: #2D3561; height: 4px; border-radius: 2px; margin-bottom: 6px;"></div>
+                                            <div style="background: #2D3561; height: 4px; border-radius: 2px; width: 70%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3447,6 +4011,14 @@ CNPJ: [CNPJ]"
                     <span style="font-size: 24px;">🧾</span>
                     <span>Emitir Recibo</span>
                 </button>
+                
+                <!-- Botão de compartilhar (aparece após gerar um documento) -->
+                <div id="compartilharDocArea" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                    <button class="btn btn-secondary" onclick="compartilharPDF()" style="padding: 16px; font-size: 16px; display: flex; align-items: center; gap: 12px; justify-content: center; background: var(--success);">
+                        <span style="font-size: 24px;">🔗</span>
+                        <span>Compartilhar Último Documento</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -7918,6 +8490,12 @@ function mostrarConfigSecao(secao) {
     document.getElementById('configPerfilSecao').style.display = 'none';
     document.getElementById('configDocumentosSecao').style.display = 'none';
     document.getElementById('configLogoSecao').style.display = 'none';
+    if (document.getElementById('configTemaSecao')) {
+        document.getElementById('configTemaSecao').style.display = 'none';
+    }
+    if (document.getElementById('configSyncSecao')) {
+        document.getElementById('configSyncSecao').style.display = 'none';
+    }
     
     // Resetar botões
     document.getElementById('btnConfigPerfil').classList.remove('btn-primary');
@@ -7926,6 +8504,14 @@ function mostrarConfigSecao(secao) {
     document.getElementById('btnConfigDocumentos').classList.add('btn-secondary');
     document.getElementById('btnConfigLogo').classList.remove('btn-primary');
     document.getElementById('btnConfigLogo').classList.add('btn-secondary');
+    if (document.getElementById('btnConfigTema')) {
+        document.getElementById('btnConfigTema').classList.remove('btn-primary');
+        document.getElementById('btnConfigTema').classList.add('btn-secondary');
+    }
+    if (document.getElementById('btnConfigSync')) {
+        document.getElementById('btnConfigSync').classList.remove('btn-primary');
+        document.getElementById('btnConfigSync').classList.add('btn-secondary');
+    }
     
     // Mostrar seção selecionada
     if (secao === 'perfil') {
@@ -7940,7 +8526,58 @@ function mostrarConfigSecao(secao) {
         document.getElementById('configLogoSecao').style.display = 'block';
         document.getElementById('btnConfigLogo').classList.remove('btn-secondary');
         document.getElementById('btnConfigLogo').classList.add('btn-primary');
+    } else if (secao === 'tema') {
+        if (document.getElementById('configTemaSecao')) {
+            document.getElementById('configTemaSecao').style.display = 'block';
+            document.getElementById('btnConfigTema').classList.remove('btn-secondary');
+            document.getElementById('btnConfigTema').classList.add('btn-primary');
+        }
+    } else if (secao === 'sync') {
+        if (document.getElementById('configSyncSecao')) {
+            document.getElementById('configSyncSecao').style.display = 'block';
+            document.getElementById('btnConfigSync').classList.remove('btn-secondary');
+            document.getElementById('btnConfigSync').classList.add('btn-primary');
+        }
     }
+}
+
+// ========================================
+// FUNÇÕES DE TEMA (CLARO/ESCURO)
+// ========================================
+
+function initTheme() {
+    // Carregar tema salvo ou usar padrão (escuro)
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    
+    // Atualizar toggle
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+        toggle.checked = savedTheme === 'dark';
+    }
+}
+
+function toggleTheme() {
+    const toggle = document.getElementById('themeToggle');
+    const newTheme = toggle.checked ? 'dark' : 'light';
+    setTheme(newTheme);
+}
+
+function setTheme(theme) {
+    // Aplicar tema
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    // Salvar preferência
+    localStorage.setItem('theme', theme);
+    
+    // Atualizar toggle se existir
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+        toggle.checked = theme === 'dark';
+    }
+    
+    // Feedback visual
+    console.log(`🎨 Tema alterado para: ${theme === 'dark' ? 'Escuro' : 'Claro'}`);
 }
 
 function carregarConfigEmpresa() {
@@ -8786,6 +9423,9 @@ if (!DB.get('configuracoes')) {
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 console.log('🚀 Inicializando EventProDJ...');
+                
+                // Inicializar tema
+                initTheme();
                 
                 // MOVER TODOS OS MODAIS PARA O FINAL DO BODY
                 // Isso garante que fiquem na frente de tudo
@@ -10213,6 +10853,12 @@ if (!DB.get('configuracoes')) {
             document.getElementById('documentosClienteId').value = clienteId;
             document.getElementById('documentosClienteNome').textContent = cliente.nome;
             
+            // Mostrar botão de compartilhar se houver documento gerado
+            const btnCompartilhar = document.getElementById('compartilharDocArea');
+            if (btnCompartilhar) {
+                btnCompartilhar.style.display = window.ultimoPDFGerado ? 'block' : 'none';
+            }
+            
             openModal('documentos');
         }
         
@@ -10258,247 +10904,317 @@ if (!DB.get('configuracoes')) {
             const doc = new jsPDF();
             
             const dataAtual = new Date().toLocaleDateString('pt-BR');
+            const margemEsquerda = 15;
+            const margemDireita = 195;
+            const larguraPagina = 180;
             
             // CABEÇALHO
-            let y = 15;
+            let y = 20;
             
-            // Logo (se existir)
+            // Logo (se existir) - ajustado
             if (config.logoBase64) {
                 try {
-                    doc.addImage(config.logoBase64, 'PNG', 15, y, 35, 35);
+                    doc.addImage(config.logoBase64, 'PNG', margemEsquerda, y, 30, 30);
                 } catch (e) {
                     console.log('Logo não adicionada');
                 }
             }
             
-            // Nome da empresa no topo direito
-            doc.setFontSize(14);
+            // Nome da empresa no topo direito - alinhado
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(config.nomeEmpresa || 'EVENTPRODJ', 200, y + 5, { align: 'right' });
+            doc.text(config.nomeEmpresa || 'EVENTPRODJ', margemDireita, y, { align: 'right' });
+            y += 5;
             
-            // Dados da empresa
-            doc.setFontSize(8);
+            // Dados da empresa - alinhados à direita
+            doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
-            y += 10;
             
             if (config.cnpj) {
-                doc.text(`CNPJ: ${config.cnpj}`, 200, y, { align: 'right' });
+                doc.text(`CNPJ: ${config.cnpj}`, margemDireita, y, { align: 'right' });
                 y += 4;
             }
             if (config.email) {
-                doc.text(`✉ ${config.email}`, 200, y, { align: 'right' });
+                doc.text(config.email, margemDireita, y, { align: 'right' });
                 y += 4;
             }
             if (config.telefone) {
-                doc.text(`📞 ${config.telefone}`, 200, y, { align: 'right' });
+                doc.text(config.telefone, margemDireita, y, { align: 'right' });
                 y += 4;
             }
             if (config.whatsapp) {
-                doc.text(`📱 ${config.whatsapp}`, 200, y, { align: 'right' });
+                doc.text(config.whatsapp, margemDireita, y, { align: 'right' });
                 y += 4;
             }
             
             // Data no canto superior direito
-            doc.text(`📅 ${dataAtual}`, 200, y, { align: 'right' });
+            doc.text(dataAtual, margemDireita, y, { align: 'right' });
             
-            // Redes sociais (abaixo do logo)
+            // Redes sociais (abaixo do logo) - sem emojis
             y = 55;
-            doc.setFontSize(7);
-            if (config.instagram) doc.text(`📷 ${config.instagram}`, 15, y);
-            if (config.facebook) doc.text(`👥 ${config.facebook}`, 55, y);
-            if (config.youtube) doc.text(`🎥 ${config.youtube}`, 95, y);
-            if (config.site) doc.text(`🌐 ${config.site}`, 135, y);
+            doc.setFontSize(6);
+            let xRede = margemEsquerda;
+            if (config.instagram) {
+                doc.text(config.instagram, xRede, y);
+                xRede += 40;
+            }
+            if (config.facebook) {
+                doc.text(config.facebook, xRede, y);
+                xRede += 40;
+            }
+            if (config.youtube) {
+                doc.text(config.youtube, xRede, y);
+                xRede += 40;
+            }
+            if (config.site) {
+                doc.text(config.site, xRede, y);
+            }
             
             // TÍTULO DO ORÇAMENTO
-            y = 70;
+            y = 65;
             doc.setFillColor(220, 220, 220);
-            doc.rect(15, y, 180, 8, 'F');
-            doc.setFontSize(12);
+            doc.rect(margemEsquerda, y, larguraPagina, 7, 'F');
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.text('Orçamento', 17, y + 5.5);
+            doc.text('Orçamento', margemEsquerda + 2, y + 5);
             
             // DADOS DO CLIENTE
-            y += 15;
-            doc.setFontSize(10);
+            y += 12;
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Cliente: ${cliente.nome}`, 15, y);
+            doc.text(`Cliente: ${cliente.nome}`, margemEsquerda, y);
             
             y += 5;
-            doc.setFontSize(8);
+            doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
             if (cliente.cpf) {
-                doc.text(`CPF: ${cliente.cpf}`, 15, y);
+                doc.text(`CPF: ${cliente.cpf}`, margemEsquerda, y);
                 y += 4;
             }
             if (cliente.endereco) {
-                const endLines = doc.splitTextToSize(cliente.endereco, 90);
-                doc.text(endLines, 15, y);
-                y += (endLines.length * 4);
+                const endLines = doc.splitTextToSize(cliente.endereco, 85);
+                doc.text(endLines, margemEsquerda, y);
+                y += (endLines.length * 3.5);
             }
             if (cliente.cep) {
-                doc.text(`CEP ${cliente.cep}`, 15, y);
+                doc.text(`CEP ${cliente.cep}`, margemEsquerda, y);
                 y += 4;
             }
             if (cliente.telefone) {
-                doc.text(`📞 ${cliente.telefone}`, 15, y);
+                doc.text(cliente.telefone, margemEsquerda, y);
+                y += 4;
             }
             
             // INFORMAÇÕES BÁSICAS DO EVENTO
-            y += 10;
+            y += 5;
             doc.setFillColor(240, 240, 240);
-            doc.rect(15, y, 180, 7, 'F');
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Informações básicas', 17, y + 5);
-            
-            y += 12;
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
             doc.setFontSize(9);
-            
-            // Coluna 1
             doc.setFont('helvetica', 'bold');
-            doc.text('Horário de início e término', 15, y);
-            doc.setFont('helvetica', 'normal');
-            doc.text(evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir', 15, y + 4);
-            
-            // Coluna 2
-            doc.setFont('helvetica', 'bold');
-            doc.text('Tipo de evento', 110, y);
-            doc.setFont('helvetica', 'normal');
-            doc.text(evento ? evento.tipo : 'A definir', 110, y + 4);
+            doc.text('Informações básicas', margemEsquerda + 2, y + 4);
             
             y += 10;
+            doc.setFontSize(7);
             
             // Coluna 1
             doc.setFont('helvetica', 'bold');
-            doc.text('Local do evento', 15, y);
+            doc.text('Horário de início e término', margemEsquerda, y);
             doc.setFont('helvetica', 'normal');
-            const localLines = doc.splitTextToSize(evento ? evento.local : 'A definir', 90);
-            doc.text(localLines, 15, y + 4);
+            doc.text(evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir', margemEsquerda, y + 3.5);
             
             // Coluna 2
             doc.setFont('helvetica', 'bold');
-            doc.text('Duração do serviço', 110, y);
+            doc.text('Tipo de evento', 105, y);
             doc.setFont('helvetica', 'normal');
-            doc.text(evento && evento.duracao ? evento.duracao : '5 hrs', 110, y + 4);
+            doc.text(evento ? evento.tipo : 'A definir', 105, y + 3.5);
+            
+            y += 9;
+            
+            // Coluna 1
+            doc.setFont('helvetica', 'bold');
+            doc.text('Local do evento', margemEsquerda, y);
+            doc.setFont('helvetica', 'normal');
+            const localLines = doc.splitTextToSize(evento ? evento.local : 'A definir', 80);
+            doc.text(localLines, margemEsquerda, y + 3.5);
+            
+            // Coluna 2
+            doc.setFont('helvetica', 'bold');
+            doc.text('Duração do serviço', 105, y);
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento && evento.duracao ? evento.duracao : '5 hrs', 105, y + 3.5);
             
             // DADOS DO EVENTO (destaque)
-            y += 15;
-            doc.setFontSize(10);
+            y += 12;
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
-            doc.text(evento ? evento.tipo : 'Evento', 15, y);
+            doc.text(evento ? evento.tipo : 'Evento', margemEsquerda, y);
             y += 4;
-            doc.setFontSize(8);
+            doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Data: ${evento ? formatDate(evento.data) : 'A definir'}`, 15, y);
-            y += 4;
-            doc.text(`Horário: ${evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir'}`, 15, y);
+            doc.text(`Data: ${evento ? formatDate(evento.data) : 'A definir'}`, margemEsquerda, y);
+            y += 3.5;
+            doc.text(`Horário: ${evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir'}`, margemEsquerda, y);
             
             // SERVIÇOS
-            y += 10;
+            y += 8;
             doc.setFillColor(240, 240, 240);
-            doc.rect(15, y, 180, 7, 'F');
-            doc.setFontSize(10);
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
-            doc.text('Serviços', 17, y + 5);
+            doc.text('Serviços', margemEsquerda + 2, y + 4);
             
-            y += 12;
+            y += 10;
             
             // Cabeçalho da tabela
-            doc.setFontSize(8);
+            doc.setFontSize(7);
             doc.setFont('helvetica', 'bold');
-            doc.text('Descrição', 15, y);
-            doc.text('Preço', 180, y, { align: 'right' });
+            doc.text('Descrição', margemEsquerda, y);
+            doc.text('Preço', margemDireita - 15, y, { align: 'right' });
             
-            y += 5;
+            y += 4;
             doc.setLineWidth(0.3);
-            doc.line(15, y, 195, y);
+            doc.line(margemEsquerda, y, margemDireita, y);
             
-            // Itens (pode pegar dos custos do evento ou valor fixo)
-            y += 6;
+            // Itens
+            y += 5;
             doc.setFont('helvetica', 'normal');
             
-            // Descrição do serviço (pode vir do modelo de orçamento ou ser padrão)
+            // Descrição do serviço
             const descricaoServico = config.modeloOrcamento || 'Estrutura completa para o evento.\nInclui: som, iluminação e DJ profissional.';
-            const descLines = doc.splitTextToSize(descricaoServico, 140);
-            doc.text(descLines, 15, y);
+            const descLines = doc.splitTextToSize(descricaoServico, 130);
+            doc.text(descLines, margemEsquerda, y);
             
             const valorServico = cliente.financeiro?.valorTotal || 0;
             doc.setFont('helvetica', 'bold');
-            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
+            doc.text(formatMoney(valorServico), margemDireita - 15, y, { align: 'right' });
             
-            y += (descLines.length * 4) + 8;
+            y += (descLines.length * 3.5) + 6;
             
             // Subtotais
             doc.setLineWidth(0.3);
-            doc.line(120, y, 195, y);
-            y += 5;
-            
-            doc.setFont('helvetica', 'normal');
-            doc.text('Serviços', 120, y);
-            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
-            
-            y += 5;
-            doc.text('Deslocamento', 120, y);
-            doc.text('R$ 0,00', 195, y, { align: 'right' });
-            
-            y += 5;
-            doc.text('Subtotal', 120, y);
-            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
-            
-            y += 6;
-            doc.setLineWidth(0.5);
-            doc.line(120, y, 195, y);
-            y += 5;
-            
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
-            doc.text('Total', 120, y);
-            doc.text(formatMoney(valorServico), 195, y, { align: 'right' });
-            
-            // PAGAMENTO
-            y += 10;
-            doc.setFillColor(240, 240, 240);
-            doc.rect(15, y, 180, 7, 'F');
-            doc.setFontSize(10);
-            doc.text('Pagamento', 17, y + 5);
-            
-            y += 12;
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Meios de pagamento', 15, y);
+            doc.line(115, y, margemDireita, y);
             y += 4;
-            doc.setFont('helvetica', 'normal');
-            doc.text('Transferência bancária, dinheiro, cartão de crédito, cartão de débito ou pix.', 15, y);
             
-            // ASSINATURAS
-            y += 20;
-            doc.text(dataAtual, 105, y, { align: 'center' });
-            
-            y += 15;
-            doc.setLineWidth(0.3);
-            doc.line(15, y, 95, y);
-            doc.line(115, y, 195, y);
-            
-            y += 5;
-            doc.setFont('helvetica', 'bold');
-            doc.text(config.nomeEmpresa || 'EVENTPRODJ', 55, y, { align: 'center' });
-            doc.text(cliente.nome, 155, y, { align: 'center' });
-            
-            y += 4;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7);
+            doc.text('Serviços', 115, y);
+            doc.text(formatMoney(valorServico), margemDireita - 15, y, { align: 'right' });
+            
+            y += 4;
+            doc.text('Deslocamento', 115, y);
+            doc.text('R$ 0,00', margemDireita - 15, y, { align: 'right' });
+            
+            y += 4;
+            doc.text('Subtotal', 115, y);
+            doc.text(formatMoney(valorServico), margemDireita - 15, y, { align: 'right' });
+            
+            y += 5;
+            doc.setLineWidth(0.5);
+            doc.line(115, y, margemDireita, y);
+            y += 4;
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text('Total', 115, y);
+            doc.text(formatMoney(valorServico), margemDireita - 15, y, { align: 'right' });
+            
+            // PAGAMENTO
+            y += 8;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+            doc.setFontSize(9);
+            doc.text('Pagamento', margemEsquerda + 2, y + 4);
+            
+            y += 10;
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Meios de pagamento', margemEsquerda, y);
+            y += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.text('Transferência bancária, dinheiro, cartão de crédito, cartão de débito ou pix.', margemEsquerda, y);
+            
+            // ASSINATURAS
+            y += 15;
+            doc.text(dataAtual, 105, y, { align: 'center' });
+            
+            y += 12;
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, 90, y);
+            doc.line(120, y, margemDireita, y);
+            
+            y += 4;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.text(config.nomeEmpresa || 'EVENTPRODJ', 52, y, { align: 'center' });
+            doc.text(cliente.nome, 157, y, { align: 'center' });
+            
+            y += 3.5;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
             if (config.nomeCorporativo) {
-                doc.text(config.nomeCorporativo, 55, y, { align: 'center' });
+                doc.text(config.nomeCorporativo, 52, y, { align: 'center' });
             }
-            doc.text(cliente.cpf ? `CPF ${cliente.cpf}` : '', 155, y, { align: 'center' });
+            doc.text(cliente.cpf ? `CPF ${cliente.cpf}` : '', 157, y, { align: 'center' });
             
             // RODAPÉ
-            doc.setFontSize(8);
+            doc.setFontSize(7);
             doc.text(`Página 1/1`, 105, 285, { align: 'center' });
+            
+            // Retornar o blob para compartilhamento
+            const pdfBlob = doc.output('blob');
+            const pdfFile = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
+            
+            // Armazenar para compartilhamento
+            window.ultimoPDFGerado = pdfFile;
             
             // Salvar
             doc.save(nomeArquivo);
-            alert(`✅ ${nomeArquivo} gerado com sucesso!`);
+            
+            // Mostrar opções de compartilhamento
+            mostrarOpcoesCompartilhamento(nomeArquivo);
+        }
+        
+        function mostrarOpcoesCompartilhamento(nomeArquivo) {
+            // Fechar modal de documentos
+            closeModal('documentos');
+            
+            // Verificar se Web Share API está disponível
+            if (navigator.share && window.ultimoPDFGerado) {
+                const confirmar = confirm(`✅ ${nomeArquivo} gerado com sucesso!\n\n🔗 Deseja compartilhar o documento?`);
+                
+                if (confirmar) {
+                    compartilharPDF();
+                }
+            } else {
+                alert(`✅ ${nomeArquivo} gerado com sucesso!`);
+            }
+        }
+        
+        async function compartilharPDF() {
+            if (!navigator.share) {
+                alert('❌ Compartilhamento não suportado neste navegador.');
+                return;
+            }
+            
+            if (!window.ultimoPDFGerado) {
+                alert('❌ Nenhum documento gerado para compartilhar.');
+                return;
+            }
+            
+            try {
+                await navigator.share({
+                    title: window.ultimoPDFGerado.name,
+                    text: 'Confira este orçamento',
+                    files: [window.ultimoPDFGerado]
+                });
+                
+                console.log('✅ Documento compartilhado com sucesso!');
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Erro ao compartilhar:', error);
+                    alert('❌ Erro ao compartilhar documento.');
+                }
+            }
         }
         
         function gerarConteudoOrcamento(cliente, evento, config) {
