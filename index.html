@@ -86,7 +86,15 @@
             --border: #2D3561;
         }
         
-        * {
+        /* Transições suaves apenas em elementos específicos */
+        body, 
+        header,
+        .card, 
+        .stat-card,
+        .client-card,
+        .event-card,
+        .modal-content,
+        .btn {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
@@ -214,13 +222,16 @@
         /* Menu Mobile */
         .mobile-menu-toggle {
             display: none;
+            position: relative;
             background: none;
             border: none;
             color: var(--primary);
-            font-size: 28px;
+            font-size: 32px;
             cursor: pointer;
             padding: 8px;
             z-index: 1001;
+            flex-shrink: 0;
+            line-height: 1;
         }
 
         .mobile-menu-overlay {
@@ -242,18 +253,23 @@
         }
 
         .mobile-menu {
-            display: none;
             position: fixed;
             top: 0;
             left: -300px;
             width: 280px;
             height: 100%;
-            background: var(--card-bg);
+            background: var(--bg-card);
             border-right: 2px solid var(--border);
             z-index: 1002;
             overflow-y: auto;
             transition: left 0.3s ease;
             padding: 20px;
+        }
+        
+        @media (min-width: 1025px) {
+            .mobile-menu {
+                display: none;
+            }
         }
 
         .mobile-menu.active {
@@ -311,13 +327,27 @@
 
         @media (max-width: 1024px) {
             .header-content {
-                justify-content: center;
+                position: relative;
+                justify-content: flex-start;
+                padding: 0 15px;
+            }
+            
+            .mobile-menu-toggle {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: relative !important;
+                z-index: 1003 !important;
+                order: -1;
+                margin-right: auto;
             }
             
             .logo {
                 position: absolute;
                 left: 50%;
                 transform: translateX(-50%);
+                z-index: 1002;
+                pointer-events: none;
             }
             
             .main-nav {
@@ -330,14 +360,6 @@
             
             .sync-text {
                 display: none;
-            }
-            
-            .mobile-menu-toggle {
-                display: block;
-            }
-            
-            .mobile-menu {
-                display: block;
             }
         }
 
@@ -352,6 +374,18 @@
             
             .sync-text {
                 display: none;
+            }
+            
+            /* Mostrar menu mobile */
+            .mobile-menu-toggle {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: relative !important;
+            }
+            
+            .main-nav {
+                display: none !important;
             }
             
             /* Dashboard mais clean no mobile */
@@ -3288,7 +3322,7 @@
                     <button class="btn btn-secondary" id="btnConfigLogo" onclick="mostrarConfigSecao('logo')" style="flex: 1; min-width: 150px;">
                         🎨 Logo
                     </button>
-                    <button class="btn btn-secondary" id="btnConfigTema" onclick="mostrarConfigSecao('tema')" style="flex: 1; min-width: 150px;">
+                    <button class="btn btn-secondary" id="btnConfigTema" onclick="console.log('🌓 Botão TEMA clicado!'); mostrarConfigSecao('tema');" style="flex: 1; min-width: 150px;">
                         🌓 Tema
                     </button>
                     <button class="btn btn-secondary" id="btnConfigSync" onclick="mostrarConfigSecao('sync')" style="flex: 1; min-width: 150px;">
@@ -3632,7 +3666,7 @@ CNPJ: [CNPJ]"
                                 <!-- Preview dos Temas -->
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;">
                                     <!-- Tema Claro -->
-                                    <div style="border: 2px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="setTheme('light')">
+                                    <div style="border: 2px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="console.log('☀️ Card CLARO clicado'); setTheme('light', true);">
                                         <div style="background: #F5F7FA; padding: 16px; text-align: center;">
                                             <div style="font-size: 32px; margin-bottom: 8px;">☀️</div>
                                             <div style="font-weight: 600; color: #1A202C;">Tema Claro</div>
@@ -3645,7 +3679,7 @@ CNPJ: [CNPJ]"
                                     </div>
                                     
                                     <!-- Tema Escuro -->
-                                    <div style="border: 2px solid var(--primary); border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="setTheme('dark')">
+                                    <div style="border: 2px solid var(--primary); border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="console.log('🌙 Card ESCURO clicado'); setTheme('dark', true);">
                                         <div style="background: #0A0E27; padding: 16px; text-align: center;">
                                             <div style="font-size: 32px; margin-bottom: 8px;">🌙</div>
                                             <div style="font-weight: 600; color: #FFFFFF;">Tema Escuro</div>
@@ -3863,6 +3897,60 @@ CNPJ: [CNPJ]"
                     <div id="listaContasPessoais"></div>
                 </div>
 
+                <!-- CONTAS A PAGAR -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">📅 Contas a Pagar</h2>
+                        <button class="btn btn-primary" onclick="openModal('contaPagar')">+ Nova Conta</button>
+                    </div>
+                    
+                    <!-- Resumo de Contas -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; padding: 20px; background: rgba(255, 255, 255, 0.02); border-radius: 12px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Vencidas</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--danger);" id="contasVencidas">0</div>
+                            <div style="font-size: 12px; color: var(--danger);" id="valorVencidas">R$ 0,00</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Vencem em 7 dias</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--accent);" id="contasProximas">0</div>
+                            <div style="font-size: 12px; color: var(--accent);" id="valorProximas">R$ 0,00</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Futuras</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--success);" id="contasFuturas">0</div>
+                            <div style="font-size: 12px; color: var(--success);" id="valorFuturas">R$ 0,00</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Total a Pagar</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);" id="totalAPagar">0</div>
+                            <div style="font-size: 12px; color: var(--primary);" id="valorTotalAPagar">R$ 0,00</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtros -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="filtrarContasPagar('todas')" id="filtroContasTodas" style="background: var(--primary);">
+                            📋 Todas
+                        </button>
+                        <button class="btn btn-secondary" onclick="filtrarContasPagar('vencidas')" id="filtroContasVencidas">
+                            ⚠️ Vencidas
+                        </button>
+                        <button class="btn btn-secondary" onclick="filtrarContasPagar('hoje')" id="filtroContasHoje">
+                            📅 Hoje
+                        </button>
+                        <button class="btn btn-secondary" onclick="filtrarContasPagar('proximas')" id="filtroContasProximas">
+                            🔔 Próximas (7 dias)
+                        </button>
+                        <button class="btn btn-secondary" onclick="filtrarContasPagar('pagas')" id="filtroContasPagas">
+                            ✅ Pagas
+                        </button>
+                    </div>
+                    
+                    <!-- Lista de Contas -->
+                    <div id="listaContasPagar"></div>
+                </div>
+
                 <!-- Despesas por Categoria -->
                 <div class="card" style="margin-top: 20px;">
                     <div class="card-header">
@@ -4014,6 +4102,81 @@ CNPJ: [CNPJ]"
                     <input type="text" class="form-input" id="contaPessoalBanco" placeholder="Ex: Nubank, Inter, Banco do Brasil">
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Adicionar Conta/Cartão</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Conta a Pagar -->
+    <div id="modalContaPagar" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📅 Nova Conta a Pagar</h2>
+                <button class="close-btn" onclick="closeModal('contaPagar')">×</button>
+            </div>
+            <form onsubmit="addContaPagar(event)">
+                <div class="form-group">
+                    <label class="form-label">Descrição da Conta</label>
+                    <input type="text" class="form-input" id="contaPagarDesc" required placeholder="Ex: Fatura Cartão Nubank, Prestação do Carro">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="contaPagarTipo" required>
+                            <option value="">Selecione...</option>
+                            <option value="cartao">💳 Fatura de Cartão</option>
+                            <option value="prestacao">🚗 Prestação</option>
+                            <option value="seguro">🛡️ Seguro</option>
+                            <option value="aluguel">🏠 Aluguel</option>
+                            <option value="condominio">🏢 Condomínio</option>
+                            <option value="luz">💡 Conta de Luz</option>
+                            <option value="agua">💧 Conta de Água</option>
+                            <option value="internet">📡 Internet</option>
+                            <option value="telefone">📱 Telefone</option>
+                            <option value="streaming">📺 Streaming</option>
+                            <option value="escola">🎓 Escola/Faculdade</option>
+                            <option value="saude">⚕️ Plano de Saúde</option>
+                            <option value="academia">🏋️ Academia</option>
+                            <option value="emprestimo">💰 Empréstimo</option>
+                            <option value="financiamento">🏦 Financiamento</option>
+                            <option value="boleto">📄 Boleto</option>
+                            <option value="outros">📌 Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Valor</label>
+                        <input type="number" step="0.01" class="form-input" id="contaPagarValor" required placeholder="0,00">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Data de Vencimento</label>
+                        <input type="date" class="form-input" id="contaPagarVencimento" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Recorrência</label>
+                        <select class="form-select" id="contaPagarRecorrencia">
+                            <option value="unica">Única (não repete)</option>
+                            <option value="mensal">Mensal</option>
+                            <option value="anual">Anual</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Observações (opcional)</label>
+                    <textarea class="form-input" id="contaPagarObs" rows="2" placeholder="Ex: Código de barras, número da fatura..."></textarea>
+                </div>
+                
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: 8px;">
+                    <input type="checkbox" id="contaPagarNotificar" checked style="width: 18px; height: 18px; cursor: pointer;">
+                    <label for="contaPagarNotificar" style="margin: 0; cursor: pointer; font-size: 13px;">
+                        🔔 Ativar alertas de vencimento
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-submit">Adicionar Conta</button>
             </form>
         </div>
     </div>
@@ -5483,6 +5646,417 @@ CNPJ: [CNPJ]"
         }
         if (!DB.get('contasPessoais') || DB.get('contasPessoais').length === 0) {
             DB.set('contasPessoais', []);
+        }
+        
+        // ============================================
+        // SISTEMA DE CONTAS A PAGAR
+        // ============================================
+        
+        // Inicializar contas a pagar
+        if (!DB.get('contasPagar')) {
+            DB.set('contasPagar', []);
+        }
+        
+        let filtroContasPagarAtual = 'todas';
+        
+        function addContaPagar(e) {
+            e.preventDefault();
+            
+            const conta = {
+                id: Date.now(),
+                descricao: document.getElementById('contaPagarDesc').value,
+                tipo: document.getElementById('contaPagarTipo').value,
+                valor: parseFloat(document.getElementById('contaPagarValor').value),
+                vencimento: document.getElementById('contaPagarVencimento').value,
+                recorrencia: document.getElementById('contaPagarRecorrencia').value,
+                observacoes: document.getElementById('contaPagarObs').value,
+                notificar: document.getElementById('contaPagarNotificar').checked,
+                paga: false,
+                dataPagamento: null,
+                dataCadastro: new Date().toISOString()
+            };
+            
+            const contas = DB.get('contasPagar');
+            contas.push(conta);
+            DB.set('contasPagar', contas);
+            
+            closeModal('contaPagar');
+            e.target.reset();
+            
+            renderContasPagar();
+            updateResumoContasPagar();
+            
+            alert('✅ Conta cadastrada com sucesso!');
+        }
+        
+        function renderContasPagar() {
+            const todasContas = DB.get('contasPagar');
+            const container = document.getElementById('listaContasPagar');
+            
+            if (!container) return;
+            
+            // Filtrar contas
+            let contas = [...todasContas];
+            const hoje = new Date().setHours(0, 0, 0, 0);
+            
+            if (filtroContasPagarAtual === 'vencidas') {
+                contas = contas.filter(c => !c.paga && new Date(c.vencimento) < hoje);
+            } else if (filtroContasPagarAtual === 'hoje') {
+                contas = contas.filter(c => !c.paga && new Date(c.vencimento).setHours(0,0,0,0) === hoje);
+            } else if (filtroContasPagarAtual === 'proximas') {
+                const seteDias = new Date(hoje);
+                seteDias.setDate(seteDias.getDate() + 7);
+                contas = contas.filter(c => !c.paga && new Date(c.vencimento) >= hoje && new Date(c.vencimento) <= seteDias);
+            } else if (filtroContasPagarAtual === 'pagas') {
+                contas = contas.filter(c => c.paga);
+            }
+            
+            // Ordenar por vencimento
+            contas.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
+            
+            if (contas.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 40px;">
+                    Nenhuma conta ${filtroContasPagarAtual === 'todas' ? '' : filtroContasPagarAtual} encontrada.
+                </p>`;
+                return;
+            }
+            
+            container.innerHTML = contas.map(c => {
+                const diasRestantes = calcularDiasRestantes(c.vencimento);
+                const status = getStatusConta(c, diasRestantes);
+                
+                const tipoIcons = {
+                    'cartao': '💳', 'prestacao': '🚗', 'seguro': '🛡️',
+                    'aluguel': '🏠', 'condominio': '🏢', 'luz': '💡',
+                    'agua': '💧', 'internet': '📡', 'telefone': '📱',
+                    'streaming': '📺', 'escola': '🎓', 'saude': '⚕️',
+                    'academia': '🏋️', 'emprestimo': '💰', 'financiamento': '🏦',
+                    'boleto': '📄', 'outros': '📌'
+                };
+                
+                return `
+                    <div class="card" style="margin-bottom: 12px; border-left: 4px solid ${status.color}; ${c.paga ? 'opacity: 0.6;' : ''}">
+                        <div style="padding: 16px;">
+                            <!-- Header -->
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin-bottom: 4px; ${c.paga ? 'text-decoration: line-through;' : ''}">
+                                        ${tipoIcons[c.tipo] || '📄'} ${c.descricao}
+                                    </h4>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">
+                                        ${getTipoLabel(c.tipo)}
+                                        ${c.recorrencia !== 'unica' ? ` • ${c.recorrencia === 'mensal' ? '📆 Mensal' : '📅 Anual'}` : ''}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 20px; font-weight: 700; color: ${c.paga ? 'var(--success)' : 'var(--text-primary)'};">
+                                        ${formatMoney(c.valor)}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Status e Vencimento -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 10px; background: rgba(255, 255, 255, 0.02); border-radius: 6px;">
+                                <div>
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">VENCIMENTO</div>
+                                    <div style="font-size: 14px; font-weight: 600;">
+                                        📅 ${formatDate(c.vencimento)}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    ${!c.paga ? `
+                                        <div style="padding: 6px 12px; background: ${status.bgColor}; color: ${status.color}; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                                            ${status.icon} ${status.text}
+                                        </div>
+                                    ` : `
+                                        <div style="padding: 6px 12px; background: rgba(6, 214, 160, 0.2); color: var(--success); border-radius: 6px; font-size: 12px; font-weight: 600;">
+                                            ✅ PAGA
+                                        </div>
+                                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                                            ${formatDate(c.dataPagamento)}
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                            
+                            ${c.observacoes ? `
+                                <div style="padding: 8px; background: rgba(255, 255, 255, 0.02); border-radius: 6px; margin-bottom: 12px;">
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">OBSERVAÇÕES</div>
+                                    <div style="font-size: 13px;">${c.observacoes}</div>
+                                </div>
+                            ` : ''}
+                            
+                            <!-- Ações -->
+                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                ${!c.paga ? `
+                                    <button class="btn" style="padding: 8px 16px; font-size: 12px; background: var(--success); color: white;" onclick="marcarComoPaga(${c.id})">
+                                        ✅ Marcar como Paga
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="desmarcarPaga(${c.id})">
+                                        ↩️ Desmarcar
+                                    </button>
+                                `}
+                                <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 12px;" onclick="editarContaPagar(${c.id})">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn" style="padding: 8px 16px; font-size: 12px; background: rgba(239, 71, 111, 0.2); color: var(--danger);" onclick="excluirContaPagar(${c.id})">
+                                    🗑️ Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function calcularDiasRestantes(vencimento) {
+            const hoje = new Date().setHours(0, 0, 0, 0);
+            const dataVenc = new Date(vencimento).setHours(0, 0, 0, 0);
+            const diff = dataVenc - hoje;
+            return Math.ceil(diff / (1000 * 60 * 60 * 24));
+        }
+        
+        function getStatusConta(conta, diasRestantes) {
+            if (conta.paga) {
+                return {
+                    text: 'PAGA',
+                    icon: '✅',
+                    color: 'var(--success)',
+                    bgColor: 'rgba(6, 214, 160, 0.2)'
+                };
+            }
+            
+            if (diasRestantes < 0) {
+                return {
+                    text: `VENCIDA HÁ ${Math.abs(diasRestantes)} DIAS`,
+                    icon: '⚠️',
+                    color: 'var(--danger)',
+                    bgColor: 'rgba(239, 71, 111, 0.2)'
+                };
+            } else if (diasRestantes === 0) {
+                return {
+                    text: 'VENCE HOJE',
+                    icon: '🔔',
+                    color: 'var(--danger)',
+                    bgColor: 'rgba(239, 71, 111, 0.2)'
+                };
+            } else if (diasRestantes <= 3) {
+                return {
+                    text: `VENCE EM ${diasRestantes} DIAS`,
+                    icon: '⏰',
+                    color: 'var(--danger)',
+                    bgColor: 'rgba(239, 71, 111, 0.2)'
+                };
+            } else if (diasRestantes <= 7) {
+                return {
+                    text: `VENCE EM ${diasRestantes} DIAS`,
+                    icon: '🔔',
+                    color: 'var(--accent)',
+                    bgColor: 'rgba(255, 210, 63, 0.2)'
+                };
+            } else {
+                return {
+                    text: `VENCE EM ${diasRestantes} DIAS`,
+                    icon: '📅',
+                    color: 'var(--success)',
+                    bgColor: 'rgba(6, 214, 160, 0.1)'
+                };
+            }
+        }
+        
+        function getTipoLabel(tipo) {
+            const labels = {
+                'cartao': '💳 Cartão', 'prestacao': '🚗 Prestação', 'seguro': '🛡️ Seguro',
+                'aluguel': '🏠 Aluguel', 'condominio': '🏢 Condomínio', 'luz': '💡 Luz',
+                'agua': '💧 Água', 'internet': '📡 Internet', 'telefone': '📱 Telefone',
+                'streaming': '📺 Streaming', 'escola': '🎓 Escola', 'saude': '⚕️ Saúde',
+                'academia': '🏋️ Academia', 'emprestimo': '💰 Empréstimo', 'financiamento': '🏦 Financiamento',
+                'boleto': '📄 Boleto', 'outros': '📌 Outros'
+            };
+            return labels[tipo] || tipo;
+        }
+        
+        function updateResumoContasPagar() {
+            const contas = DB.get('contasPagar').filter(c => !c.paga);
+            const hoje = new Date().setHours(0, 0, 0, 0);
+            
+            let vencidas = 0, valorVencidas = 0;
+            let proximas = 0, valorProximas = 0;
+            let futuras = 0, valorFuturas = 0;
+            
+            contas.forEach(c => {
+                const diasRestantes = calcularDiasRestantes(c.vencimento);
+                
+                if (diasRestantes < 0) {
+                    vencidas++;
+                    valorVencidas += c.valor;
+                } else if (diasRestantes <= 7) {
+                    proximas++;
+                    valorProximas += c.valor;
+                } else {
+                    futuras++;
+                    valorFuturas += c.valor;
+                }
+            });
+            
+            const totalContas = contas.length;
+            const totalValor = valorVencidas + valorProximas + valorFuturas;
+            
+            // Atualizar elementos
+            const els = {
+                contasVencidas: document.getElementById('contasVencidas'),
+                valorVencidas: document.getElementById('valorVencidas'),
+                contasProximas: document.getElementById('contasProximas'),
+                valorProximas: document.getElementById('valorProximas'),
+                contasFuturas: document.getElementById('contasFuturas'),
+                valorFuturas: document.getElementById('valorFuturas'),
+                totalAPagar: document.getElementById('totalAPagar'),
+                valorTotalAPagar: document.getElementById('valorTotalAPagar')
+            };
+            
+            if (els.contasVencidas) els.contasVencidas.textContent = vencidas;
+            if (els.valorVencidas) els.valorVencidas.textContent = formatMoney(valorVencidas);
+            if (els.contasProximas) els.contasProximas.textContent = proximas;
+            if (els.valorProximas) els.valorProximas.textContent = formatMoney(valorProximas);
+            if (els.contasFuturas) els.contasFuturas.textContent = futuras;
+            if (els.valorFuturas) els.valorFuturas.textContent = formatMoney(valorFuturas);
+            if (els.totalAPagar) els.totalAPagar.textContent = totalContas;
+            if (els.valorTotalAPagar) els.valorTotalAPagar.textContent = formatMoney(totalValor);
+            
+            // Mostrar alertas se houver contas vencidas ou próximas
+            mostrarAlertasVencimento(vencidas, proximas);
+        }
+        
+        function mostrarAlertasVencimento(vencidas, proximas) {
+            // Remover alertas anteriores
+            const alertaAnterior = document.getElementById('alertaContasPagar');
+            if (alertaAnterior) alertaAnterior.remove();
+            
+            if (vencidas === 0 && proximas === 0) return;
+            
+            // Criar alerta
+            const alerta = document.createElement('div');
+            alerta.id = 'alertaContasPagar';
+            alerta.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                max-width: 350px;
+                background: ${vencidas > 0 ? 'var(--danger)' : 'var(--accent)'};
+                color: white;
+                padding: 16px;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+                cursor: pointer;
+            `;
+            
+            alerta.innerHTML = `
+                <div style="display: flex; align-items: start; gap: 12px;">
+                    <div style="font-size: 32px;">${vencidas > 0 ? '⚠️' : '🔔'}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; margin-bottom: 4px; font-size: 15px;">
+                            ${vencidas > 0 ? 'Contas Vencidas!' : 'Contas Próximas!'}
+                        </div>
+                        <div style="font-size: 13px; opacity: 0.9;">
+                            ${vencidas > 0 ? `${vencidas} conta(s) vencida(s)` : ''}
+                            ${vencidas > 0 && proximas > 0 ? ' • ' : ''}
+                            ${proximas > 0 ? `${proximas} vence(m) em 7 dias` : ''}
+                        </div>
+                        <div style="font-size: 11px; margin-top: 8px; opacity: 0.8;">
+                            Clique para ver detalhes
+                        </div>
+                    </div>
+                    <button onclick="event.stopPropagation(); this.parentElement.parentElement.remove();" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; line-height: 1;">×</button>
+                </div>
+            `;
+            
+            alerta.onclick = () => {
+                switchTab('pessoal');
+                setTimeout(() => {
+                    document.getElementById('listaContasPagar').scrollIntoView({ behavior: 'smooth' });
+                    if (vencidas > 0) {
+                        filtrarContasPagar('vencidas');
+                    }
+                }, 300);
+                alerta.remove();
+            };
+            
+            document.body.appendChild(alerta);
+            
+            // Remover após 10 segundos
+            setTimeout(() => alerta.remove(), 10000);
+        }
+        
+        function filtrarContasPagar(filtro) {
+            filtroContasPagarAtual = filtro;
+            
+            // Atualizar botões
+            ['todas', 'vencidas', 'hoje', 'proximas', 'pagas'].forEach(f => {
+                const btn = document.getElementById(`filtroContas${f.charAt(0).toUpperCase() + f.slice(1)}`);
+                if (btn) {
+                    if (f === filtro) {
+                        btn.style.background = 'var(--primary)';
+                        btn.style.color = 'white';
+                    } else {
+                        btn.style.background = '';
+                        btn.style.color = '';
+                    }
+                }
+            });
+            
+            renderContasPagar();
+        }
+        
+        function marcarComoPaga(id) {
+            if (!confirm('Marcar esta conta como paga?')) return;
+            
+            const contas = DB.get('contasPagar');
+            const conta = contas.find(c => c.id === id);
+            if (!conta) return;
+            
+            conta.paga = true;
+            conta.dataPagamento = new Date().toISOString().split('T')[0];
+            
+            DB.set('contasPagar', contas);
+            renderContasPagar();
+            updateResumoContasPagar();
+            
+            alert('✅ Conta marcada como paga!');
+        }
+        
+        function desmarcarPaga(id) {
+            if (!confirm('Desmarcar pagamento desta conta?')) return;
+            
+            const contas = DB.get('contasPagar');
+            const conta = contas.find(c => c.id === id);
+            if (!conta) return;
+            
+            conta.paga = false;
+            conta.dataPagamento = null;
+            
+            DB.set('contasPagar', contas);
+            renderContasPagar();
+            updateResumoContasPagar();
+        }
+        
+        function editarContaPagar(id) {
+            alert('Função de editar em desenvolvimento...');
+        }
+        
+        function excluirContaPagar(id) {
+            if (!confirm('Tem certeza que deseja excluir esta conta?')) return;
+            
+            let contas = DB.get('contasPagar');
+            contas = contas.filter(c => c.id !== id);
+            DB.set('contasPagar', contas);
+            
+            renderContasPagar();
+            updateResumoContasPagar();
+            
+            alert('🗑️ Conta excluída!');
         }
         
         // Initialize sample data if empty
@@ -8521,6 +9095,8 @@ function renderTopServicos(servicosComStats) {
 // ============================================
 
 function mostrarConfigSecao(secao) {
+    console.log('⚙️ Mostrando seção:', secao);
+    
     // Esconder todas as seções
     document.getElementById('configPerfilSecao').style.display = 'none';
     document.getElementById('configDocumentosSecao').style.display = 'none';
@@ -8562,10 +9138,20 @@ function mostrarConfigSecao(secao) {
         document.getElementById('btnConfigLogo').classList.remove('btn-secondary');
         document.getElementById('btnConfigLogo').classList.add('btn-primary');
     } else if (secao === 'tema') {
-        if (document.getElementById('configTemaSecao')) {
-            document.getElementById('configTemaSecao').style.display = 'block';
-            document.getElementById('btnConfigTema').classList.remove('btn-secondary');
-            document.getElementById('btnConfigTema').classList.add('btn-primary');
+        console.log('🌓 Tentando mostrar seção de tema...');
+        const temaSecao = document.getElementById('configTemaSecao');
+        console.log('📍 Seção de tema encontrada:', temaSecao ? 'SIM' : 'NÃO');
+        
+        if (temaSecao) {
+            temaSecao.style.display = 'block';
+            console.log('✅ Seção de tema mostrada');
+            
+            const btnTema = document.getElementById('btnConfigTema');
+            if (btnTema) {
+                btnTema.classList.remove('btn-secondary');
+                btnTema.classList.add('btn-primary');
+                console.log('✅ Botão tema ativado');
+            }
         }
     } else if (secao === 'sync') {
         if (document.getElementById('configSyncSecao')) {
@@ -8583,7 +9169,7 @@ function mostrarConfigSecao(secao) {
 function initTheme() {
     // Carregar tema salvo ou usar padrão (escuro)
     const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
+    setTheme(savedTheme, false); // false = não mostrar alert
     
     // Atualizar toggle
     const toggle = document.getElementById('themeToggle');
@@ -8595,14 +9181,28 @@ function initTheme() {
 function toggleTheme() {
     const toggle = document.getElementById('themeToggle');
     const newTheme = toggle.checked ? 'dark' : 'light';
-    setTheme(newTheme);
+    setTheme(newTheme, true); // true = mostrar alert
 }
 
-function setTheme(theme) {
-    console.log(`🎨 Alterando tema para: ${theme}`);
+function setTheme(theme, showAlert = true) {
+    console.log('🎨 === SETTHEME CHAMADO ===');
+    console.log('Tema solicitado:', theme);
+    console.log('Mostrar alert:', showAlert);
     
     // Aplicar tema no HTML
     document.documentElement.setAttribute('data-theme', theme);
+    
+    // Verificar se aplicou
+    const aplicado = document.documentElement.getAttribute('data-theme');
+    console.log('✅ Atributo aplicado:', aplicado);
+    
+    // Verificar variável CSS
+    const style = getComputedStyle(document.documentElement);
+    const bgDark = style.getPropertyValue('--bg-dark').trim();
+    const bgCard = style.getPropertyValue('--bg-card').trim();
+    console.log('📊 Variáveis CSS:');
+    console.log('  --bg-dark:', bgDark);
+    console.log('  --bg-card:', bgCard);
     
     // Salvar preferência
     localStorage.setItem('theme', theme);
@@ -8611,35 +9211,31 @@ function setTheme(theme) {
     const toggle = document.getElementById('themeToggle');
     if (toggle) {
         toggle.checked = theme === 'dark';
+        console.log('🔘 Toggle atualizado:', theme === 'dark' ? 'checked' : 'unchecked');
     }
     
-    // Feedback visual imediato
-    const body = document.body;
-    body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+    console.log('✅ Tema aplicado com sucesso!');
     
-    // Forçar reflow para aplicar transição
-    void body.offsetWidth;
-    
-    // Feedback no console
-    console.log(`✅ Tema ${theme === 'dark' ? 'Escuro' : 'Claro'} aplicado!`);
-    
-    // Alert visual (opcional)
-    const alertMsg = document.createElement('div');
-    alertMsg.textContent = `Tema ${theme === 'dark' ? 'Escuro 🌙' : 'Claro ☀️'} ativado!`;
-    alertMsg.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        background: var(--primary);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-weight: 600;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    document.body.appendChild(alertMsg);
-    setTimeout(() => alertMsg.remove(), 2000);
+    // Alert visual apenas se showAlert for true
+    if (showAlert) {
+        const alertMsg = document.createElement('div');
+        alertMsg.textContent = `Tema ${theme === 'dark' ? 'Escuro 🌙' : 'Claro ☀️'} ativado!`;
+        alertMsg.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(alertMsg);
+        setTimeout(() => alertMsg.remove(), 2000);
+        console.log('💬 Alert mostrado');
+    }
 }
 
 function carregarConfigEmpresa() {
@@ -9486,6 +10082,32 @@ if (!DB.get('configuracoes')) {
             try {
                 console.log('🚀 Inicializando EventProDJ...');
                 
+                // Verificar menu mobile
+                const mobileMenu = document.getElementById('mobileMenu');
+                const mobileToggle = document.querySelector('.mobile-menu-toggle');
+                console.log('📱 Menu mobile:', mobileMenu ? 'Encontrado' : '❌ NÃO ENCONTRADO');
+                console.log('🍔 Botão toggle:', mobileToggle ? 'Encontrado' : '❌ NÃO ENCONTRADO');
+                
+                // Verificar estilos do botão
+                if (mobileToggle) {
+                    const styles = getComputedStyle(mobileToggle);
+                    console.log('🔍 Estilos do botão hamburguer:');
+                    console.log('  display:', styles.display);
+                    console.log('  visibility:', styles.visibility);
+                    console.log('  opacity:', styles.opacity);
+                    console.log('  color:', styles.color);
+                    console.log('  font-size:', styles.fontSize);
+                    console.log('  position:', styles.position);
+                    
+                    const rect = mobileToggle.getBoundingClientRect();
+                    console.log('📐 Posição e tamanho:');
+                    console.log('  top:', rect.top, 'left:', rect.left);
+                    console.log('  width:', rect.width, 'height:', rect.height);
+                    console.log('  visível na tela:', rect.width > 0 && rect.height > 0);
+                }
+                
+                console.log('📱 Largura da tela:', window.innerWidth, 'px');
+                
                 // Inicializar tema
                 initTheme();
                 
@@ -10036,10 +10658,19 @@ if (!DB.get('configuracoes')) {
         // ============================================
         
         function toggleMobileMenu() {
+            console.log('🍔 Toggle menu mobile chamado');
             const menu = document.getElementById('mobileMenu');
             const overlay = document.getElementById('mobileMenuOverlay');
+            
+            if (!menu || !overlay) {
+                console.error('❌ Elementos do menu não encontrados!');
+                return;
+            }
+            
             menu.classList.toggle('active');
             overlay.classList.toggle('active');
+            
+            console.log('📱 Menu active:', menu.classList.contains('active'));
             
             // Prevenir scroll do body quando menu aberto
             if (menu.classList.contains('active')) {
@@ -10159,6 +10790,8 @@ if (!DB.get('configuracoes')) {
                 renderContasPessoais();
                 renderDespesasPorCategoria();
                 updateStatsPessoal();
+                renderContasPagar();
+                updateResumoContasPagar();
             }
         }
 
