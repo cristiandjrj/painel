@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,20 +35,39 @@
             --border: #2D3561;
         }
         
-        /* TEMA CLARO */
+        /* TEMA CLARO - Cores otimizadas */
         [data-theme="light"] {
             --primary: #FF6B35;
             --primary-dark: #E85A2B;
-            --secondary: #004E89;
-            --accent: #FFD23F;
-            --success: #06D6A0;
-            --danger: #EF476F;
-            --bg-dark: #F5F7FA;
+            --secondary: #2563EB;
+            --accent: #F59E0B;
+            --success: #10B981;
+            --danger: #EF4444;
+            --bg-dark: #F8FAFC;
             --bg-card: #FFFFFF;
-            --bg-card-hover: #F0F2F5;
-            --text-primary: #1A202C;
-            --text-secondary: #718096;
+            --bg-card-hover: #F1F5F9;
+            --text-primary: #0F172A;
+            --text-secondary: #64748B;
             --border: #E2E8F0;
+        }
+        
+        /* Estilos específicos do tema claro */
+        [data-theme="light"] .stat-card,
+        [data-theme="light"] .card,
+        [data-theme="light"] .client-card,
+        [data-theme="light"] .event-card-full {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        [data-theme="light"] .stat-card:hover,
+        [data-theme="light"] .card:hover,
+        [data-theme="light"] .client-card:hover,
+        [data-theme="light"] .event-card-full:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        [data-theme="light"] header {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
         
         /* TEMA ESCURO (padrão) */
@@ -66,15 +85,16 @@
             --text-secondary: #A0AEC0;
             --border: #2D3561;
         }
+        
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
 
         body {
             font-family: 'IBM Plex Mono', monospace;
             background: var(--bg-dark);
             color: var(--text-primary);
             min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 20% 50%, rgba(0, 78, 137, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%);
         }
 
         .container {
@@ -85,7 +105,7 @@
 
         /* Header */
         header {
-            background: rgba(20, 27, 61, 0.95);
+            background: var(--bg-card);
             backdrop-filter: blur(10px);
             border-bottom: 2px solid var(--border);
             padding: 16px 0;
@@ -305,7 +325,11 @@
             }
             
             .sync-status {
-                margin-left: auto;
+                display: none !important;
+            }
+            
+            .sync-text {
+                display: none;
             }
             
             .mobile-menu-toggle {
@@ -453,8 +477,8 @@
             
             /* Stats grid - 1 coluna no mobile */
             .stats-grid {
-                grid-template-columns: 1fr !important;
-                gap: 12px !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
             }
             
             /* Cards ainda mais compactos */
@@ -908,6 +932,17 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
             }
         }
 
@@ -8564,7 +8599,9 @@ function toggleTheme() {
 }
 
 function setTheme(theme) {
-    // Aplicar tema
+    console.log(`🎨 Alterando tema para: ${theme}`);
+    
+    // Aplicar tema no HTML
     document.documentElement.setAttribute('data-theme', theme);
     
     // Salvar preferência
@@ -8576,8 +8613,33 @@ function setTheme(theme) {
         toggle.checked = theme === 'dark';
     }
     
-    // Feedback visual
-    console.log(`🎨 Tema alterado para: ${theme === 'dark' ? 'Escuro' : 'Claro'}`);
+    // Feedback visual imediato
+    const body = document.body;
+    body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+    
+    // Forçar reflow para aplicar transição
+    void body.offsetWidth;
+    
+    // Feedback no console
+    console.log(`✅ Tema ${theme === 'dark' ? 'Escuro' : 'Claro'} aplicado!`);
+    
+    // Alert visual (opcional)
+    const alertMsg = document.createElement('div');
+    alertMsg.textContent = `Tema ${theme === 'dark' ? 'Escuro 🌙' : 'Claro ☀️'} ativado!`;
+    alertMsg.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: var(--primary);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(alertMsg);
+    setTimeout(() => alertMsg.remove(), 2000);
 }
 
 function carregarConfigEmpresa() {
@@ -8879,7 +8941,7 @@ if (!DB.get('configuracoes')) {
         // ⚠️ CONFIGURAÇÃO DO FIREBASE
         // ============================================
         // Cole suas credenciais do Firebase aqui:
-        const FIREBASE_CONFIG = {
+         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyB3isxgzmM5PJnoW9Cn0uzOmQLpHm5WABI",                    // Cole aqui: AIzaSy...
             authDomain: "eventprodj.firebaseapp.com",                // Cole aqui: seu-projeto.firebaseapp.com
             databaseURL: "https://eventprodj-default-rtdb.firebaseio.com",               // Cole aqui: https://seu-projeto.firebaseio.com
