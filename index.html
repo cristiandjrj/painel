@@ -20,6 +20,11 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
         :root {
             --primary: #FF6B35;
             --primary-dark: #E85A2B;
@@ -103,12 +108,17 @@
             background: var(--bg-dark);
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+            width: 100%;
+            overflow-x: hidden;
         }
 
         /* Header */
@@ -368,6 +378,10 @@
                 padding: 12px 0;
             }
             
+            .header-content {
+                padding: 0 16px !important;
+            }
+            
             .logo {
                 font-size: 24px;
             }
@@ -505,8 +519,15 @@
         
         /* OTIMIZAÇÃO ESPECÍFICA PARA iPHONE 15 / 15 Pro Max */
         @media (max-width: 430px) {
+            html, body {
+                overflow-x: hidden !important;
+                max-width: 100vw !important;
+            }
+            
             .container {
                 padding: 12px;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
             }
             
             /* Stats grid - 1 coluna no mobile */
@@ -661,6 +682,11 @@
                 white-space: nowrap !important;
             }
             
+            /* Ocultar email no mobile */
+            .client-email {
+                display: none !important;
+            }
+            
             .client-badges {
                 width: 100% !important;
                 justify-content: flex-start !important;
@@ -671,15 +697,9 @@
                 padding: 4px 8px !important;
             }
             
+            /* Ocultar grid de informações no mobile (aniversário, CPF, endereço) */
             .client-info-grid {
-                grid-template-columns: 1fr !important;
-                gap: 8px !important;
-                margin-top: 12px !important;
-                padding-top: 12px !important;
-            }
-            
-            .client-info-item {
-                font-size: 11px !important;
+                display: none !important;
             }
             
             .client-actions {
@@ -706,20 +726,124 @@
             /* Action buttons */
             .action-btn {
                 padding: 10px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
             }
             
             .action-icon {
                 width: 32px !important;
                 height: 32px !important;
                 font-size: 16px !important;
+                flex-shrink: 0 !important;
+            }
+            
+            .action-text {
+                max-width: 100% !important;
+                overflow: hidden !important;
             }
             
             .action-text h4 {
                 font-size: 12px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
             }
             
             .action-text p {
                 font-size: 10px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            
+            /* Transações recentes */
+            .transaction-item {
+                padding: 10px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+            
+            .transaction-info {
+                max-width: 60% !important;
+                overflow: hidden !important;
+            }
+            
+            .transaction-details h4 {
+                font-size: 12px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            
+            .transaction-date {
+                font-size: 10px !important;
+            }
+            
+            .transaction-amount {
+                font-size: 14px !important;
+                white-space: nowrap !important;
+            }
+            
+            /* Cards do dashboard */
+            .card {
+                padding: 14px !important;
+                margin-bottom: 16px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+            
+            .card-header {
+                margin-bottom: 12px !important;
+                padding-bottom: 10px !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+            
+            .card-title {
+                font-size: 14px !important;
+                word-wrap: break-word !important;
+            }
+            
+            /* Event cards no dashboard */
+            .event-card {
+                padding: 12px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+            
+            .event-header {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+            
+            .event-title {
+                font-size: 13px !important;
+                word-wrap: break-word !important;
+            }
+            
+            .event-client {
+                font-size: 11px !important;
+                word-wrap: break-word !important;
+            }
+            
+            .event-details {
+                gap: 8px !important;
+            }
+            
+            .event-detail {
+                font-size: 11px !important;
+            }
+            
+            /* Origem dos clientes */
+            #origemStats {
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+            
+            #origemStats > div {
+                max-width: 100% !important;
+                overflow: hidden !important;
+                word-wrap: break-word !important;
             }
             
             /* Form inputs menores */
@@ -807,7 +931,103 @@
             
             /* Event cards na lista */
             .event-card-full {
-                padding: 12px !important;
+                padding: 14px !important;
+                margin-bottom: 12px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+                word-wrap: break-word !important;
+            }
+            
+            .event-card-main {
+                flex-direction: column !important;
+                gap: 8px !important;
+                align-items: flex-start !important;
+                max-width: 100% !important;
+            }
+            
+            .event-card-info {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+            
+            .event-card-info h3 {
+                font-size: 16px !important;
+                margin-bottom: 4px !important;
+                line-height: 1.3 !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+            
+            .event-card-client {
+                font-size: 12px !important;
+                margin-bottom: 10px !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+            
+            /* Estilos para os divs inline dentro do card */
+            .event-card-full div[style*="display: flex"] {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                font-size: 11px !important;
+                max-width: 100% !important;
+            }
+            
+            .event-card-full div[style*="display: flex"] > div {
+                font-size: 11px !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+            
+            .event-card-full strong {
+                font-size: 12px !important;
+                word-wrap: break-word !important;
+            }
+            
+            .event-status {
+                font-size: 10px !important;
+                padding: 4px 10px !important;
+                white-space: nowrap !important;
+                align-self: flex-start !important;
+            }
+            
+            .event-card-actions {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 6px !important;
+                margin-top: 12px !important;
+                padding-top: 12px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            .event-action-btn {
+                padding: 8px 10px !important;
+                font-size: 10px !important;
+                width: 100% !important;
+                min-width: unset !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            
+            /* Event observations no mobile */
+            .event-observations {
+                margin-top: 10px !important;
+                padding-top: 10px !important;
+            }
+            
+            .event-observations-text {
+                font-size: 11px !important;
+                line-height: 1.5 !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                white-space: normal !important;
+                max-width: 100% !important;
+                text-align: left !important;
+                display: block !important;
             }
             
             .event-card-header {
@@ -1908,6 +2128,8 @@
             padding: 20px;
             transition: all 0.3s ease;
             cursor: pointer;
+            max-width: 100%;
+            overflow: hidden;
         }
 
         .event-card-full:hover {
@@ -1989,6 +2211,24 @@
         .event-action-btn:hover {
             background: var(--primary);
             border-color: var(--primary);
+        }
+
+        /* Event Observations */
+        .event-observations {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .event-observations-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            text-align: left;
+            display: block;
         }
 
         /* Kanban View */
@@ -2590,24 +2830,34 @@
         
         @media (max-width: 768px) {
             .footer {
-                padding: 30px 15px 15px;
+                padding: 30px 16px 15px;
+                margin-top: 40px;
+            }
+            
+            .footer-content {
+                padding: 0 !important;
             }
             
             .footer-brand {
-                font-size: 24px;
+                font-size: 22px;
             }
             
             .footer-signature {
-                font-size: 14px;
+                font-size: 16px;
+                margin-bottom: 20px;
             }
             
             .footer-social {
-                gap: 12px;
+                gap: 10px;
+                flex-direction: column;
+                align-items: stretch;
             }
             
             .social-link {
-                padding: 10px 16px;
+                padding: 12px 20px;
                 font-size: 13px;
+                justify-content: center;
+            }
             }
         }
     </style>
@@ -2944,34 +3194,26 @@
                 </div>
 
                 <!-- Client Stats -->
-                <div class="clients-stats">
-                    <div class="client-stat-card">
-                        <div class="client-stat-icon bg-primary">👥</div>
-                        <div class="client-stat-info">
-                            <div class="client-stat-value" id="totalClientes">0</div>
-                            <div class="client-stat-label">Total de Clientes</div>
-                        </div>
+                <div class="stats-grid" style="margin-bottom: 25px;">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">👥</div>
+                        <div class="stat-label">Total de Clientes</div>
+                        <div class="stat-value" id="totalClientes">0</div>
                     </div>
-                    <div class="client-stat-card">
-                        <div class="client-stat-icon bg-success">🎂</div>
-                        <div class="client-stat-info">
-                            <div class="client-stat-value" id="aniversariantesProximos">0</div>
-                            <div class="client-stat-label">Aniversários Este Mês</div>
-                        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">🎂</div>
+                        <div class="stat-label">Aniversários Este Mês</div>
+                        <div class="stat-value" id="aniversariantesProximos">0</div>
                     </div>
-                    <div class="client-stat-card">
-                        <div class="client-stat-icon bg-accent">📸</div>
-                        <div class="client-stat-info">
-                            <div class="client-stat-value" id="clientesInstagram">0</div>
-                            <div class="client-stat-label">Via Instagram</div>
-                        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-accent">📸</div>
+                        <div class="stat-label">Via Instagram</div>
+                        <div class="stat-value" id="clientesInstagram">0</div>
                     </div>
-                    <div class="client-stat-card">
-                        <div class="client-stat-icon bg-secondary">🤝</div>
-                        <div class="client-stat-info">
-                            <div class="client-stat-value" id="clientesIndicacao">0</div>
-                            <div class="client-stat-label">Via Indicação</div>
-                        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-secondary">🤝</div>
+                        <div class="stat-label">Via Indicação</div>
+                        <div class="stat-value" id="clientesIndicacao">0</div>
                     </div>
                 </div>
 
@@ -6523,6 +6765,18 @@ CNPJ: [CNPJ]"
             const eventos = DB.get('eventos');
             const clientes = DB.get('clientes');
 
+            // Obter mês e ano atual para filtrar
+            const hoje = new Date();
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
+
+            // Filtrar receitas do mês atual
+            const receitasDoMes = receitas.filter(r => {
+                if (!r.data) return false;
+                const dataReceita = new Date(r.data + 'T00:00:00');
+                return dataReceita.getMonth() === mesAtual && dataReceita.getFullYear() === anoAtual;
+            });
+
             // Separar despesas gerais de despesas de eventos
             // Identifica por flag OU pela descrição (para dados antigos)
             const despesas = todasDespesas.filter(d => {
@@ -6533,18 +6787,32 @@ CNPJ: [CNPJ]"
                 // Se não tem flag, verificar pela descrição
                 return !d.descricao.includes('[Custo Evento:');
             });
+
+            // Filtrar despesas do mês atual
+            const despesasDoMes = despesas.filter(d => {
+                if (!d.data) return false;
+                const dataDespesa = new Date(d.data + 'T00:00:00');
+                return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
+            });
+
+            // Filtrar custos de eventos do mês atual
+            const custosEventosDoMes = custosEventos.filter(c => {
+                if (!c.data) return false;
+                const dataCusto = new Date(c.data + 'T00:00:00');
+                return dataCusto.getMonth() === mesAtual && dataCusto.getFullYear() === anoAtual;
+            });
             
-            const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
-            const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
+            const totalReceitas = receitasDoMes.reduce((sum, r) => sum + r.valor, 0);
+            const totalDespesas = despesasDoMes.reduce((sum, d) => sum + d.valor, 0);
             const totalCustosGerais = custosGerais.reduce((sum, c) => sum + c.valor, 0);
-            const totalCustosEventos = custosEventos.reduce((sum, c) => sum + c.valor, 0);
+            const totalCustosEventos = custosEventosDoMes.reduce((sum, c) => sum + c.valor, 0);
             
             // DEBUG: Verificar valores
-            console.log('📊 DEBUG Dashboard:');
-            console.log('Receitas:', totalReceitas, '(' + receitas.length + ' itens)');
-            console.log('Despesas:', totalDespesas, '(' + despesas.length + ' itens)');
+            console.log('📊 DEBUG Dashboard (Mês Atual):');
+            console.log('Receitas do Mês:', totalReceitas, '(' + receitasDoMes.length + ' itens)');
+            console.log('Despesas do Mês:', totalDespesas, '(' + despesasDoMes.length + ' itens)');
             console.log('Custos Gerais:', totalCustosGerais, '(' + custosGerais.length + ' itens) - NÃO são subtraídos separadamente');
-            console.log('Custos Eventos:', totalCustosEventos, '(' + custosEventos.length + ' itens)');
+            console.log('Custos Eventos do Mês:', totalCustosEventos, '(' + custosEventosDoMes.length + ' itens)');
             
             // Alert temporário para debug
             const lucroCalculado = totalReceitas - totalDespesas - totalCustosEventos;
@@ -6554,10 +6822,6 @@ CNPJ: [CNPJ]"
             console.log('ℹ️ Custos Gerais já estão incluídos nas Despesas quando pagos por uma conta');
             
             // Calcular valores a receber APENAS do mês atual
-            const hoje = new Date();
-            const mesAtual = hoje.getMonth();
-            const anoAtual = hoje.getFullYear();
-            
             let valoresAReceber = 0;
             let clientesPendentes = 0;
             clientes.forEach(cliente => {
@@ -8539,7 +8803,8 @@ CNPJ: [CNPJ]"
             document.getElementById('financeiroTotalDespesas').textContent = formatMoney(totalDespesas);
             document.getElementById('financeiroLucro').textContent = formatMoney(lucro);
             document.getElementById('financeiroLucro').style.color = lucro >= 0 ? 'var(--success)' : 'var(--danger)';
-            document.getElementById('financeiroTotalContas').textContent = contas.filter(c => c.ativa).length;
+            // Total de contas ativas comentado pois o elemento não existe
+            // document.getElementById('financeiroTotalContas').textContent = contas.filter(c => c.ativa).length;
             
             // Formas de Pagamento
             const formasPagamento = {};
@@ -9081,7 +9346,8 @@ CNPJ: [CNPJ]"
             const totalDespesas = despesasFiltradas.reduce((sum, d) => sum + d.valor, 0);
             const totalCustosGerais = custosGeraisFiltrados.reduce((sum, c) => sum + c.valor, 0);
             const totalCustosEventos = custosEventosFiltrados.reduce((sum, c) => sum + c.valor, 0);
-            const lucro = totalReceitas - totalDespesas - totalCustosGerais - totalCustosEventos;
+            // IMPORTANTE: Não subtrair custosGerais separadamente pois eles já viraram despesas
+            const lucro = totalReceitas - totalDespesas - totalCustosEventos;
             
             let valoresAReceber = 0;
             clientes.forEach(cliente => {
@@ -9114,9 +9380,11 @@ CNPJ: [CNPJ]"
             if (document.getElementById('financeiroCustosEventos')) {
                 document.getElementById('financeiroCustosEventos').textContent = formatMoney(totalCustosEventos);
             }
-            // Total de Despesas (despesas + custos gerais + custos eventos)
+            // Total de Despesas (despesas + custos eventos)
+            // IMPORTANTE: Não somar custosGerais separadamente pois eles já viraram despesas
+            // quando foram pagos por uma conta (evita duplicação)
             if (document.getElementById('financeiroTotalDespesas')) {
-                document.getElementById('financeiroTotalDespesas').textContent = formatMoney(totalDespesas + totalCustosGerais + totalCustosEventos);
+                document.getElementById('financeiroTotalDespesas').textContent = formatMoney(totalDespesas + totalCustosEventos);
             }
             if (document.getElementById('financeiroLucro')) {
                 document.getElementById('financeiroLucro').textContent = formatMoney(lucro);
@@ -11715,9 +11983,9 @@ if (!DB.get('configuracoes')) {
                             </div>
                         </div>
                         ${e.observacoes ? `
-                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
-                                <div style="font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    📋 ${e.observacoes.replace(/\n/g, ' ')}
+                            <div class="event-observations">
+                                <div class="event-observations-text">
+                                    📋 ${e.observacoes.replace(/\n/g, '<br>')}
                                 </div>
                             </div>
                         ` : ''}
@@ -12717,7 +12985,7 @@ if (!DB.get('configuracoes')) {
             window.ultimoPDFGerado = pdfFile;
             
             // Salvar
-            doc.save(nomeArquivo);
+            // doc.save(nomeArquivo); // Comentado - não fazer download automático
             
             // Mostrar opções de compartilhamento
             mostrarOpcoesCompartilhamento(nomeArquivo);
@@ -13102,7 +13370,7 @@ _______________________________
             window.ultimoPDFGerado = pdfFile;
             
             // Salvar
-            doc.save(nomeArquivo);
+            // doc.save(nomeArquivo); // Comentado - não fazer download automático
             
             // Mostrar opções de compartilhamento
             mostrarOpcoesCompartilhamento(nomeArquivo);
@@ -13188,7 +13456,7 @@ _______________________________
             window.ultimoPDFGerado = pdfFile;
             
             // Salvar PDF
-            doc.save(nomeArquivo);
+            // doc.save(nomeArquivo); // Comentado - não fazer download automático
             
             // Mostrar opções de compartilhamento
             mostrarOpcoesCompartilhamento(nomeArquivo);
