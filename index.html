@@ -13261,16 +13261,76 @@ _______________________________
             const larguraPagina = 180;
             const dataAtual = new Date().toLocaleDateString('pt-BR');
             
-            // Usar cabeçalho padronizado
-            let y = criarCabecalhoPDF(doc, config);
+            // Obter cidade da empresa ou do config
+            const cidadeEmpresa = config.cidade || 'Rio de Janeiro';
+            const dataExtenso = `${cidadeEmpresa}, ${dataAtual}`;
             
-            // Data no canto superior direito
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`📅 ${dataAtual}`, margemDireita, 15, { align: 'right' });
+            let y = 15;
             
-            // TÍTULO: RECIBO
+            // ===== CABEÇALHO CUSTOMIZADO PARA RECIBO =====
+            // Logo à esquerda
+            if (config.logoBase64) {
+                try {
+                    doc.addImage(config.logoBase64, 'PNG', margemEsquerda, y, 35, 35);
+                } catch (e) {
+                    console.log('Logo não adicionada');
+                }
+            }
+            
+            // Informações da empresa ao lado da logo (alinhadas à esquerda E MESMA ALTURA)
+            let yEmpresa = y + 2; // Ajuste para alinhar com o topo da logo
+            let xEmpresa = margemEsquerda + 40; // Ao lado da logo
+            
+            // Nome da empresa (apenas uma vez)
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', xEmpresa, yEmpresa);
+            yEmpresa += 6;
+            
+            // REMOVER DATA AQUI (estava ao lado da logo)
+            // doc.text(`${dataAtual}`, xEmpresa, yEmpresa);
+            // yEmpresa += 5;
+            
+            // CNPJ
+            if (config.cnpj) {
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`CNPJ: ${config.cnpj}`, xEmpresa, yEmpresa);
+                yEmpresa += 4;
+            }
+            
+            // Email
+            if (config.email) {
+                doc.text(`Email: ${config.email}`, xEmpresa, yEmpresa);
+                yEmpresa += 4;
+            }
+            
+            // Telefone
+            if (config.telefone) {
+                doc.text(`Tel: ${config.telefone}`, xEmpresa, yEmpresa);
+                yEmpresa += 4;
+            }
+            
+            // WhatsApp
+            if (config.whatsapp) {
+                doc.text(`WhatsApp: ${config.whatsapp}`, xEmpresa, yEmpresa);
+                yEmpresa += 4;
+            }
+            
+            // REMOVER REDES SOCIAIS (todas)
+            y = Math.max(y + 40, yEmpresa + 3);
+            
+            // Reset cor
+            doc.setTextColor(0, 0, 0);
+            
+            // Linha separadora
+            y += 5;
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
             y += 8;
+            
+            // ===== TÍTULO: RECIBO =====
             doc.setFillColor(220, 220, 220);
             doc.rect(margemEsquerda, y, larguraPagina, 8, 'F');
             doc.setFontSize(12);
@@ -13281,16 +13341,30 @@ _______________________________
             const numeroRecibo = `001-${new Date().getFullYear()}`;
             doc.setFontSize(9);
             doc.text(numeroRecibo, margemDireita - 2, y + 5.5, { align: 'right' });
-            
-            // DECLARAÇÃO
             y += 15;
+            
+            // ===== DECLARAÇÃO (TEXTO ATUALIZADO) =====
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             
             const valorRecebido = cliente.financeiro?.sinalValor || 0;
             const dataRecebimento = cliente.financeiro?.sinalData ? formatDate(cliente.financeiro.sinalData) : dataAtual;
             
-            const declaracao = `Declaro que recebi de ${cliente.nome}, inscrito no CPF sob o n. ${cliente.cpf || '000.000.000-00'}, com endereço em ${cliente.endereco || 'não informado'}, ${cliente.bairro ? cliente.bairro + ', ' : ''}${cliente.cidade ? cliente.cidade + '-' : ''}${cliente.estado || ''}, CEP ${cliente.cep || '00000-000'}, o valor de R$ ${formatMoney(valorRecebido)} (${numeroParaExtenso(valorRecebido)}) em ${dataRecebimento}, referente aos seguintes serviços:`;
+            // Montar endereço sem duplicação
+            let enderecoCompleto = '';
+            if (cliente.rua && cliente.numero) {
+                enderecoCompleto = `${cliente.rua}, ${cliente.numero}`;
+                if (cliente.complemento) enderecoCompleto += ` - ${cliente.complemento}`;
+                if (cliente.bairro) enderecoCompleto += ` - ${cliente.bairro}`;
+                if (cliente.cidade && cliente.estado) enderecoCompleto += ` - ${cliente.cidade}-${cliente.estado}`;
+                if (cliente.cep) enderecoCompleto += `, CEP ${cliente.cep}`;
+            } else if (cliente.endereco) {
+                enderecoCompleto = cliente.endereco;
+            } else {
+                enderecoCompleto = 'não informado';
+            }
+            
+            const declaracao = `Declaro que recebi de ${cliente.nome}, inscrito no CPF sob o n. ${cliente.cpf || '000.000.000-00'}, com endereço em ${enderecoCompleto}, o valor de R$ ${formatMoney(valorRecebido)} (${numeroParaExtenso(valorRecebido)}) em ${dataRecebimento}, referente ao Sinal para os Serviços abaixo listados e agendamento da data para o Evento solicitado.`;
             
             const declaracaoLines = doc.splitTextToSize(declaracao, larguraPagina);
             declaracaoLines.forEach(linha => {
@@ -13298,7 +13372,7 @@ _______________________________
                 y += 5;
             });
             
-            // SERVIÇOS
+            // ===== SERVIÇOS (COM ESPAÇO ANTES DOS ITENS) =====
             y += 5;
             doc.setFillColor(240, 240, 240);
             doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
@@ -13306,46 +13380,94 @@ _______________________________
             doc.setFont('helvetica', 'bold');
             doc.text('Serviços', margemEsquerda + 2, y + 4);
             
-            y += 10;
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Descrição', margemEsquerda, y);
-            y += 5;
+            y += 10; // Espaço de uma linha antes dos itens
             
-            // Listar serviços do orçamento ou descrição padrão
+            // Listar serviços do evento (descrição do orçamento)
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            if (cliente.orcamento && cliente.orcamento.servicos && cliente.orcamento.servicos.length > 0) {
-                cliente.orcamento.servicos.forEach(servico => {
-                    doc.text(`• ${servico.nome}`, margemEsquerda, y);
+            if (evento && evento.observacoes) {
+                // Extrair serviços das observações (formato do orçamento)
+                const servicosMatch = evento.observacoes.match(/Serviços:\n([\s\S]*?)(?:Outras Taxas:|Observações:|$)/);
+                if (servicosMatch && servicosMatch[1]) {
+                    const servicosTexto = servicosMatch[1].trim();
+                    const servicosLinhas = servicosTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                    servicosLinhas.forEach(linha => {
+                        // Remover valores, manter apenas descrição
+                        const descricao = linha.replace(/\s*-\s*R\$.*$/, '').trim();
+                        doc.text(descricao, margemEsquerda, y);
+                        y += 5;
+                    });
+                } else {
+                    doc.text(`• ${evento.tipo || 'Serviços de DJ e Sonorização'}`, margemEsquerda, y);
                     y += 5;
-                });
+                }
             } else {
-                doc.text(evento ? evento.tipo : 'Serviços de DJ e Sonorização', margemEsquerda, y);
+                doc.text('• Serviços de DJ e Sonorização', margemEsquerda, y);
                 y += 5;
             }
             
-            // PAGAMENTO
-            y += 10;
+            // ===== EVENTO (COM ESPAÇO ANTES DOS ITENS) =====
+            y += 5;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Evento', margemEsquerda + 2, y + 4);
+            
+            y += 10; // Espaço de uma linha antes dos itens
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            
+            // Tipo de evento
+            if (evento && evento.tipo) {
+                doc.text(`Tipo de evento: ${evento.tipo}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            // Data do evento
+            if (evento && evento.data) {
+                doc.text(`Data do evento: ${formatDate(evento.data)}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            // ===== PAGAMENTO (COM ESPAÇO ANTES DOS ITENS) =====
+            y += 5;
             doc.setFillColor(240, 240, 240);
             doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text('Pagamento', margemEsquerda + 2, y + 4);
             
-            y += 10;
+            y += 10; // Espaço de uma linha antes dos itens
             doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
             doc.text('Meios de pagamento', margemEsquerda, y);
             y += 5;
             doc.setFont('helvetica', 'normal');
-            doc.text('Pix.', margemEsquerda, y);
             
-            // ASSINATURA
+            // Forma de pagamento do cliente
+            const formaPagamento = cliente.financeiro?.sinalFormaPagamento || 'pix';
+            const formasLabels = {
+                'pix': 'Pix',
+                'dinheiro': 'Dinheiro',
+                'debito': 'Cartão de Débito',
+                'credito': 'Cartão de Crédito',
+                'transferencia': 'Transferência Bancária',
+                'boleto': 'Boleto'
+            };
+            doc.text(formasLabels[formaPagamento] || 'Pix', margemEsquerda, y);
+            
+            // ===== ASSINATURA =====
             y += 35;
             
             // Linha de assinatura
             doc.setLineWidth(0.5);
             doc.line(margemEsquerda + 50, y, margemDireita - 50, y);
+            
+            y += 3;
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Assinatura do responsável da empresa', 105, y, { align: 'center' });
             
             y += 5;
             doc.setFontSize(10);
@@ -13353,9 +13475,9 @@ _______________________________
             doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 105, y, { align: 'center' });
             
             y += 5;
-            doc.setFontSize(9);
+            doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.text(config.nomeCorporativo || 'Cristian Mayca', 105, y, { align: 'center' });
+            doc.text(dataExtenso, 105, y, { align: 'center' });
             
             // Rodapé
             doc.setFontSize(7);
