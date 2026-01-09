@@ -2999,7 +2999,7 @@
         <div class="dashboard">
             <div class="dashboard-header">
                 <h1 class="dashboard-title">Dashboard Financeiro</h1>
-                <p class="dashboard-subtitle">Gestão completa para sua empresa MEI de eventos</p>
+                <p class="dashboard-subtitle">Gestão completa para sua empresa de eventos</p>
             </div>
 
             <!-- Stats Cards -->
@@ -3163,10 +3163,10 @@
 
                 <div class="events-header">
                     <div class="events-filters">
-                        <button class="filter-btn" onclick="filterEvents('andamento')">Em Andamento</button>
+                        <button class="filter-btn active" onclick="filterEvents('andamento')">Em Andamento</button>
                         <button class="filter-btn" onclick="filterEvents('aguardando')">Aguardando Aprovação</button>
                         <button class="filter-btn" onclick="filterEvents('concluido')">Concluído</button>
-                        <button class="filter-btn active" onclick="filterEvents('todos')">Todos</button>
+                        <button class="filter-btn" onclick="filterEvents('todos')">Todos</button>
                         <button class="filter-btn" onclick="filterEvents('cancelado')">Cancelados</button>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -3274,8 +3274,8 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon bg-secondary">🤝</div>
-                        <div class="stat-label">Via Indicação</div>
-                        <div class="stat-value" id="clientesIndicacao">0</div>
+                        <div class="stat-label">Via Facebook</div>
+                        <div class="stat-value" id="clientesFacebook">0</div>
                     </div>
                 </div>
 
@@ -4093,48 +4093,10 @@ CNPJ: [CNPJ]"
                             </div>
                         </div>
                     </div>
-                
-                    <!-- Assinatura Digital -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">✍️ Assinatura Digital</h2>
-                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
-                                Faça upload da sua assinatura para incluir automaticamente nos documentos
-                            </p>
-                        </div>
-                        <div style="padding: 24px;">
-                            <div class="form-group">
-                                <label class="form-label">Imagem da Assinatura</label>
-                                <input 
-                                    type="file" 
-                                    id="configAssinaturaInput" 
-                                    accept="image/png,image/jpeg" 
-                                    class="form-input" 
-                                    onchange="handleAssinaturaUpload(event)"
-                                    style="padding: 10px;"
-                                />
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
-                                    📌 Formatos aceitos: PNG ou JPG | Tamanho recomendado: 300x100 pixels
-                                </div>
-                            </div>
-
-                            <div id="assinaturaPreview" style="margin-top: 20px; display: none;">
-                                <label class="form-label">Preview:</label>
-                                <div style="border: 1px dashed var(--border); border-radius: 8px; padding: 20px; background: white; text-align: center;">
-                                    <img id="assinaturaPreviewImg" src="" alt="Assinatura" style="max-width: 300px; max-height: 100px;" />
-                                </div>
-                            </div>
-
-                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                                <button onclick="removerAssinatura()" class="btn btn-secondary" id="btnRemoverAssinatura" style="display: none;">
-                                    🗑️ Remover Assinatura
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- Seção: Logo -->           <div id="configLogoSecao" style="display: none;">
+                <!-- Seção: Logo -->
+                <div id="configLogoSecao" style="display: none;">
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">🎨 Logo da Empresa</h2>
@@ -5505,7 +5467,7 @@ CNPJ: [CNPJ]"
                 <h2 class="modal-title">💼 Novo Orçamento Completo</h2>
                 <button class="close-btn" onclick="closeModal('orcamento')">×</button>
             </div>
-            <form onsubmit="addOrcamento(event)">
+            <form id="orcamentoForm" onsubmit="addOrcamento(event)">
                 
                 <!-- SEÇÃO 1: DADOS DO CLIENTE -->
                 <div style="background: rgba(255, 107, 53, 0.1); border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
@@ -5759,7 +5721,7 @@ CNPJ: [CNPJ]"
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-submit">💼 Gerar Orçamento e Criar Evento</button>
+                <button type="submit" id="btnSubmitOrcamento" class="btn btn-primary btn-submit">💼 Gerar Orçamento e Criar Evento</button>
             </form>
         </div>
     </div>
@@ -5945,13 +5907,14 @@ CNPJ: [CNPJ]"
                         <div class="form-group">
                             <label class="form-label">Categoria</label>
                             <select class="form-select" id="servicoCategoria" required>
-                                <option value="">Selecione...</option>
-                                <option value="som">Som e Iluminação</option>
+<option value="">Selecione a categoria...</option>
+                                <option value="som_iluminacao">Som e Iluminação</option>
                                 <option value="decoracao">Decoração</option>
-                                <option value="buffet">Buffet</option>
-                                <option value="fotografia">Fotografia/Filmagem</option>
-                                <option value="animacao">Animação</option>
-                                <option value="estrutura">Estrutura</option>
+                                <option value="audiovisual">Audiovisual</option>
+                                <option value="servicos">Serviços</option>
+                                <option value="estruturas">Estruturas</option>
+                                <option value="mao_obra">Mão de Obra</option>
+                                <option value="pirotecnia">Pirotecnia e Efeitos</option>
                                 <option value="outros">Outros</option>
                             </select>
                         </div>
@@ -5991,6 +5954,88 @@ CNPJ: [CNPJ]"
                 return newItem; // RETORNAR O ITEM CRIADO
             }
         };
+
+        // ============================================
+        // VARIÁVEIS GLOBAIS PARA EDIÇÃO DE EVENTOS
+        // ============================================
+        let servicosSelecionados = [];
+        let outrasTaxas = [];
+        
+        // Função para atualizar lista visual de serviços
+        function atualizarListaServicos() {
+            const container = document.getElementById('servicosSelecionadosList');
+            if (!container) return;
+            
+            if (servicosSelecionados.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 10px;">Nenhum serviço selecionado</p>';
+                return;
+            }
+            
+            const html = servicosSelecionados.map((s, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px;">
+                    <div>
+                        <strong>${s.nome}</strong>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${formatMoney(s.valor)}</div>
+                    </div>
+                    <button type="button" onclick="removerServico(${index})" style="background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                        🗑️
+                    </button>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+            atualizarTotalOrcamento();
+        }
+        
+        // Função para atualizar lista visual de taxas
+        function atualizarListaTaxas() {
+            const container = document.getElementById('outrasTaxasList');
+            if (!container) return;
+            
+            if (outrasTaxas.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const html = outrasTaxas.map((t, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px;">
+                    <div>
+                        <strong>${t.descricao}</strong>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${formatMoney(t.valor)}</div>
+                    </div>
+                    <button type="button" onclick="removerTaxa(${index})" style="background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                        🗑️
+                    </button>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+            atualizarTotalOrcamento();
+        }
+        
+        // Função para remover serviço
+        function removerServico(index) {
+            servicosSelecionados.splice(index, 1);
+            atualizarListaServicos();
+        }
+        
+        // Função para remover taxa
+        function removerTaxa(index) {
+            outrasTaxas.splice(index, 1);
+            atualizarListaTaxas();
+        }
+        
+        // Função para atualizar total do orçamento
+        function atualizarTotalOrcamento() {
+            const totalServicos = servicosSelecionados.reduce((sum, s) => sum + s.valor, 0);
+            const totalTaxas = outrasTaxas.reduce((sum, t) => sum + t.valor, 0);
+            const total = totalServicos + totalTaxas;
+            
+            const totalElement = document.getElementById('totalOrcamentoDisplay');
+            if (totalElement) {
+                totalElement.textContent = formatMoney(total);
+            }
+        }
 
         // ============================================
         // FUNÇÕES DO FINANCEIRO PESSOAL
@@ -7197,8 +7242,8 @@ CNPJ: [CNPJ]"
             if (rua) {
                 enderecoCompleto = rua;
                 if (numero) enderecoCompleto += ', ' + numero;
-                if (complemento) enderecoCompleto += ' - ' + complemento;
-                if (bairro) enderecoCompleto += ' - ' + bairro;
+                if (complemento) enderecoCompleto += ' - ' + complemento + '\n';
+                if (bairro) enderecoCompleto += bairro;
                 if (cidade && estado) enderecoCompleto += ' - ' + cidade + '/' + estado;
             }
             
@@ -7238,6 +7283,16 @@ CNPJ: [CNPJ]"
         function addOrcamento(e) {
             e.preventDefault();
             
+            // Verificar se está editando
+            const form = e.target;
+            const editingEventId = form.getAttribute('data-editing-event-id');
+            const isEditing = !!editingEventId;
+            
+            console.log('🔍 DEBUG addOrcamento:');
+            console.log('  Form:', form);
+            console.log('  editingEventId:', editingEventId);
+            console.log('  isEditing:', isEditing);
+            
             // Coletar dados do orçamento
             const cliente = document.getElementById('orcCliente').value;
             const tipoEvento = document.getElementById('orcTipoEvento').value;
@@ -7271,20 +7326,31 @@ CNPJ: [CNPJ]"
             if (rua) {
                 enderecoCompleto = rua;
                 if (numero) enderecoCompleto += ', ' + numero;
-                if (complemento) enderecoCompleto += ' - ' + complemento;
-                if (bairro) enderecoCompleto += ' - ' + bairro;
+                if (complemento) enderecoCompleto += ' - ' + complemento + '\n';
+                if (bairro) enderecoCompleto += bairro;
                 if (cidade && estado) enderecoCompleto += ' - ' + cidade + '/' + estado;
             }
             
-            // Coletar serviços selecionados
+            // Coletar serviços selecionados (usar global + checkboxes marcados)
             const checkboxes = document.querySelectorAll('#orcamentosServicosList input[type="checkbox"]:checked');
-            const servicosSelecionados = [];
+            
+            // Limpar e recoletar serviços dos checkboxes
+            const servicosCheckboxes = [];
             checkboxes.forEach(cb => {
-                servicosSelecionados.push({
+                servicosCheckboxes.push({
                     id: parseInt(cb.dataset.id),
                     nome: cb.dataset.nome,
                     valor: parseFloat(cb.dataset.valor)
                 });
+            });
+            
+            // Combinar serviços dos checkboxes com serviços já na lista global
+            const todosServicos = [...servicosCheckboxes];
+            // Adicionar serviços da global que não estão nos checkboxes
+            servicosSelecionados.forEach(s => {
+                if (!servicosCheckboxes.find(sc => sc.nome === s.nome)) {
+                    todosServicos.push(s);
+                }
             });
             
             const valorTotal = parseFloat(document.getElementById('orcValorTotal').value);
@@ -7303,7 +7369,7 @@ CNPJ: [CNPJ]"
                 duracao,
                 endereco: enderecoCompleto,
                 cep, rua, numero, complemento, bairro, cidade, estado,
-                servicos: servicosSelecionados,
+                servicos: todosServicos,
                 outrasTaxas: [...outrasTaxas],
                 desconto: {
                     valor: parseFloat(document.getElementById('orcDesconto').value) || 0,
@@ -7332,36 +7398,101 @@ CNPJ: [CNPJ]"
                 local: enderecoCompleto,
                 cep, rua, numero, complemento, bairro, cidade, estado,
                 valor: valorTotal,
-                servicos: servicosSelecionados, // ✅ Adicionar serviços ao evento
-                status: status, // ✅ Usar status do orçamento
-                observacoes: `Orçamento criado em ${formatDate(dataCriacao)}\n\nServiços:\n${servicosSelecionados.map(s => `• ${s.nome} - ${formatMoney(s.valor)}`).join('\n')}${outrasTaxas.length > 0 ? '\n\nOutras Taxas:\n' + outrasTaxas.map(t => `• ${t.descricao} - ${formatMoney(t.valor)}`).join('\n') : ''}${observacoes ? '\n\nObservações:\n' + observacoes : ''}`
+                servicos: todosServicos,
+                status: status,
+                observacoes: `Orçamento criado em ${formatDate(dataCriacao)}\n\nServiços:\n${todosServicos.map(s => `• ${s.nome} - ${formatMoney(s.valor)}`).join('\n')}${outrasTaxas.length > 0 ? '\n\nOutras Taxas:\n' + outrasTaxas.map(t => `• ${t.descricao} - ${formatMoney(t.valor)}`).join('\n') : ''}${observacoes ? '\n\nObservações:\n' + observacoes : ''}`
             };
             
-            DB.add('eventos', evento);
+            // Verificar se está editando ou criando novo
+            if (isEditing) {
+                // EDITANDO evento existente
+                const eventos = DB.get('eventos');
+                const index = eventos.findIndex(ev => ev.id == editingEventId);
+                
+                if (index !== -1) {
+                    // Manter ID e data de criação
+                    evento.id = eventos[index].id;
+                    evento.dataCadastro = eventos[index].dataCadastro;
+                    
+                    // Atualizar evento
+                    eventos[index] = evento;
+                    DB.set('eventos', eventos);
+                    
+                    console.log('✓ Evento atualizado:', evento.tipo);
+                    
+                    // Limpar atributo de edição
+                    form.removeAttribute('data-editing-event-id');
+                    
+                    // Restaurar botão
+                    const btnSubmit = document.getElementById('btnSubmitOrcamento');
+                    if (btnSubmit) {
+                        btnSubmit.innerHTML = '💼 Gerar Orçamento e Criar Evento';
+                    }
+                    
+                    // Atualizar dados financeiros do cliente na edição
+                    const clientes = DB.get('clientes');
+                    const clienteExistente = clientes.find(c => c.nome.toLowerCase() === cliente.toLowerCase());
+                    
+                    if (clienteExistente) {
+                        // Atualizar valores financeiros
+                        clienteExistente.financeiro = clienteExistente.financeiro || {};
+                        clienteExistente.financeiro.valorTotal = valorTotal;
+                        clienteExistente.financeiro.valorPagar = valorTotal - (clienteExistente.financeiro.sinalValor || 0);
+                        clienteExistente.financeiro.vencimento = data;
+                        DB.set('clientes', clientes);
+                        console.log('✓ Dados financeiros do cliente atualizados:', clienteExistente.nome);
+                    }
+                    
+                    // Limpar formulário
+                    e.target.reset();
+                    outrasTaxas = [];
+                    servicosSelecionados = [];
+                    document.getElementById('outrasTaxasList').innerHTML = '';
+                    limparCamposEnderecoOrcamento();
+                    closeModal('orcamento');
+                    
+                    // Mensagem de sucesso para EDIÇÃO
+                    alert('✅ Evento editado com sucesso!\n\nOs dados do evento e valores financeiros foram atualizados.');
+                    
+                    switchTabProgramatically('eventos');
+                    renderEventsList();
+                    updateDashboard();
+                    return; // Importante: sair da função aqui
+                }
+            } else {
+                // CRIANDO novo evento
+                DB.add('eventos', evento);
+                console.log('✓ Novo evento criado:', evento.tipo);
+            }
             
-            // Atualizar dados financeiros do cliente se já existir
+            // Atualizar dados financeiros do cliente se já existir (apenas para CRIAÇÃO)
             const clientes = DB.get('clientes');
             const clienteExistente = clientes.find(c => c.nome.toLowerCase() === cliente.toLowerCase());
             
-            if (clienteExistente && (!clienteExistente.financeiro || clienteExistente.financeiro.valorTotal === 0)) {
-                clienteExistente.financeiro = {
-                    valorTotal,
-                    sinalValor: 0,
-                    sinalData: '',
-                    valorPagar: valorTotal,
-                    vencimento: data
-                };
-                DB.set('clientes', clientes);
+            if (clienteExistente) {
+                // Na criação, só atualizar se não tiver valores ou estiver zerado
+                if (!clienteExistente.financeiro || clienteExistente.financeiro.valorTotal === 0) {
+                    clienteExistente.financeiro = {
+                        valorTotal,
+                        sinalValor: 0,
+                        sinalData: '',
+                        valorPagar: valorTotal,
+                        vencimento: data
+                    };
+                    DB.set('clientes', clientes);
+                    console.log('✓ Dados financeiros do cliente criados:', clienteExistente.nome);
+                }
             }
             
             // Limpar formulário
             e.target.reset();
             outrasTaxas = [];
+            servicosSelecionados = [];
             document.getElementById('outrasTaxasList').innerHTML = '';
             limparCamposEnderecoOrcamento();
             closeModal('orcamento');
             
-            // Mostrar sucesso e ir para eventos
+            // Mensagem de sucesso para CRIAÇÃO
             alert('✅ Orçamento gerado e evento criado com sucesso!\n\nO evento foi criado com status "Aguardando Aprovação".');
             
             switchTabProgramatically('eventos');
@@ -7389,8 +7520,8 @@ CNPJ: [CNPJ]"
             if (rua) {
                 enderecoCompleto = rua;
                 if (numero) enderecoCompleto += ', ' + numero;
-                if (complemento) enderecoCompleto += ' - ' + complemento;
-                if (bairro) enderecoCompleto += ' - ' + bairro;
+                if (complemento) enderecoCompleto += ' - ' + complemento + '\n';
+                if (bairro) enderecoCompleto += bairro;
                 if (cidade && estado) enderecoCompleto += ' - ' + cidade + '/' + estado;
             }
             
@@ -7420,8 +7551,39 @@ CNPJ: [CNPJ]"
                 }
             };
             
-            // Salvar cliente
-            const novoCliente = DB.add('clientes', cliente);
+            // Verificar se está editando
+            const editingId = e.target.getAttribute('data-editing-id');
+            let novoCliente;
+            
+            if (editingId) {
+                const clientes = DB.get('clientes');
+                const index = clientes.findIndex(c => c.id === editingId);
+                if (index !== -1) {
+                    cliente.id = editingId;
+                    cliente.financeiro = clientes[index].financeiro || {
+                        valorTotal: 0,
+                        sinalValor: 0,
+                        sinalData: '',
+                        valorPagar: 0,
+                        vencimento: ''
+                    };
+                    cliente.dataCadastro = clientes[index].dataCadastro;
+                    clientes[index] = cliente;
+                    DB.set('clientes', clientes);
+                    novoCliente = cliente;
+                }
+                e.target.removeAttribute('data-editing-id');
+            } else {
+                cliente.financeiro = {
+                    valorTotal: 0,
+                    sinalValor: 0,
+                    sinalData: '',
+                    valorPagar: 0,
+                    vencimento: ''
+                };
+                novoCliente = DB.add('clientes', cliente);
+            }
+            
             window.ultimoClienteId = novoCliente.id;
             
             // Limpar formulário
@@ -7568,7 +7730,7 @@ CNPJ: [CNPJ]"
             document.getElementById('clienteEstado').value = '';
         }
 
-        // Calcular duração do evento
+        // Calcular duração do serviço
         function calcularDuracaoEvento() {
             const horaInicio = document.getElementById('eventoHoraInicio').value;
             const horaFim = document.getElementById('eventoHoraFim').value;
@@ -7773,7 +7935,7 @@ CNPJ: [CNPJ]"
 
         // Variável global para taxas
         let taxasCounter = 0;
-        let outrasTaxas = [];
+        // outrasTaxas já declarado globalmente no início
         let taxaDeslocamentoIncluida = true; // Controla se a taxa de deslocamento está ativa
 
         // Atualizar taxa de deslocamento
@@ -8091,7 +8253,7 @@ CNPJ: [CNPJ]"
                 }
                 
                 // Carregar serviços disponíveis
-                renderServicosOrcamento();
+                renderOrcamentoServicos();
             }, 300);
         }
 
@@ -8134,7 +8296,7 @@ CNPJ: [CNPJ]"
                     }
                 }
                 
-                renderServicosOrcamento();
+                renderOrcamentoServicos();
             }, 300);
         }
 
@@ -10081,9 +10243,6 @@ function carregarConfigEmpresa() {
         document.getElementById('configModeloRecibo').value = config.modeloRecibo || '';
     }
     
-    // Carregar assinatura
-    setTimeout(carregarAssinatura, 100);
-    
     // Carregar logo se existir
     if (config.logoBase64) {
         document.getElementById('logoImage').src = config.logoBase64;
@@ -10174,68 +10333,6 @@ function salvarModeloRecibo() {
     
     alert('✅ Modelo de recibo salvo com sucesso!');
 }
-
-function handleAssinaturaUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    if (!file.type.match('image/png') && !file.type.match('image/jpeg')) {
-        alert('❌ Por favor, selecione apenas arquivos PNG ou JPG');
-        return;
-    }
-    
-    if (file.size > 2 * 1024 * 1024) {
-        alert('❌ A imagem deve ter no máximo 2MB');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const assinaturaBase64 = e.target.result;
-        
-        const configuracoes = DB.get('configuracoes');
-        if (configuracoes.length > 0) {
-            configuracoes[0].assinaturaBase64 = assinaturaBase64;
-            DB.set('configuracoes', configuracoes);
-        } else {
-            DB.set('configuracoes', [{ assinaturaBase64: assinaturaBase64 }]);
-        }
-        
-        document.getElementById('assinaturaPreview').style.display = 'block';
-        document.getElementById('assinaturaPreviewImg').src = assinaturaBase64;
-        document.getElementById('btnRemoverAssinatura').style.display = 'inline-block';
-        
-        alert('✅ Assinatura salva com sucesso!');
-    };
-    reader.readAsDataURL(file);
-}
-
-function removerAssinatura() {
-    if (!confirm('Deseja realmente remover a assinatura?')) return;
-    
-    const configuracoes = DB.get('configuracoes');
-    if (configuracoes.length > 0) {
-        delete configuracoes[0].assinaturaBase64;
-        DB.set('configuracoes', configuracoes);
-    }
-    
-    document.getElementById('assinaturaPreview').style.display = 'none';
-    document.getElementById('assinaturaPreviewImg').src = '';
-    document.getElementById('configAssinaturaInput').value = '';
-    document.getElementById('btnRemoverAssinatura').style.display = 'none';
-    
-    alert('✅ Assinatura removida com sucesso!');
-}
-
-function carregarAssinatura() {
-    const configuracoes = DB.get('configuracoes');
-    if (configuracoes.length > 0 && configuracoes[0].assinaturaBase64) {
-        document.getElementById('assinaturaPreview').style.display = 'block';
-        document.getElementById('assinaturaPreviewImg').src = configuracoes[0].assinaturaBase64;
-        document.getElementById('btnRemoverAssinatura').style.display = 'inline-block';
-    }
-}
-
 
 function resetarClausulas() {
     const textoDefault = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE EVENTOS
@@ -11559,6 +11656,9 @@ if (!DB.get('configuracoes')) {
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div class="transaction-amount negative">${formatMoney(c.valor)}</div>
+                        <button class="btn btn-small" onclick="editCustoGeral(${c.id})" style="padding: 6px 12px; background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid #ffc107;">
+                            ✏️
+                        </button>
                         <button class="btn btn-small" onclick="deleteCustoGeral(${c.id})" style="padding: 6px 12px; background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
                             🗑️
                         </button>
@@ -11671,6 +11771,12 @@ if (!DB.get('configuracoes')) {
         // Add custo geral
         function addCustoGeral(e) {
             e.preventDefault();
+            
+            // Verificar se está editando
+            const form = e.target;
+            const editingId = form.getAttribute('data-editing-id');
+            const isEditing = !!editingId;
+            
             const contaId = document.getElementById('custoGeralConta').value;
             const valor = parseFloat(document.getElementById('custoGeralValor').value);
             const descricao = document.getElementById('custoGeralDescricao').value;
@@ -11687,28 +11793,103 @@ if (!DB.get('configuracoes')) {
                 contaId: contaId || null
             };
             
-            DB.add('custosGerais', custo);
-            
-            // Se foi selecionada uma conta, criar uma despesa correspondente
-            if (contaId && contaId !== '') {
-                const despesa = {
-                    descricao: `[Custo Geral] ${descricao}`,
-                    valor: valor,
-                    data: data,
-                    categoria: categoria,
-                    contaId: contaId,
-                    formaPagamento: 'transferencia',
-                    observacoes: observacoes || 'Custo geral da empresa',
-                    tipoDespesa: 'custo_geral' // ✅ Flag para identificar tipo
-                };
+            if (isEditing) {
+                // EDITANDO custo existente
+                const custosGerais = DB.get('custosGerais');
+                const index = custosGerais.findIndex(c => c.id == editingId);
                 
-                DB.add('despesas', despesa);
+                if (index !== -1) {
+                    const custoAntigo = custosGerais[index];
+                    custo.id = custoAntigo.id;
+                    custosGerais[index] = custo;
+                    DB.set('custosGerais', custosGerais);
+                    
+                    // Atualizar despesa correspondente se houver conta
+                    const despesas = DB.get('despesas');
+                    
+                    // Se tinha conta antes, remover despesa antiga
+                    if (custoAntigo.contaId) {
+                        // Buscar pela ID do custo (mais confiável)
+                        let despesaIndex = despesas.findIndex(d => d.custoGeralId === custoAntigo.id);
+                        
+                        // Se não encontrou pelo ID, buscar pela descrição (custos antigos)
+                        if (despesaIndex === -1) {
+                            const descricaoAntiga = `[Custo Geral] ${custoAntigo.descricao}`;
+                            despesaIndex = despesas.findIndex(d => 
+                                d.descricao === descricaoAntiga &&
+                                d.tipoDespesa === 'custo_geral' &&
+                                Math.abs(d.valor - custoAntigo.valor) < 0.01 &&
+                                d.data === custoAntigo.data
+                            );
+                        }
+                        
+                        if (despesaIndex !== -1) {
+                            despesas.splice(despesaIndex, 1);
+                            // Restaurar saldo da conta antiga
+                            atualizarSaldoConta(custoAntigo.contaId, custoAntigo.valor, 'credito');
+                        }
+                    }
+                    
+                    // Se tem conta nova, criar nova despesa
+                    if (contaId && contaId !== '') {
+                        const despesa = {
+                            descricao: `[Custo Geral] ${descricao}`,
+                            valor: valor,
+                            data: data,
+                            categoria: categoria,
+                            contaId: contaId,
+                            formaPagamento: 'transferencia',
+                            observacoes: observacoes || 'Custo geral da empresa',
+                            tipoDespesa: 'custo_geral',
+                            custoGeralId: custo.id // Vincular à despesa
+                        };
+                        
+                        despesas.push({ ...despesa, id: Date.now() });
+                        
+                        // Debitar da nova conta
+                        atualizarSaldoConta(contaId, valor, 'debito');
+                    }
+                    
+                    DB.set('despesas', despesas);
+                    
+                    alert('✅ Custo atualizado com sucesso!');
+                    
+                    // Limpar flag de edição
+                    form.removeAttribute('data-editing-id');
+                    
+                    // Restaurar botão
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.textContent = '+ Adicionar Custo';
+                    }
+                }
+            } else {
+                // CRIANDO novo custo
+                const novoCusto = DB.add('custosGerais', custo);
                 
-                // Atualizar saldo da conta
-                atualizarSaldoConta(contaId, valor, 'debito');
+                // Se foi selecionada uma conta, criar uma despesa correspondente
+                if (contaId && contaId !== '') {
+                    const despesa = {
+                        descricao: `[Custo Geral] ${descricao}`,
+                        valor: valor,
+                        data: data,
+                        categoria: categoria,
+                        contaId: contaId,
+                        formaPagamento: 'transferencia',
+                        observacoes: observacoes || 'Custo geral da empresa',
+                        tipoDespesa: 'custo_geral',
+                        custoGeralId: novoCusto.id // Vincular ao custo criado
+                    };
+                    
+                    DB.add('despesas', despesa);
+                    
+                    // Atualizar saldo da conta
+                    atualizarSaldoConta(contaId, valor, 'debito');
+                }
+                
+                alert('✅ Custo geral adicionado com sucesso!');
             }
             
-            alert('✅ Custo geral adicionado com sucesso!');
             closeModal('custoGeral');
             e.target.reset();
             renderCustosGerais();
@@ -11783,6 +11964,34 @@ if (!DB.get('configuracoes')) {
         }
 
         // Delete custo geral
+        function editCustoGeral(id) {
+            const custo = DB.get('custosGerais').find(c => c.id === id);
+            if (!custo) return;
+            
+            // Preencher formulário
+            document.getElementById('custoGeralDescricao').value = custo.descricao || '';
+            document.getElementById('custoGeralCategoria').value = custo.categoria || '';
+            document.getElementById('custoGeralValor').value = custo.valor || '';
+            document.getElementById('custoGeralData').value = custo.data || '';
+            document.getElementById('custoGeralObs').value = custo.observacoes || '';
+            document.getElementById('custoGeralConta').value = custo.contaId || '';
+            
+            // Marcar formulário como editando
+            const form = document.querySelector('#modalCustoGeral form');
+            if (form) {
+                form.setAttribute('data-editing-id', id);
+            }
+            
+            // Mudar texto do botão
+            const submitBtn = document.querySelector('#modalCustoGeral button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = '💾 Salvar Alterações';
+            }
+            
+            // Abrir modal
+            openModal('custoGeral');
+        }
+
         function deleteCustoGeral(id) {
             if (confirm('Deseja realmente excluir este custo?')) {
                 const custosGerais = DB.get('custosGerais');
@@ -12008,6 +12217,11 @@ if (!DB.get('configuracoes')) {
             
             document.getElementById(tabName + 'Tab').classList.add('active');
             
+            // Atualizar dashboard sempre para dados mais recentes
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+            
             // Load tab-specific content
             if (tabName === 'eventos') {
                 renderEventsList();
@@ -12015,6 +12229,8 @@ if (!DB.get('configuracoes')) {
             } else if (tabName === 'clientes') {
                 renderClientsList();
                 updateClientsStats();
+                checkBirthdays();
+                updateOrigemStats();
             } else if (tabName === 'custos') {
                 preencherAnosCustos();
                 toggleCustosView('gerais');
@@ -12023,6 +12239,7 @@ if (!DB.get('configuracoes')) {
             } else if (tabName === 'servicos') {
                 preencherAnosServicos();
                 renderServicosPerformance();
+                renderServicos();
             } else if (tabName === 'configuracoes') {
                 carregarConfigEmpresa();
             } else if (tabName === 'pessoal') {
@@ -12038,7 +12255,7 @@ if (!DB.get('configuracoes')) {
 
         // Events page variables
         let currentView = 'list';
-        let currentFilter = 'todos';
+        let currentFilter = 'andamento';
         let currentMonth = new Date();
 
         // Switch event view
@@ -12414,44 +12631,159 @@ if (!DB.get('configuracoes')) {
             const evento = DB.get('eventos').find(e => e.id === id);
             if (!evento) return;
             
-            // Preencher modal com dados do evento
-            document.getElementById('eventoTipo').value = evento.tipo || '';
-            document.getElementById('eventoCliente').value = evento.cliente || '';
-            document.getElementById('eventoData').value = evento.data || '';
-            document.getElementById('eventoHoraInicio').value = evento.horaInicio || evento.horario || '';
-            document.getElementById('eventoHoraFim').value = evento.horaFim || '';
-            document.getElementById('eventoCep').value = evento.cep || '';
-            document.getElementById('eventoRua').value = evento.rua || '';
-            document.getElementById('eventoNumero').value = evento.numero || '';
-            document.getElementById('eventoComplemento').value = evento.complemento || '';
-            document.getElementById('eventoBairro').value = evento.bairro || '';
-            document.getElementById('eventoCidade').value = evento.cidade || '';
-            document.getElementById('eventoEstado').value = evento.estado || '';
-            document.getElementById('eventoValor').value = evento.valor || '';
-            document.getElementById('eventoStatus').value = evento.status || 'aguardando';
-            document.getElementById('eventoObservacoes').value = evento.observacoes || '';
+            // Buscar cliente relacionado
+            const clientes = DB.get('clientes');
+            const cliente = clientes.find(c => c.nome === evento.cliente || c.id === evento.clienteId);
             
-            // Calcular duração se tiver horários
-            if (evento.horaInicio && evento.horaFim) {
-                calcularDuracaoEvento();
-            }
+            // Abrir modal de orçamento completo
+            openModal('orcamento');
             
-            // Guardar ID do evento sendo editado
-            window.eventoEditandoId = id;
-            
-            // Mudar título do modal
-            document.querySelector('#modalEvento .modal-title').textContent = 'Editar Evento';
-            
-            // Mudar texto do botão
-            const submitBtn = document.querySelector('#modalEvento button[type="submit"]');
-            submitBtn.textContent = 'Salvar Alterações';
-            submitBtn.onclick = function(e) {
-                e.preventDefault();
-                salvarEdicaoEvento();
-            };
-            
-            // Abrir modal
-            openModal('evento');
+            setTimeout(() => {
+                // Preencher dados do cliente
+                if (document.getElementById('orcCliente')) {
+                    if (cliente) {
+                        document.getElementById('orcCliente').value = cliente.nome || '';
+                    } else {
+                        document.getElementById('orcCliente').value = evento.cliente || '';
+                    }
+                }
+                
+                // Preencher dados do evento
+                if (document.getElementById('orcTipoEvento')) {
+                    document.getElementById('orcTipoEvento').value = evento.tipo || '';
+                }
+                if (document.getElementById('orcData')) {
+                    document.getElementById('orcData').value = evento.data || '';
+                }
+                if (document.getElementById('orcHoraInicio')) {
+                    document.getElementById('orcHoraInicio').value = evento.horaInicio || '';
+                }
+                if (document.getElementById('orcHoraFim')) {
+                    document.getElementById('orcHoraFim').value = evento.horaFim || '';
+                }
+                
+                // Calcular duração
+                if (evento.horaInicio && evento.horaFim) {
+                    calcularDuracaoOrcamento();
+                }
+                
+                // Preencher endereço do evento
+                if (document.getElementById('orcCep')) {
+                    document.getElementById('orcCep').value = evento.cep || '';
+                }
+                if (document.getElementById('orcRua')) {
+                    document.getElementById('orcRua').value = evento.rua || '';
+                }
+                if (document.getElementById('orcNumero')) {
+                    document.getElementById('orcNumero').value = evento.numero || '';
+                }
+                if (document.getElementById('orcComplemento')) {
+                    document.getElementById('orcComplemento').value = evento.complemento || '';
+                }
+                if (document.getElementById('orcBairro')) {
+                    document.getElementById('orcBairro').value = evento.bairro || '';
+                }
+                if (document.getElementById('orcCidade')) {
+                    document.getElementById('orcCidade').value = evento.cidade || '';
+                }
+                if (document.getElementById('orcEstado')) {
+                    document.getElementById('orcEstado').value = evento.estado || '';
+                }
+                
+                // Limpar serviços e taxas anteriores
+                servicosSelecionados = [];
+                outrasTaxas = [];
+                
+                // Extrair e preencher serviços das observações
+                if (evento.observacoes) {
+                    const servicosMatch = evento.observacoes.match(/Serviços:\n([\s\S]*?)(?:\n\nOutras Taxas:|\n\nObservações:|$)/);
+                    if (servicosMatch && servicosMatch[1]) {
+                        const servicosTexto = servicosMatch[1].trim();
+                        const servicosLinhas = servicosTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                        
+                        servicosLinhas.forEach(linha => {
+                            const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                            if (match) {
+                                const nome = match[1].trim();
+                                const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                                const valor = parseFloat(valorStr);
+                                
+                                servicosSelecionados.push({
+                                    id: 'servico_' + Date.now() + Math.random(),
+                                    nome: nome,
+                                    valor: valor
+                                });
+                            }
+                        });
+                        
+                        // Marcar checkboxes dos serviços
+                        const checkboxes = document.querySelectorAll('#orcamentosServicosList input[type="checkbox"]');
+                        checkboxes.forEach(cb => {
+                            const nomeServico = cb.dataset.nome;
+                            const servicoSelecionado = servicosSelecionados.find(s => s.nome === nomeServico);
+                            if (servicoSelecionado) {
+                                cb.checked = true;
+                            }
+                        });
+                        
+                        atualizarListaServicos();
+                    }
+                    
+                    // Extrair e preencher outras taxas
+                    const taxasMatch = evento.observacoes.match(/Outras Taxas:\n([\s\S]*?)(?:\n\nObservações:|$)/);
+                    if (taxasMatch && taxasMatch[1]) {
+                        const taxasTexto = taxasMatch[1].trim();
+                        const taxasLinhas = taxasTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                        
+                        taxasLinhas.forEach(linha => {
+                            const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                            if (match) {
+                                const descricao = match[1].trim();
+                                const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                                const valor = parseFloat(valorStr);
+                                
+                                outrasTaxas.push({
+                                    id: 'taxa_' + Date.now() + Math.random(),
+                                    descricao: descricao,
+                                    valor: valor
+                                });
+                            }
+                        });
+                        
+                        atualizarListaTaxas();
+                    }
+                }
+                
+                // Marcar que estamos editando um evento
+                const form = document.getElementById('orcamentoForm');
+                if (form) {
+                    form.setAttribute('data-editing-event-id', id);
+                    if (cliente) {
+                        form.setAttribute('data-cliente-id', cliente.id);
+                    }
+                }
+                
+                // Mudar texto do botão para "Salvar Alterações"
+                const btnSubmit = document.getElementById('btnSubmitOrcamento');
+                if (btnSubmit) {
+                    btnSubmit.innerHTML = '💾 Salvar Alterações do Evento';
+                }
+                
+                // Atualizar resumo financeiro (chamar duas vezes para garantir)
+                setTimeout(() => {
+                    atualizarTotalOrcamento();
+                    // Atualizar campo de valor total também
+                    const totalServicos = servicosSelecionados.reduce((sum, s) => sum + s.valor, 0);
+                    const totalTaxas = outrasTaxas.reduce((sum, t) => sum + t.valor, 0);
+                    const total = totalServicos + totalTaxas;
+                    const valorTotalInput = document.getElementById('orcValorTotal');
+                    if (valorTotalInput) {
+                        valorTotalInput.value = total.toFixed(2);
+                    }
+                }, 100);
+                
+                console.log('✓ Modal de edição aberto para evento:', evento.tipo, 'Cliente:', evento.cliente);
+            }, 200);
         }
 
         // Salvar edição do evento
@@ -12474,8 +12806,8 @@ if (!DB.get('configuracoes')) {
             if (rua) {
                 enderecoCompleto = rua;
                 if (numero) enderecoCompleto += ', ' + numero;
-                if (complemento) enderecoCompleto += ' - ' + complemento;
-                if (bairro) enderecoCompleto += ' - ' + bairro;
+                if (complemento) enderecoCompleto += ' - ' + complemento + '\n';
+                if (bairro) enderecoCompleto += bairro;
                 if (cidade && estado) enderecoCompleto += ' - ' + cidade + '/' + estado;
             }
             
@@ -12743,6 +13075,7 @@ if (!DB.get('configuracoes')) {
                         ` : ''}
                         
                         <div class="client-actions">
+                            <button class="client-action-btn" onclick="event.stopPropagation(); editClient('${c.id}')">✏️ Editar</button>
                             <button class="client-action-btn" onclick="event.stopPropagation(); abrirModalDocumentos(${c.id})">📄 Gerar Documento</button>
                             <button class="client-action-btn" onclick="event.stopPropagation(); openFinanceiroModal(${c.id})">💰 Financeiro</button>
                             <button class="client-action-btn" onclick="event.stopPropagation(); createEventForClient(${c.id})">🎉 Novo Evento</button>
@@ -12777,9 +13110,9 @@ if (!DB.get('configuracoes')) {
             const instagram = clientes.filter(c => c.origem === 'instagram').length;
             document.getElementById('clientesInstagram').textContent = instagram;
             
-            // Clientes via Indicação
-            const indicacao = clientes.filter(c => c.origem === 'indicacao').length;
-            document.getElementById('clientesIndicacao').textContent = indicacao;
+            // Clientes via Facebook
+            const facebook = clientes.filter(c => c.origem === 'facebook').length;
+            document.getElementById('clientesFacebook').textContent = facebook;
         }
 
         // Search clients
@@ -12810,6 +13143,89 @@ if (!DB.get('configuracoes')) {
             openModal('documentos');
         }
         
+        
+        // Variável global para armazenar o PDF gerado
+        let pdfBlobGlobal = null;
+        let pdfNomeGlobal = '';
+        
+        window.mostrarModalCompartilhar = function(blob, nomeArquivo) {
+            pdfBlobGlobal = blob;
+            pdfNomeGlobal = nomeArquivo;
+            
+            // Mostrar botão de compartilhar
+            const btnCompartilhar = document.getElementById('compartilharDocArea');
+            if (btnCompartilhar) {
+                btnCompartilhar.style.display = 'block';
+            }
+            
+            // Abrir modal
+            const modal = document.getElementById('modalCompartilhar');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+        
+        window.fecharModalCompartilhar = function() {
+            const modal = document.getElementById('modalCompartilhar');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        
+        window.compartilharPDF = async function() {
+            if (!pdfBlobGlobal || !pdfNomeGlobal) {
+                alert('Nenhum documento foi gerado ainda.');
+                return;
+            }
+            
+            // Fechar modal de documentos primeiro
+            closeModal('documentos');
+            
+            try {
+                if (navigator.share && navigator.canShare) {
+                    const file = new File([pdfBlobGlobal], pdfNomeGlobal, { type: 'application/pdf' });
+                    
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Compartilhar Documento',
+                            text: 'Documento gerado pelo EventProDJ'
+                        });
+                        alert('✅ Documento compartilhado com sucesso!');
+                        return;
+                    }
+                }
+                
+                // Fallback: baixar
+                alert('ℹ️ Compartilhamento não disponível. Baixando documento...');
+                baixarPDF();
+                
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Erro ao compartilhar:', error);
+                    alert('❌ Erro ao compartilhar. Baixando documento...');
+                    baixarPDF();
+                }
+            }
+        }
+
+            pdfBlobGlobal = null;
+            pdfNomeGlobal = '';
+        }
+        
+        window.baixarPDF = function() {
+            if (pdfBlobGlobal && pdfNomeGlobal) {
+                const url = URL.createObjectURL(pdfBlobGlobal);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = pdfNomeGlobal;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                fecharModalCompartilhar();
+            }
+        }
+
         async function gerarDocumento(tipo) {
             const clienteId = parseInt(document.getElementById('documentosClienteId').value);
             const cliente = DB.get('clientes').find(c => c.id === clienteId);
@@ -12830,9 +13246,8 @@ if (!DB.get('configuracoes')) {
                     nomeArquivo = `Orcamento_${cliente.nome.replace(/\s/g, '_')}.pdf`;
                     await gerarOrcamentoProfissional(cliente, evento, config, nomeArquivo);
                 } else if (tipo === 'contrato') {
-                    const conteudo = gerarConteudoContrato(cliente, evento, config);
                     nomeArquivo = `Contrato_${cliente.nome.replace(/\s/g, '_')}.pdf`;
-                    await gerarPDF(conteudo, nomeArquivo, config);
+                    await gerarContratoProfissional(cliente, evento, config, nomeArquivo);
                 } else if (tipo === 'recibo') {
                     nomeArquivo = `Recibo_${cliente.nome.replace(/\s/g, '_')}.pdf`;
                     await gerarReciboProfissional(cliente, evento, config, nomeArquivo);
@@ -12866,21 +13281,21 @@ if (!DB.get('configuracoes')) {
             let yDireita = y;
             
             // Nome da empresa
-            doc.setFontSize(14);
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(config.nomeEmpresa || 'EVENTPRODJ', margemDireita, yDireita, { align: 'right' });
             yDireita += 6;
             
             // Nome completo (se diferente)
             if (config.nomeCorporativo && config.nomeCorporativo !== config.nomeEmpresa) {
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
                 doc.text(config.nomeCorporativo, margemDireita, yDireita, { align: 'right' });
                 yDireita += 5;
             }
             
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
             
             // CNPJ
             if (config.cnpj) {
@@ -12916,7 +13331,7 @@ if (!DB.get('configuracoes')) {
             y += 3;
             
             // REDES SOCIAIS com ícones
-            doc.setFontSize(7);
+            doc.setFontSize(10);
             doc.setTextColor(80, 80, 80);
             
             let xRede = margemEsquerda;
@@ -12960,580 +13375,703 @@ if (!DB.get('configuracoes')) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
+            // Configurações
             const margemEsquerda = 15;
             const margemDireita = 195;
-            const larguraPagina = 180;
-            const dataAtual = new Date().toLocaleDateString('pt-BR');
+            const larguraPagina = margemDireita - margemEsquerda;
+            let y = 20;
             
-            let y = 15;
-            
-            // ===== CABEÇALHO PADRONIZADO =====
-            // Logo à esquerda
+            // ===== CABEÇALHO =====
             if (config.logoBase64) {
                 try {
-                    doc.addImage(config.logoBase64, 'PNG', margemEsquerda, y, 35, 35);
+                    doc.addImage(config.logoBase64, 'PNG', margemEsquerda, y, 30, 30);
                 } catch (e) {
-                    console.log('Logo não adicionada');
+                    console.log('Erro ao adicionar logo:', e);
                 }
             }
             
-            // Informações da empresa centralizadas verticalmente ao lado da logo
-            let yEmpresa = y + 8; // Centralizar verticalmente
-            let xEmpresa = margemEsquerda + 40;
-            
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', xEmpresa, yEmpresa);
-            yEmpresa += 5;
+            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 50, y + 5);
             
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            if (config.cnpj) {
-                doc.text(`CNPJ: ${config.cnpj}`, xEmpresa, yEmpresa);
-                yEmpresa += 4;
-            }
-            if (config.email) {
-                doc.text(`Email: ${config.email}`, xEmpresa, yEmpresa);
-                yEmpresa += 4;
-            }
-            if (config.telefone) {
-                doc.text(`Tel: ${config.telefone}`, xEmpresa, yEmpresa);
-                yEmpresa += 4;
-            }
-            if (config.whatsapp) {
-                doc.text(`WhatsApp: ${config.whatsapp}`, xEmpresa, yEmpresa);
-                yEmpresa += 4;
-            }
+            if (config.cnpj) doc.text(`CNPJ: ${config.cnpj}`, 50, y + 10);
+            if (config.email) doc.text(`Email: ${config.email}`, 50, y + 14);
+            if (config.telefone) doc.text(`Tel: ${config.telefone}`, 50, y + 18);
+            if (config.whatsapp) doc.text(`WhatsApp: ${config.whatsapp}`, 50, y + 22);
             
-            // Linha separadora
-            y = Math.max(y + 40, yEmpresa + 3);
-            doc.setDrawColor(200, 200, 200);
+            const enderecoLines = [];
+            if (config.endereco) enderecoLines.push(config.endereco);
+            if (config.cidade && config.estado) enderecoLines.push(`${config.cidade}/${config.estado}`);
+            if (config.cep) enderecoLines.push(`CEP: ${config.cep}`);
+            
+            let yEnd = y + 26;
+            enderecoLines.forEach(linha => {
+                doc.text(linha, 50, yEnd);
+                yEnd += 4;
+            });
+            
+            y = yEnd + 5;
             doc.setLineWidth(0.5);
             doc.line(margemEsquerda, y, margemDireita, y);
-            doc.setTextColor(0, 0, 0);
-            y += 8;
+            y += 10;
             
-            // ===== TÍTULO: ORÇAMENTO =====
+            // ===== TÍTULO =====
             doc.setFillColor(220, 220, 220);
             doc.rect(margemEsquerda, y, larguraPagina, 8, 'F');
-            doc.setFontSize(18);
+            doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('Orçamento', margemEsquerda + 2, y + 6);
+            doc.text('Orçamento', margemEsquerda + 2, y + 5.5);
             y += 15;
             
-            // ===== DADOS DO CLIENTE (COMPLETOS) =====
-            doc.setFontSize(9);
+            // ===== DADOS DO CLIENTE =====
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text(`Cliente: ${cliente.nome}`, margemEsquerda, y);
             y += 5;
             
-            doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            
             if (cliente.cpf) {
                 doc.text(`CPF: ${cliente.cpf}`, margemEsquerda, y);
-                y += 4;
+                y += 5;
             }
             
             if (cliente.telefone) {
                 doc.text(`Telefone: ${cliente.telefone}`, margemEsquerda, y);
-                y += 4;
+                y += 5;
             }
             
-            // Endereço completo
-            let enderecoCompleto = '';
-            if (cliente.rua && cliente.numero) {
-                enderecoCompleto = `${cliente.rua}, ${cliente.numero}`;
-                if (cliente.complemento) enderecoCompleto += ` - ${cliente.complemento}`;
-                if (cliente.bairro) enderecoCompleto += ` - ${cliente.bairro}`;
-                if (cliente.cidade && cliente.estado) enderecoCompleto += ` - ${cliente.cidade}-${cliente.estado}`;
-                if (cliente.cep) enderecoCompleto += `, CEP ${cliente.cep}`;
-            } else if (cliente.endereco) {
-                enderecoCompleto = cliente.endereco;
+            if (cliente.email) {
+                doc.text(`Email: ${cliente.email}`, margemEsquerda, y);
+                y += 5;
             }
             
-            if (enderecoCompleto) {
-                const endLines = doc.splitTextToSize(enderecoCompleto, larguraPagina);
-                doc.text(endLines, margemEsquerda, y);
-                y += (endLines.length * 4);
+            // Endereço completo em 2 linhas
+            if (cliente.endereco || cliente.bairro || cliente.cidade) {
+                // LINHA 1: SOMENTE Rua + número
+                let linha1 = '';
+                if (cliente.endereco) {
+                    linha1 = cliente.endereco;
+                    if (cliente.numero) linha1 += ', ' + cliente.numero;
+                }
+                if (linha1) {
+                    doc.text(linha1, margemEsquerda, y);
+                    y += 4;
+                }
+                
+                // LINHA 2: Bairro - Cidade/Estado - CEP
+                let linha2 = '';
+                if (cliente.bairro) {
+                    linha2 = cliente.bairro;
+                }
+                if (cliente.cidade && cliente.estado) {
+                    if (linha2) linha2 += ' - ';
+                    linha2 += cliente.cidade + '/' + cliente.estado;
+                }
+                if (cliente.cep) {
+                    if (linha2) linha2 += ' - ';
+                    linha2 += 'CEP: ' + cliente.cep;
+                }
+                if (linha2) {
+                    doc.text(linha2, margemEsquerda, y);
+                    y += 4;
+                }
             }
             
             // ===== INFORMAÇÕES DO EVENTO =====
             y += 5;
             doc.setFillColor(240, 240, 240);
             doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
-            doc.setFontSize(10);
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
             doc.text('Informações do Evento', margemEsquerda + 2, y + 4);
             y += 10;
             
-            doc.setFontSize(8);
+            doc.setFontSize(10);
             
-            // LINHA 1: Tipo de evento | Data do evento
+            // LINHA 1
             doc.setFont('helvetica', 'bold');
-            doc.text('Tipo de evento:', margemEsquerda, y);
+            doc.text('Tipo de evento: ', margemEsquerda, y);
+            const w1 = doc.getTextWidth('Tipo de evento: ');
             doc.setFont('helvetica', 'normal');
-            doc.text(evento ? evento.tipo : 'A definir', margemEsquerda + 25, y);
+            doc.text(evento ? evento.tipo : 'A definir', margemEsquerda + w1, y);
             
             doc.setFont('helvetica', 'bold');
-            doc.text('Data do evento:', 105, y);
+            doc.text('Data do evento: ', 105, y);
+            const w2 = doc.getTextWidth('Data do evento: ');
             doc.setFont('helvetica', 'normal');
-            doc.text(evento ? formatDate(evento.data) : 'A definir', 135, y);
+            doc.text(evento ? formatDate(evento.data) : 'A definir', 105 + w2, y);
             y += 5;
             
-            // LINHA 2: Horário de início e término | Duração do evento
+            // LINHA 2
             doc.setFont('helvetica', 'bold');
-            doc.text('Horário:', margemEsquerda, y);
+            doc.text('Horário: ', margemEsquerda, y);
+            const w3 = doc.getTextWidth('Horário: ');
             doc.setFont('helvetica', 'normal');
-            doc.text(evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir', margemEsquerda + 25, y);
+            doc.text(evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir', margemEsquerda + w3, y);
             
             doc.setFont('helvetica', 'bold');
-            doc.text('Duração do evento:', 105, y);
+            doc.text('Duração do Serviço: ', 105, y);
+            const w4 = doc.getTextWidth('Duração do Serviço: ');
             doc.setFont('helvetica', 'normal');
-            doc.text(evento && evento.duracao ? evento.duracao : '5h', 135, y);
+            doc.text(evento && evento.duracao ? evento.duracao : '5h', 105 + w4, y);
             y += 5;
             
-            // LINHA 3: Local do evento (SEM duração do serviço)
+            // LINHA 3
             doc.setFont('helvetica', 'bold');
-            doc.text('Local do evento:', margemEsquerda, y);
+            doc.text('Local do evento: ', margemEsquerda, y);
+            const w5 = doc.getTextWidth('Local do evento: ');
             doc.setFont('helvetica', 'normal');
             const localEvento = evento && evento.complemento ? evento.complemento : (evento ? evento.local : 'A definir');
             const localLines = doc.splitTextToSize(localEvento, 140);
-            doc.text(localLines, margemEsquerda + 25, y);
+            doc.text(localLines, margemEsquerda + w5, y);
             y += Math.max(5, localLines.length * 4);
             
             // ===== SERVIÇOS =====
             y += 5;
             doc.setFillColor(240, 240, 240);
             doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
-            doc.setFontSize(10);
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
             doc.text('Serviços', margemEsquerda + 2, y + 4);
             y += 10;
             
             // Cabeçalho da tabela
-            doc.setFontSize(8);
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text('Descrição', margemEsquerda, y);
-            doc.text('Valor', margemDireita - 15, y, { align: 'right' });
+            doc.text('Valor', margemDireita, y, { align: 'right' });
             y += 4;
             doc.setLineWidth(0.3);
             doc.line(margemEsquerda, y, margemDireita, y);
             y += 5;
             
             let totalServicos = 0;
-            let deslocamento = 0;
-            let taxasExtras = 0;
             
-            // Listar serviços (CORRIGIDO)
-            doc.setFontSize(8);
+            // Extrair serviços do evento.observacoes
             doc.setFont('helvetica', 'normal');
-            if (cliente.orcamento && cliente.orcamento.servicos && cliente.orcamento.servicos.length > 0) {
-                cliente.orcamento.servicos.forEach((servico, index) => {
-                    if (index > 0) y += 4;
-                    doc.text(servico.nome, margemEsquerda, y);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(formatMoney(servico.valor), margemDireita - 15, y, { align: 'right' });
-                    doc.setFont('helvetica', 'normal');
-                    totalServicos += servico.valor;
-                });
-                y += 6;
-            } else {
-                const valorTotal = cliente.financeiro?.valorTotal || 0;
-                doc.text('Pacote de serviços completo', margemEsquerda, y);
-                doc.setFont('helvetica', 'bold');
-                doc.text(formatMoney(valorTotal), margemDireita - 15, y, { align: 'right' });
-                doc.setFont('helvetica', 'normal');
-                totalServicos = valorTotal;
-                y += 6;
+            if (evento && evento.observacoes) {
+                const servicosMatch = evento.observacoes.match(/Serviços:\n([\s\S]*?)(?:\n\nOutras Taxas:|\n\nObservações:|$)/);
+                if (servicosMatch && servicosMatch[1]) {
+                    const servicosTexto = servicosMatch[1].trim();
+                    const servicosLinhas = servicosTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                    
+                    servicosLinhas.forEach(linha => {
+                        const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                        if (match) {
+                            const nome = match[1].trim();
+                            const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                            const valor = parseFloat(valorStr);
+                            
+                            doc.setFontSize(10);
+                            doc.text(nome, margemEsquerda, y);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                            doc.setFont('helvetica', 'normal');
+                            totalServicos += valor;
+                            y += 4;
+                        }
+                    });
+                    y += 2;
+                }
             }
             
-            // ===== DESLOCAMENTO E TAXAS EXTRAS (se houver) =====
-            if (cliente.orcamento && cliente.orcamento.outrasTaxas && cliente.orcamento.outrasTaxas.length > 0) {
-                const taxasDeslocamento = cliente.orcamento.outrasTaxas.filter(t => 
-                    t.descricao.toLowerCase().includes('deslocamento')
-                );
-                
-                const outrasTaxas = cliente.orcamento.outrasTaxas.filter(t => 
-                    !t.descricao.toLowerCase().includes('deslocamento')
-                );
-                
-                if (taxasDeslocamento.length > 0) {
-                    doc.setLineWidth(0.2);
-                    doc.line(margemEsquerda, y, margemDireita, y);
-                    y += 5;
+            // ===== OUTRAS TAXAS =====
+            if (evento && evento.observacoes) {
+                const taxasMatch = evento.observacoes.match(/Outras Taxas:\n([\s\S]*?)(?:\n\nObservações:|$)/);
+                if (taxasMatch && taxasMatch[1]) {
+                    const taxasTexto = taxasMatch[1].trim();
+                    const taxasLinhas = taxasTexto.split('\n').filter(l => l.trim().startsWith('•'));
                     
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Deslocamento', margemEsquerda, y);
-                    doc.setFont('helvetica', 'normal');
-                    y += 5;
-                    
-                    taxasDeslocamento.forEach((taxa, index) => {
-                        if (index > 0) y += 4;
-                        doc.text(taxa.descricao, margemEsquerda, y);
+                    if (taxasLinhas.length > 0) {
+                        doc.setLineWidth(0.2);
+                        doc.line(margemEsquerda, y, margemDireita, y);
+                        y += 6;
+                        
+                        doc.setFontSize(11);
                         doc.setFont('helvetica', 'bold');
-                        doc.text(formatMoney(taxa.valor), margemDireita - 15, y, { align: 'right' });
+                        doc.text('Outras Taxas', margemEsquerda, y);
+                        y += 6;
+                        
+                        doc.setFontSize(10);
                         doc.setFont('helvetica', 'normal');
-                        deslocamento += taxa.valor;
-                    });
-                    y += 6;
-                }
-                
-                if (outrasTaxas.length > 0) {
-                    doc.setLineWidth(0.2);
-                    doc.line(margemEsquerda, y, margemDireita, y);
-                    y += 5;
-                    
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Taxas Extras', margemEsquerda, y);
-                    doc.setFont('helvetica', 'normal');
-                    y += 5;
-                    
-                    outrasTaxas.forEach((taxa, index) => {
-                        if (index > 0) y += 4;
-                        doc.text(taxa.descricao, margemEsquerda, y);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(formatMoney(taxa.valor), margemDireita - 15, y, { align: 'right' });
-                        doc.setFont('helvetica', 'normal');
-                        taxasExtras += taxa.valor;
-                    });
-                    y += 6;
+                        
+                        taxasLinhas.forEach(linha => {
+                            const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                            if (match) {
+                                const descricao = match[1].trim();
+                                const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                                const valor = parseFloat(valorStr);
+                                
+                                doc.text(descricao, margemEsquerda, y);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                                doc.setFont('helvetica', 'normal');
+                                totalServicos += valor;
+                                y += 4;
+                            }
+                        });
+                        y += 2;
+                    }
                 }
             }
             
             // ===== TOTAL =====
             doc.setLineWidth(0.3);
-            doc.line(115, y, margemDireita, y);
-            y += 5;
+            doc.line(margemEsquerda, y, margemDireita, y);
+            y += 6;
             
-            const valorTotal = totalServicos + deslocamento + taxasExtras;
+            const valorTotal = cliente.financeiro?.valorTotal || totalServicos;
             
-            doc.setFont('helvetica', 'bold');
             doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
             doc.text('VALOR TOTAL', 115, y);
-            doc.text(formatMoney(valorTotal), margemDireita - 15, y, { align: 'right' });
+            doc.text(formatMoney(valorTotal), margemDireita, y, { align: 'right' });
             
-            // ===== PAGAMENTO =====
             y += 8;
             doc.setFillColor(240, 240, 240);
             doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
-            doc.setFontSize(10);
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
             doc.text('Pagamento', margemEsquerda + 2, y + 4);
             y += 10;
             
-            doc.setFontSize(8);
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text('Formas de pagamento: Pix, Transferência, Dinheiro, Cartão de Crédito/Débito', margemEsquerda, y);
             
-            // ===== ASSINATURAS =====
-            y += 20;
-            doc.setFontSize(8);
-            doc.text(dataAtual, 105, y, { align: 'center' });
+            // ===== ASSINATURA =====
+            y += 35;
             
-            y += 12;
             doc.setLineWidth(0.3);
-            doc.line(margemEsquerda, y, 90, y);
-            doc.line(120, y, margemDireita, y);
+            doc.line(margemEsquerda + 50, y, margemDireita - 50, y);
             
-            // Adicionar imagem da assinatura da empresa
             if (config.assinaturaBase64) {
                 try {
-                    doc.addImage(config.assinaturaBase64, 'PNG', 22, y - 10, 60, 10);
+                    doc.addImage(config.assinaturaBase64, 'PNG', 75, y - 10, 60, 10);
                 } catch (e) {
                     console.log('Erro ao adicionar assinatura:', e);
                 }
             }
             
             y += 4;
-            doc.setFont('helvetica', 'bold');
-            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 52, y, { align: 'center' });
-            doc.text(cliente.nome, 157, y, { align: 'center' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Assinatura do responsável da empresa', 105, y, { align: 'center' });
             
             y += 4;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 105, y, { align: 'center' });
+            
+            y += 5;
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(7);
-            if (config.nomeCorporativo) {
-                doc.text(config.nomeCorporativo, 52, y, { align: 'center' });
-            }
-            doc.text(cliente.cpf ? `CPF: ${cliente.cpf}` : '', 157, y, { align: 'center' });
+            const dataExtenso = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+            doc.text(`Rio de Janeiro, ${dataExtenso}`, 105, y, { align: 'center' });
             
             // RODAPÉ
-            doc.setFontSize(7);
+            doc.setFontSize(9);
             doc.setTextColor(150);
-            doc.text(`Página 1/1`, 105, 285, { align: 'center' });
+            doc.text(`Página 1/1`, 105, 280, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setTextColor(0);
+            doc.text(`Esse orçamento tem uma validade de 30 dias a partir da data que foi gerado.`, 105, 287, { align: 'center' });
             
-            // Retornar o blob para compartilhamento
             const pdfBlob = doc.output('blob');
-            const pdfFile = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
-            window.ultimoPDFGerado = pdfFile;
-            
-            // Mostrar opções de compartilhamento
-            mostrarOpcoesCompartilhamento(nomeArquivo);
+            mostrarModalCompartilhar(pdfBlob, nomeArquivo || `Orcamento_${cliente.nome}.pdf`);
         }
 
-        
-        function mostrarOpcoesCompartilhamento(nomeArquivo) {
-            // Fechar modal de documentos
-            closeModal('documentos');
+        async function gerarContratoProfissional(cliente, evento, config, nomeArquivo) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
             
-            // Criar modal de opções
-            const modalHTML = `
-                <div id="modalCompartilharPDF" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100vw;
-                    height: 100vh;
-                    background: rgba(0, 0, 0, 0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 999999;
-                ">
-                    <div style="
-                        background: var(--bg-card);
-                        border-radius: 16px;
-                        padding: 32px;
-                        max-width: 400px;
-                        width: 90%;
-                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-                    ">
-                        <!-- Ícone de Sucesso -->
-                        <div style="text-align: center; margin-bottom: 24px;">
-                            <div style="font-size: 64px; margin-bottom: 12px;">✅</div>
-                            <h2 style="font-size: 20px; margin-bottom: 8px; color: var(--text-primary);">
-                                Documento Gerado!
-                            </h2>
-                            <p style="font-size: 13px; color: var(--text-secondary);">
-                                ${nomeArquivo}
-                            </p>
-                        </div>
-                        
-                        <!-- Botões de Ação -->
-                        <div style="display: flex; flex-direction: column; gap: 12px;">
-                            ${navigator.share ? `
-                                <button onclick="compartilharPDF()" style="
-                                    background: linear-gradient(135deg, var(--primary), var(--accent));
-                                    color: white;
-                                    border: none;
-                                    padding: 16px;
-                                    border-radius: 8px;
-                                    font-size: 15px;
-                                    font-weight: 600;
-                                    cursor: pointer;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    gap: 8px;
-                                    transition: transform 0.2s;
-                                " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                                    <span style="font-size: 20px;">📤</span>
-                                    Compartilhar
-                                </button>
-                            ` : ''}
-                            
-                            <button onclick="baixarPDFNovamente(); fecharModalCompartilhar();" style="
-                                background: rgba(79, 70, 229, 0.2);
-                                color: var(--text-primary);
-                                border: 1px solid rgba(79, 70, 229, 0.5);
-                                padding: 16px;
-                                border-radius: 8px;
-                                font-size: 15px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 8px;
-                                transition: all 0.2s;
-                            " onmouseover="this.style.background='rgba(79, 70, 229, 0.3)'" onmouseout="this.style.background='rgba(79, 70, 229, 0.2)'">
-                                <span style="font-size: 20px;">💾</span>
-                                Baixar Novamente
-                            </button>
-                            
-                            <button onclick="fecharModalCompartilhar()" style="
-                                background: transparent;
-                                color: var(--text-secondary);
-                                border: 1px solid var(--border);
-                                padding: 12px;
-                                border-radius: 8px;
-                                font-size: 14px;
-                                font-weight: 500;
-                                cursor: pointer;
-                                transition: all 0.2s;
-                            " onmouseover="this.style.borderColor='var(--text-secondary)'" onmouseout="this.style.borderColor='var(--border)'">
-                                Fechar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // Configurações
+            const margemEsquerda = 15;
+            const margemDireita = 195;
+            const larguraPagina = margemDireita - margemEsquerda;
+            let y = 20;
             
-            // Adicionar ao body
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-        }
-        
-        function fecharModalCompartilhar() {
-            const modal = document.getElementById('modalCompartilharPDF');
-            if (modal) {
-                modal.remove();
-            }
-        }
-        
-        function baixarPDFNovamente() {
-            if (!window.ultimoPDFGerado) {
-                alert('❌ Nenhum documento disponível para download.');
-                return;
-            }
-            
-            // Criar link de download
-            const url = URL.createObjectURL(window.ultimoPDFGerado);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = window.ultimoPDFGerado.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert('📥 Download iniciado!');
-        }
-        
-        async function compartilharPDF() {
-            if (!navigator.share) {
-                alert('❌ Compartilhamento não suportado neste navegador.');
-                return;
-            }
-            
-            if (!window.ultimoPDFGerado) {
-                alert('❌ Nenhum documento gerado para compartilhar.');
-                return;
-            }
-            
-            try {
-                await navigator.share({
-                    title: window.ultimoPDFGerado.name,
-                    text: 'Confira este documento',
-                    files: [window.ultimoPDFGerado]
-                });
-                
-                console.log('✅ Documento compartilhado com sucesso!');
-                
-                // Fechar modal após compartilhar
-                fecharModalCompartilhar();
-                
-            } catch (error) {
-                if (error.name !== 'AbortError') {
-                    console.error('Erro ao compartilhar:', error);
-                    alert('❌ Erro ao compartilhar documento.');
+            // ===== CABEÇALHO =====
+            if (config.logoBase64) {
+                try {
+                    doc.addImage(config.logoBase64, 'PNG', margemEsquerda, y, 30, 30);
+                } catch (e) {
+                    console.log('Erro ao adicionar logo:', e);
                 }
-                // Não fecha o modal se houver erro (exceto AbortError que é cancelamento do usuário)
             }
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 50, y + 5);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            if (config.cnpj) doc.text(`CNPJ: ${config.cnpj}`, 50, y + 10);
+            if (config.email) doc.text(`Email: ${config.email}`, 50, y + 14);
+            if (config.telefone) doc.text(`Tel: ${config.telefone}`, 50, y + 18);
+            if (config.whatsapp) doc.text(`WhatsApp: ${config.whatsapp}`, 50, y + 22);
+            
+            const enderecoLines = [];
+            if (config.endereco) enderecoLines.push(config.endereco);
+            if (config.cidade && config.estado) enderecoLines.push(`${config.cidade}/${config.estado}`);
+            if (config.cep) enderecoLines.push(`CEP: ${config.cep}`);
+            
+            let yEnd = y + 26;
+            enderecoLines.forEach(linha => {
+                doc.text(linha, 50, yEnd);
+                yEnd += 4;
+            });
+            
+            y = yEnd + 5;
+            doc.setLineWidth(0.5);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            y += 10;
+            
+            // ===== TÍTULO =====
+            doc.setFillColor(220, 220, 220);
+            doc.rect(margemEsquerda, y, larguraPagina, 8, 'F');
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Contrato', margemEsquerda + 2, y + 5.5);
+            y += 15;
+            
+            // ===== DADOS DO CLIENTE =====
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Cliente: ${cliente.nome}`, margemEsquerda, y);
+            y += 5;
+            
+            doc.setFont('helvetica', 'normal');
+            if (cliente.cpf) {
+                doc.text(`CPF: ${cliente.cpf}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            if (cliente.telefone) {
+                doc.text(`Telefone: ${cliente.telefone}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            if (cliente.email) {
+                doc.text(`Email: ${cliente.email}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            // Endereço completo em 2 linhas
+            if (cliente.endereco || cliente.bairro || cliente.cidade) {
+                // LINHA 1: SOMENTE Rua + número
+                let linha1 = '';
+                if (cliente.endereco) {
+                    linha1 = cliente.endereco;
+                    if (cliente.numero) linha1 += ', ' + cliente.numero;
+                }
+                if (linha1) {
+                    doc.text(linha1, margemEsquerda, y);
+                    y += 4;
+                }
+                
+                // LINHA 2: Bairro - Cidade/Estado - CEP
+                let linha2 = '';
+                if (cliente.bairro) {
+                    linha2 = cliente.bairro;
+                }
+                if (cliente.cidade && cliente.estado) {
+                    if (linha2) linha2 += ' - ';
+                    linha2 += cliente.cidade + '/' + cliente.estado;
+                }
+                if (cliente.cep) {
+                    if (linha2) linha2 += ' - ';
+                    linha2 += 'CEP: ' + cliente.cep;
+                }
+                if (linha2) {
+                    doc.text(linha2, margemEsquerda, y);
+                    y += 4;
+                }
+            }
+            
+            // ===== INFORMAÇÕES DO EVENTO =====
+            y += 5;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Informações do Evento', margemEsquerda + 2, y + 4);
+            y += 10;
+            
+            doc.setFontSize(10);
+            
+            // LINHA 1
+            doc.setFont('helvetica', 'bold');
+            doc.text('Tipo de evento: ', margemEsquerda, y);
+            const w1 = doc.getTextWidth('Tipo de evento: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? evento.tipo : 'A definir', margemEsquerda + w1, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.text('Data do evento: ', 105, y);
+            const w2 = doc.getTextWidth('Data do evento: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? formatDate(evento.data) : 'A definir', 105 + w2, y);
+            y += 5;
+            
+            // LINHA 2
+            doc.setFont('helvetica', 'bold');
+            doc.text('Horário: ', margemEsquerda, y);
+            const w3 = doc.getTextWidth('Horário: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir', margemEsquerda + w3, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.text('Duração do Serviço: ', 105, y);
+            const w4 = doc.getTextWidth('Duração do Serviço: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento && evento.duracao ? evento.duracao : '5h', 105 + w4, y);
+            y += 5;
+            
+            // LINHA 3
+            doc.setFont('helvetica', 'bold');
+            doc.text('Local do evento: ', margemEsquerda, y);
+            const w5 = doc.getTextWidth('Local do evento: ');
+            doc.setFont('helvetica', 'normal');
+            const localEvento = evento && evento.complemento ? evento.complemento : (evento ? evento.local : 'A definir');
+            const localLines = doc.splitTextToSize(localEvento, 140);
+            doc.text(localLines, margemEsquerda + w5, y);
+            y += Math.max(5, localLines.length * 4);
+            
+            // ===== SERVIÇOS =====
+            y += 5;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Serviços', margemEsquerda + 2, y + 4);
+            y += 10;
+            
+            // Cabeçalho da tabela
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Descrição', margemEsquerda, y);
+            doc.text('Valor', margemDireita, y, { align: 'right' });
+            y += 4;
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            y += 5;
+            
+            let totalServicos = 0;
+            
+            // Extrair serviços do evento.observacoes
+            doc.setFont('helvetica', 'normal');
+            if (evento && evento.observacoes) {
+                const servicosMatch = evento.observacoes.match(/Serviços:\n([\s\S]*?)(?:\n\nOutras Taxas:|\n\nObservações:|$)/);
+                if (servicosMatch && servicosMatch[1]) {
+                    const servicosTexto = servicosMatch[1].trim();
+                    const servicosLinhas = servicosTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                    
+                    servicosLinhas.forEach(linha => {
+                        const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                        if (match) {
+                            const nome = match[1].trim();
+                            const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                            const valor = parseFloat(valorStr);
+                            
+                            doc.setFontSize(10);
+                            doc.text(nome, margemEsquerda, y);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                            doc.setFont('helvetica', 'normal');
+                            totalServicos += valor;
+                            y += 4;
+                        }
+                    });
+                    y += 2;
+                }
+            }
+            
+            // ===== OUTRAS TAXAS =====
+            if (evento && evento.observacoes) {
+                const taxasMatch = evento.observacoes.match(/Outras Taxas:\n([\s\S]*?)(?:\n\nObservações:|$)/);
+                if (taxasMatch && taxasMatch[1]) {
+                    const taxasTexto = taxasMatch[1].trim();
+                    const taxasLinhas = taxasTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                    
+                    if (taxasLinhas.length > 0) {
+                        doc.setLineWidth(0.2);
+                        doc.line(margemEsquerda, y, margemDireita, y);
+                        y += 6;
+                        
+                        doc.setFontSize(11);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Outras Taxas', margemEsquerda, y);
+                        y += 6;
+                        
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'normal');
+                        
+                        taxasLinhas.forEach(linha => {
+                            const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                            if (match) {
+                                const descricao = match[1].trim();
+                                const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                                const valor = parseFloat(valorStr);
+                                
+                                doc.text(descricao, margemEsquerda, y);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                                doc.setFont('helvetica', 'normal');
+                                totalServicos += valor;
+                                y += 4;
+                            }
+                        });
+                        y += 2;
+                    }
+                }
+            }
+            
+            // ===== TOTAL =====
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            y += 6;
+            
+            const valorTotal = cliente.financeiro?.valorTotal || totalServicos;
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('VALOR TOTAL', 115, y);
+            doc.text(formatMoney(valorTotal), margemDireita, y, { align: 'right' });
+            
+            // ===== TABELA DE PAGAMENTOS =====
+            y += 8;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 7, 'F');
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PAGAMENTOS', margemEsquerda + 2, y + 5);
+            doc.text('Vencimento', 115, y + 5);
+            doc.text('Valor', margemDireita, y + 5, { align: 'right' });
+            
+            y += 7;
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            
+            const sinalValor = cliente.financeiro?.sinalValor || 0;
+            const sinalData = cliente.financeiro?.sinalData ? formatDate(cliente.financeiro.sinalData) : formatDate(new Date());
+            const saldoAPagar = valorTotal - sinalValor;
+            const vencimento = cliente.financeiro?.vencimento ? formatDate(cliente.financeiro.vencimento) : (evento ? formatDate(evento.data) : formatDate(new Date()));
+            
+            y += 5;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Entrada', margemEsquerda + 2, y);
+            doc.text(sinalData, 115, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(formatMoney(sinalValor), margemDireita, y, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            
+            y += 5;
+            
+            doc.text('A receber', margemEsquerda + 2, y);
+            doc.text(vencimento, 115, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(formatMoney(saldoAPagar), margemDireita, y, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            
+            y += 6;
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            
+            y += 10;
+            
+            // ===== PÁGINA 2: CLÁUSULAS =====
+            doc.addPage();
+            y = 20;
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Cláusulas Contratuais', 105, y, { align: 'center' });
+            y += 15;
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
+            const clausulas = config.clausulasContratuais || 'Nenhuma cláusula configurada. Configure em: Configurações → Documentos → Contratos';
+            
+            const clausulasLines = doc.splitTextToSize(clausulas, larguraPagina);
+            
+            clausulasLines.forEach((linha) => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(linha, margemEsquerda, y);
+                y += 4;
+            });
+            
+            // ===== ASSINATURAS NA ÚLTIMA PÁGINA =====
+            if (y > 200) {
+                doc.addPage();
+                y = 20;
+            } else {
+                y += 20;
+            }
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Assinaturas', 105, y, { align: 'center' });
+            y += 15;
+            
+            const yInicial = y;
+            
+            // EMPRESA (ESQUERDA)
+            doc.setFontSize(10);
+            doc.setLineWidth(0.3);
+            doc.line(15, yInicial, 90, yInicial);
+            
+            if (config.assinaturaBase64) {
+                try {
+                    doc.addImage(config.assinaturaBase64, 'PNG', 22, yInicial - 10, 60, 10);
+                } catch (e) {
+                    console.log('Erro ao adicionar assinatura:', e);
+                }
+            }
+            
+            doc.setFont('helvetica', 'normal');
+            doc.text('Assinatura do responsável da empresa', 52, yInicial + 4, { align: 'center' });
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 52, yInicial + 8, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            const dataExtenso = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+            doc.text(`Rio de Janeiro, ${dataExtenso}`, 52, yInicial + 12, { align: 'center' });
+            
+            // CLIENTE (DIREITA)
+            doc.setFontSize(10);
+            doc.setLineWidth(0.3);
+            doc.line(120, yInicial, 195, yInicial);
+            doc.setFont('helvetica', 'bold');
+            doc.text(cliente.nome, 157, yInicial + 4, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            if (cliente.cpf) {
+                doc.text(`CPF: ${cliente.cpf}`, 157, yInicial + 8, { align: 'center' });
+            }
+            
+            // Rodapé com paginação dinâmica
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(`Página ${i}/${totalPages}`, 105, 285, { align: 'center' });
+                doc.setTextColor(0);
+            }
+            
+            const pdfBlob = doc.output('blob');
+            mostrarModalCompartilhar(pdfBlob, nomeArquivo || `Contrato_${cliente.nome}.pdf`);
         }
-        
-        function gerarConteudoOrcamento(cliente, evento, config) {
-            let modelo = config.modeloOrcamento || `ORÇAMENTO DE SERVIÇOS
 
-Prezado(a) [CLIENTE],
-
-Segue orçamento para os serviços solicitados:
-
-DADOS DO EVENTO:
-- Tipo: [TIPO]
-- Data: [DATA]
-- Horário: [HORARIO]
-- Local: [LOCAL]
-
-VALOR TOTAL: R$ [VALOR]
-
-CONDIÇÕES DE PAGAMENTO:
-- Sinal: R$ [SINAL] (50%)
-- Restante: R$ [RESTANTE] até [VENCIMENTO]
-
-VALIDADE DO ORÇAMENTO: [VALIDADE]
-
-Atenciosamente,
-[EMPRESA]`;
-            
-            // Substituir placeholders
-            modelo = modelo.replace(/\[CLIENTE\]/g, cliente.nome);
-            modelo = modelo.replace(/\[TIPO\]/g, evento ? evento.tipo : 'Não especificado');
-            modelo = modelo.replace(/\[DATA\]/g, evento ? formatDate(evento.data) : 'A definir');
-            modelo = modelo.replace(/\[HORARIO\]/g, evento ? `${evento.horaInicio} às ${evento.horaFim}` : 'A definir');
-            modelo = modelo.replace(/\[LOCAL\]/g, evento ? evento.local : cliente.endereco || 'A definir');
-            modelo = modelo.replace(/\[VALOR\]/g, cliente.financeiro?.valorTotal ? formatMoney(cliente.financeiro.valorTotal) : 'R$ 0,00');
-            modelo = modelo.replace(/\[SINAL\]/g, cliente.financeiro?.sinalValor ? formatMoney(cliente.financeiro.sinalValor) : 'R$ 0,00');
-            modelo = modelo.replace(/\[RESTANTE\]/g, cliente.financeiro?.valorPagar ? formatMoney(cliente.financeiro.valorPagar) : 'R$ 0,00');
-            modelo = modelo.replace(/\[VENCIMENTO\]/g, cliente.financeiro?.vencimento ? formatDate(cliente.financeiro.vencimento) : 'A definir');
-            modelo = modelo.replace(/\[VALIDADE\]/g, '30 dias');
-            modelo = modelo.replace(/\[EMPRESA\]/g, config.nomeEmpresa || 'EventProDJ');
-            
-            return modelo;
-        }
-        
-        function gerarConteudoContrato(cliente, evento, config) {
-            let modelo = config.clausulasContratuais || `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE EVENTOS
-
-1. DO OBJETO
-O presente contrato tem por objeto a prestação de serviços pela CONTRATADA em favor do CONTRATANTE.
-
-2. DAS CONDIÇÕES
-2.1. Data do Evento: [DATA]
-2.2. Horário: [HORARIO]
-2.3. Local: [LOCAL]
-
-3. DO VALOR E FORMA DE PAGAMENTO
-3.1. O valor total do serviço é de R$ [VALOR]
-3.2. Sinal de R$ [SINAL] 
-3.3. Restante de R$ [RESTANTE] até [VENCIMENTO]`;
-            
-            // Substituir placeholders
-            modelo = modelo.replace(/\[CLIENTE\]/g, cliente.nome);
-            modelo = modelo.replace(/\[DATA\]/g, evento ? formatDate(evento.data) : 'A definir');
-            modelo = modelo.replace(/\[HORARIO\]/g, evento ? `${evento.horaInicio} às ${evento.horaFim}` : 'A definir');
-            modelo = modelo.replace(/\[LOCAL\]/g, evento ? evento.local : cliente.endereco || 'A definir');
-            modelo = modelo.replace(/\[VALOR\]/g, cliente.financeiro?.valorTotal ? formatMoney(cliente.financeiro.valorTotal) : 'R$ 0,00');
-            modelo = modelo.replace(/\[SINAL\]/g, cliente.financeiro?.sinalValor ? formatMoney(cliente.financeiro.sinalValor) : 'R$ 0,00');
-            modelo = modelo.replace(/\[RESTANTE\]/g, cliente.financeiro?.valorPagar ? formatMoney(cliente.financeiro.valorPagar) : 'R$ 0,00');
-            modelo = modelo.replace(/\[VENCIMENTO\]/g, cliente.financeiro?.vencimento ? formatDate(cliente.financeiro.vencimento) : 'A definir');
-            modelo = modelo.replace(/\[TIPO\]/g, evento ? evento.tipo : 'Evento');
-            modelo = modelo.replace(/\[EMPRESA\]/g, config.nomeEmpresa || 'EventProDJ');
-            
-            return modelo;
-        }
-        
-        function gerarConteudoRecibo(cliente, evento, config) {
-            // Esta função agora será substituída por gerarReciboProfissional
-            // Mantida apenas para compatibilidade
-            let modelo = config.modeloRecibo || `RECIBO DE PAGAMENTO
-
-Recebi de [CLIENTE], a quantia de R$ [VALOR], referente a [DESCRICAO].
-
-DADOS DO PAGAMENTO:
-- Data: [DATA]
-- Referente a: [EVENTO]
-
-Local e Data: [DATA_COMPLETA]
-
-_______________________________
-[EMPRESA]`;
-            
-            // Substituir placeholders
-            const valorRecebido = cliente.financeiro?.sinalValor || 0;
-            modelo = modelo.replace(/\[CLIENTE\]/g, cliente.nome);
-            modelo = modelo.replace(/\[VALOR\]/g, formatMoney(valorRecebido));
-            modelo = modelo.replace(/\[DESCRICAO\]/g, evento ? `Sinal para ${evento.tipo}` : 'Serviços prestados');
-            modelo = modelo.replace(/\[DATA\]/g, cliente.financeiro?.sinalData ? formatDate(cliente.financeiro.sinalData) : formatDate(new Date().toISOString().split('T')[0]));
-            modelo = modelo.replace(/\[EVENTO\]/g, evento ? evento.tipo : 'Serviços');
-            modelo = modelo.replace(/\[DATA_COMPLETA\]/g, new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }));
-            modelo = modelo.replace(/\[EMPRESA\]/g, config.nomeEmpresa || 'EventProDJ');
-            modelo = modelo.replace(/\[CNPJ\]/g, config.cnpj || '');
-            
-            return modelo;
-        }
-        
-        // Nova função para gerar recibo profissional como na imagem
         async function gerarReciboProfissional(cliente, evento, config, nomeArquivo) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -13549,7 +14087,7 @@ _______________________________
             
             let y = 15;
             
-            // ===== CABEÇALHO PADRONIZADO =====
+            // ===== CABEÇALHO CUSTOMIZADO PARA RECIBO =====
             // Logo à esquerda
             if (config.logoBase64) {
                 try {
@@ -13559,52 +14097,72 @@ _______________________________
                 }
             }
             
-            // Informações da empresa centralizadas verticalmente ao lado da logo
-            let yEmpresa = y + 8; // Centralizar verticalmente
-            let xEmpresa = margemEsquerda + 40;
+            // Informações da empresa ao lado da logo (alinhadas à esquerda E MESMA ALTURA)
+            let yEmpresa = y + 2; // Ajuste para alinhar com o topo da logo
+            let xEmpresa = margemEsquerda + 40; // Ao lado da logo
             
+            // Nome da empresa (apenas uma vez)
             doc.setFontSize(12);
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', xEmpresa, yEmpresa);
-            yEmpresa += 5;
+            yEmpresa += 6;
             
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
+            // REMOVER DATA AQUI (estava ao lado da logo)
+            // doc.text(`${dataAtual}`, xEmpresa, yEmpresa);
+            // yEmpresa += 5;
+            
+            // CNPJ
             if (config.cnpj) {
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
                 doc.text(`CNPJ: ${config.cnpj}`, xEmpresa, yEmpresa);
                 yEmpresa += 4;
             }
+            
+            // Email
             if (config.email) {
                 doc.text(`Email: ${config.email}`, xEmpresa, yEmpresa);
                 yEmpresa += 4;
             }
+            
+            // Telefone
             if (config.telefone) {
                 doc.text(`Tel: ${config.telefone}`, xEmpresa, yEmpresa);
                 yEmpresa += 4;
             }
+            
+            // WhatsApp
             if (config.whatsapp) {
                 doc.text(`WhatsApp: ${config.whatsapp}`, xEmpresa, yEmpresa);
                 yEmpresa += 4;
             }
             
-            // Linha separadora
+            // REMOVER REDES SOCIAIS (todas)
             y = Math.max(y + 40, yEmpresa + 3);
-            doc.setDrawColor(200, 200, 200);
-            doc.setLineWidth(0.5);
-            doc.line(margemEsquerda, y, margemDireita, y);
+            
+            // Reset cor
             doc.setTextColor(0, 0, 0);
+            
+            // Linha separadora
+            y += 5;
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
             y += 8;
             
             // ===== TÍTULO: RECIBO =====
             doc.setFillColor(220, 220, 220);
             doc.rect(margemEsquerda, y, larguraPagina, 8, 'F');
-            doc.setFontSize(18);
+            doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('Recibo', margemEsquerda + 2, y + 6);
+            doc.text('Recibo', margemEsquerda + 2, y + 5.5);
+            
+            
             y += 15;
             
             // ===== DECLARAÇÃO (TEXTO ATUALIZADO) =====
-            doc.setFontSize(9);
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             
             const valorRecebido = cliente.financeiro?.sinalValor || 0;
@@ -13636,14 +14194,14 @@ _______________________________
             y += 5;
             doc.setFillColor(240, 240, 240);
             doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
             doc.text('Serviços', margemEsquerda + 2, y + 4);
             
             y += 10; // Espaço de uma linha antes dos itens
             
             // Listar serviços do evento (descrição do orçamento)
-            doc.setFontSize(9);
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             if (evento && evento.observacoes) {
                 // Extrair serviços das observações (formato do orçamento)
@@ -13654,7 +14212,8 @@ _______________________________
                     servicosLinhas.forEach(linha => {
                         // Remover valores, manter apenas descrição
                         const descricao = linha.replace(/\s*-\s*R\$.*$/, '').trim();
-                        doc.text(descricao, margemEsquerda, y);
+                        doc.setFontSize(10);
+                    doc.text(descricao, margemEsquerda, y);
                         y += 5;
                     });
                 } else {
@@ -13675,12 +14234,17 @@ _______________________________
             doc.text('Evento', margemEsquerda + 2, y + 4);
             
             y += 10; // Espaço de uma linha antes dos itens
-            doc.setFontSize(9);
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             
             // Tipo de evento
             if (evento && evento.tipo) {
-                doc.text(`Tipo de evento: ${evento.tipo}`, margemEsquerda, y);
+                doc.setFont('helvetica', 'bold');
+            doc.text('Tipo de evento:', margemEsquerda, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Tipo de evento:', margemEsquerda, y);
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? evento.tipo : 'A definir', 55, y);
                 y += 5;
             }
             
@@ -13694,12 +14258,12 @@ _______________________________
             y += 5;
             doc.setFillColor(240, 240, 240);
             doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
             doc.text('Pagamento', margemEsquerda + 2, y + 4);
             
             y += 10; // Espaço de uma linha antes dos itens
-            doc.setFontSize(9);
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text('Meios de pagamento', margemEsquerda, y);
             y += 5;
@@ -13721,50 +14285,43 @@ _______________________________
             y += 35;
             
             // Linha de assinatura
-            doc.setLineWidth(0.5);
+            doc.setLineWidth(0.3);
             doc.line(margemEsquerda + 50, y, margemDireita - 50, y);
             
-            // Adicionar imagem da assinatura se existir
+            // Adicionar assinatura digital se configurada
             if (config.assinaturaBase64) {
                 try {
-                    doc.addImage(config.assinaturaBase64, 'PNG', 75, y - 15, 60, 15);
+                    doc.addImage(config.assinaturaBase64, 'PNG', 75, y - 10, 60, 10);
                 } catch (e) {
                     console.log('Erro ao adicionar assinatura:', e);
                 }
             }
             
-            y += 3;
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
+            y += 4;
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
             doc.text('Assinatura do responsável da empresa', 105, y, { align: 'center' });
             
-            y += 5;
+            y += 4;
+            doc.setFontSize(12);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 105, y, { align: 'center' });
             
             y += 5;
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
             doc.text(dataExtenso, 105, y, { align: 'center' });
             
             // Rodapé
-            doc.setFontSize(7);
+            doc.setFontSize(10);
             doc.setTextColor(150);
             doc.text(`Página 1/1`, 105, 285, { align: 'center' });
             
-            // Retornar o blob para compartilhamento
+            // Salvar e mostrar modal
             const pdfBlob = doc.output('blob');
-            const pdfFile = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
-            
-            // Armazenar para compartilhamento
-            window.ultimoPDFGerado = pdfFile;
-            
-            // Salvar
-            // doc.save(nomeArquivo); // Comentado - não fazer download automático
-            
-            // Mostrar opções de compartilhamento
-            mostrarOpcoesCompartilhamento(nomeArquivo);
+            mostrarModalCompartilhar(pdfBlob, nomeArquivo || `Recibo_${cliente.nome}.pdf`);
         }
         
         // Função auxiliar para converter número em extenso (simplificada)
@@ -13850,7 +14407,7 @@ _______________________________
             // doc.save(nomeArquivo); // Comentado - não fazer download automático
             
             // Mostrar opções de compartilhamento
-            mostrarOpcoesCompartilhamento(nomeArquivo);
+            // Documento gerado com sucesso
         }
 
         function viewClientDetails(id) {
@@ -13900,9 +14457,41 @@ _______________________________
         }
 
         function editClient(id) {
-            alert('Funcionalidade de edição em desenvolvimento!\nEm breve você poderá editar os dados do cliente.');
+            // Converter ID para número se for string
+            const clienteId = typeof id === 'string' ? parseInt(id) : id;
+            const cliente = DB.get('clientes').find(c => c.id == clienteId);
+            if (!cliente) {
+                console.error('Cliente não encontrado. ID recebido:', id, 'Tipo:', typeof id);
+                return alert('Cliente não encontrado!');
+            }
+            
+            document.getElementById('clienteNome').value = cliente.nome || '';
+            document.getElementById('clienteEmail').value = cliente.email || '';
+            document.getElementById('clienteTelefone').value = cliente.telefone || '';
+            document.getElementById('clienteCpf').value = cliente.cpf || '';
+            document.getElementById('clienteAniversario').value = cliente.aniversario || '';
+            document.getElementById('clienteOrigem').value = cliente.origem || '';
+            
+            if (cliente.origem === 'indicacao') {
+                document.getElementById('indicacaoDetalhes').style.display = 'block';
+                document.getElementById('clienteIndicacao').value = cliente.indicacao || '';
+            }
+            
+            document.getElementById('clienteCep').value = cliente.cep || '';
+            document.getElementById('clienteRua').value = cliente.rua || '';
+            document.getElementById('clienteNumero').value = cliente.numero || '';
+            document.getElementById('clienteComplemento').value = cliente.complemento || '';
+            document.getElementById('clienteBairro').value = cliente.bairro || '';
+            document.getElementById('clienteCidade').value = cliente.cidade || '';
+            document.getElementById('clienteEstado').value = cliente.estado || '';
+            document.getElementById('clienteObservacoes').value = cliente.observacoes || '';
+            
+            const form = document.querySelector('#modalCliente form');
+            if (form) form.setAttribute('data-editing-id', clienteId);
+            
+            openModal('cliente');
         }
-
+        
         function deleteClient(id) {
             const cliente = DB.get('clientes').find(c => c.id === id);
             if (!cliente) return;
@@ -13982,46 +14571,36 @@ _______________________________
             const cliente = DB.get('clientes').find(c => c.id === id);
             if (!cliente) return;
             
-            // Ir para aba de eventos
-            switchTabProgramatically('eventos');
+            // Abrir modal de orçamento completo
+            openModal('orcamento');
             
-            // Abrir modal de novo evento com pequeno delay
             setTimeout(() => {
-                openModal('evento');
-                
-                // Pré-preencher APENAS nome do cliente
-                const nomeInput = document.getElementById('eventoCliente');
-                if (nomeInput) {
-                    nomeInput.value = cliente.nome;
+                if (document.getElementById('nomeCliente')) {
+                    document.getElementById('nomeCliente').value = cliente.nome;
+                }
+                if (document.getElementById('emailCliente')) {
+                    document.getElementById('emailCliente').value = cliente.email || '';
+                }
+                if (document.getElementById('telefoneCliente')) {
+                    document.getElementById('telefoneCliente').value = cliente.telefone || '';
+                }
+                if (document.getElementById('cpfCliente')) {
+                    document.getElementById('cpfCliente').value = cliente.cpf || '';
                 }
                 
-                // Guardar dados do cliente para opção de usar endereço
-                window.enderecoCliente = {
-                    cep: cliente.cep || '',
-                    rua: cliente.rua || '',
-                    numero: cliente.numero || '',
-                    complemento: cliente.complemento || '',
-                    bairro: cliente.bairro || '',
-                    cidade: cliente.cidade || '',
-                    estado: cliente.estado || ''
-                };
-                
-                // Mostrar opção de usar endereço do cliente se ele tiver endereço
                 if (cliente.cep) {
-                    document.getElementById('opcoesEnderecoEvento').style.display = 'block';
-                    document.getElementById('enderecoClienteDisplay').textContent = cliente.endereco || `${cliente.rua}, ${cliente.numero} - ${cliente.bairro}`;
+                    if (document.getElementById('cepEvento')) document.getElementById('cepEvento').value = cliente.cep;
+                    if (document.getElementById('ruaEvento')) document.getElementById('ruaEvento').value = cliente.rua || '';
+                    if (document.getElementById('numeroEvento')) document.getElementById('numeroEvento').value = cliente.numero || '';
+                    if (document.getElementById('complementoEvento')) document.getElementById('complementoEvento').value = cliente.complemento || '';
+                    if (document.getElementById('bairroEvento')) document.getElementById('bairroEvento').value = cliente.bairro || '';
+                    if (document.getElementById('cidadeEvento')) document.getElementById('cidadeEvento').value = cliente.cidade || '';
+                    if (document.getElementById('estadoEvento')) document.getElementById('estadoEvento').value = cliente.estado || '';
                 }
                 
-                // Se tiver valor financeiro, preencher também
-                if (cliente.financeiro && cliente.financeiro.valorTotal > 0) {
-                    const valorInput = document.getElementById('eventoValor');
-                    if (valorInput) {
-                        valorInput.value = cliente.financeiro.valorTotal;
-                        document.getElementById('valorClienteDisplay').textContent = formatMoney(cliente.financeiro.valorTotal);
-                        document.getElementById('valorClienteInfo').style.display = 'block';
-                    }
-                }
-            }, 300);
+                const form = document.getElementById('orcamentoForm');
+                if (form) form.setAttribute('data-cliente-id', id);
+            }, 100);
         }
 
         function sendMessage(id) {
@@ -14039,5 +14618,56 @@ _______________________________
 
         // Aguardar DOM estar pronto antes de adicionar event listeners
     </script>
+
+    <!-- Modal de Compartilhar Documento -->
+    <div id="modalCompartilhar" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 style="margin-bottom: 20px;">📄 Documento Gerado</h2>
+            <p style="margin-bottom: 30px; color: var(--text-secondary);">
+                Seu documento foi gerado com sucesso! Escolha uma opção:
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <button onclick="compartilharPDF()" class="btn" style="
+                    width: 100%;
+                    padding: 15px;
+                    font-size: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    background: var(--success);
+                    color: white;
+                ">
+                    <span style="font-size: 20px;">🔗</span>
+                    Compartilhar
+                </button>
+                
+                <button onclick="baixarPDF()" class="btn btn-primary" style="
+                    width: 100%;
+                    padding: 15px;
+                    font-size: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                ">
+                    <span style="font-size: 20px;">💾</span>
+                    Baixar
+                </button>
+                
+                <button onclick="fecharModalCompartilhar()" class="btn" style="
+                    width: 100%;
+                    padding: 15px;
+                    background: transparent;
+                    color: var(--text-secondary);
+                    border: 1px solid var(--border);
+                ">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
