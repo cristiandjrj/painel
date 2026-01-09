@@ -4867,6 +4867,11 @@ CNPJ: [CNPJ]"
                     <span>Emitir Recibo</span>
                 </button>
                 
+                <button class="btn btn-primary" onclick="gerarDocumento('resumo')" style="padding: 16px; font-size: 16px; display: flex; align-items: center; gap: 12px; justify-content: center;">
+                    <span style="font-size: 24px;">💰</span>
+                    <span>Gerar Resumo Financeiro</span>
+                </button>
+                
                 <!-- Botão de compartilhar (aparece após gerar um documento) -->
                 <div id="compartilharDocArea" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
                     <button class="btn btn-secondary" onclick="compartilharPDF()" style="padding: 16px; font-size: 16px; display: flex; align-items: center; gap: 12px; justify-content: center; background: var(--success);">
@@ -4874,6 +4879,28 @@ CNPJ: [CNPJ]"
                         <span>Compartilhar Último Documento</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Escolher Tipo de Recibo -->
+    <div id="modalEscolherRecibo" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🧾 Emitir Recibo</h2>
+                <button class="close-btn" onclick="closeModal('escolherRecibo')">×</button>
+            </div>
+            <div style="margin-bottom: 20px; padding: 12px; background: rgba(255, 107, 53, 0.1); border-radius: 8px;">
+                <strong id="reciboClienteNome" style="color: var(--primary); font-size: 16px;">Cliente</strong>
+            </div>
+            <input type="hidden" id="reciboClienteId">
+            
+            <p style="margin-bottom: 20px; color: var(--text-secondary); font-size: 14px;">
+                Selecione para qual pagamento deseja emitir o recibo:
+            </p>
+            
+            <div id="listaPagamentosRecibo" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Será preenchido dinamicamente -->
             </div>
         </div>
     </div>
@@ -6234,6 +6261,115 @@ CNPJ: [CNPJ]"
             updateStatsPessoal();
         }
         
+        // Editar conta
+        function editarConta(contaId) {
+            const contas = DB.get('contasPessoais');
+            const conta = contas.find(c => c.id === contaId);
+            
+            if (!conta) {
+                alert('❌ Conta não encontrada!');
+                return;
+            }
+            
+            // Preencher modal com dados da conta
+            document.getElementById('contaPessoalNome').value = conta.nome;
+            document.getElementById('contaPessoalTipo').value = conta.tipo;
+            document.getElementById('contaPessoalSaldo').value = conta.saldoAtual || 0;
+            document.getElementById('contaPessoalBanco').value = conta.banco || '';
+            
+            // Abrir modal
+            openModal('contaPessoal');
+            
+            // Mudar comportamento do form para edição
+            const form = document.getElementById('formContaPessoal');
+            const btnSubmit = form.querySelector('button[type="submit"]');
+            
+            // Salvar handler original
+            const originalSubmit = form.onsubmit;
+            
+            // Mudar texto do botão
+            const originalText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '💾 Salvar Alterações';
+            
+            // Substituir submit por edição
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                // Atualizar conta
+                conta.nome = document.getElementById('contaPessoalNome').value;
+                conta.tipo = document.getElementById('contaPessoalTipo').value;
+                conta.saldoAtual = parseFloat(document.getElementById('contaPessoalSaldo').value) || 0;
+                conta.banco = document.getElementById('contaPessoalBanco').value;
+                
+                // Salvar no banco
+                DB.set('contasPessoais', contas);
+                
+                alert('✅ Conta atualizada com sucesso!');
+                
+                // Restaurar form
+                form.onsubmit = originalSubmit;
+                btnSubmit.innerHTML = originalText;
+                
+                closeModal('contaPessoal');
+                form.reset();
+                renderContasPessoais();
+                carregarContasPessoaisNosSelects();
+                updateStatsPessoal();
+            };
+        }
+        
+        // Excluir conta
+        function excluirConta(contaId) {
+            const contas = DB.get('contasPessoais');
+            const conta = contas.find(c => c.id === contaId);
+            
+            if (!conta) {
+                alert('❌ Conta não encontrada!');
+                return;
+            }
+            
+            // Verificar se tem transações vinculadas
+            const receitas = DB.get('receitasPessoais').filter(r => r.contaId == contaId);
+            const despesas = DB.get('despesasPessoais').filter(d => d.contaId == contaId);
+            const totalTransacoes = receitas.length + despesas.length;
+            
+            let mensagem = `Tem certeza que deseja excluir a conta "${conta.nome}"?`;
+            
+            if (totalTransacoes > 0) {
+                mensagem += `\n\n⚠️ ATENÇÃO: Esta conta possui ${totalTransacoes} transação(ões) vinculada(s)!`;
+                mensagem += '\n\nAo excluir a conta, as transações permanecerão no sistema mas sem vínculo com conta.';
+            }
+            
+            if (!confirm(mensagem)) return;
+            
+            // Remover vínculo das transações
+            if (receitas.length > 0) {
+                const todasReceitas = DB.get('receitasPessoais');
+                todasReceitas.forEach(r => {
+                    if (r.contaId == contaId) r.contaId = null;
+                });
+                DB.set('receitasPessoais', todasReceitas);
+            }
+            
+            if (despesas.length > 0) {
+                const todasDespesas = DB.get('despesasPessoais');
+                todasDespesas.forEach(d => {
+                    if (d.contaId == contaId) d.contaId = null;
+                });
+                DB.set('despesasPessoais', todasDespesas);
+            }
+            
+            // Excluir conta
+            const novasContas = contas.filter(c => c.id !== contaId);
+            DB.set('contasPessoais', novasContas);
+            
+            alert(`✅ Conta "${conta.nome}" excluída com sucesso!`);
+            
+            renderContasPessoais();
+            carregarContasPessoaisNosSelects();
+            updateStatsPessoal();
+        }
+        
         function renderReceitasPessoais() {
             const receitas = DB.get('receitasPessoais');
             const container = document.getElementById('listaReceitasPessoais');
@@ -6323,7 +6459,15 @@ CNPJ: [CNPJ]"
                                 <div style="font-size: 24px; font-weight: 700; color: ${saldoColor};">
                                     ${formatMoney(c.saldoAtual || 0)}
                                 </div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">Saldo Atual</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Saldo Atual</div>
+                                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                    <button onclick="editarConta(${c.id})" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                                        ✏️ Editar
+                                    </button>
+                                    <button onclick="excluirConta(${c.id})" class="btn" style="padding: 8px 16px; font-size: 13px; background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
+                                        🗑️ Excluir
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -9461,9 +9605,17 @@ CNPJ: [CNPJ]"
                                 ${c.observacoes ? `<div style="margin-top: 8px;">📝 ${c.observacoes}</div>` : ''}
                             </div>
                         </div>
-                        <button class="btn" onclick="toggleContaAtiva(${c.id})" style="background: ${c.ativa ? 'rgba(239, 71, 111, 0.2)' : 'rgba(6, 214, 160, 0.2)'}; color: ${c.ativa ? 'var(--danger)' : 'var(--success)'}; border: 1px solid ${c.ativa ? 'var(--danger)' : 'var(--success)'}; flex-shrink: 0;">
-                            ${c.ativa ? '🗑️ Desativar' : '✅ Ativar'}
-                        </button>
+                        <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+                            <button onclick="editarContaBancaria(${c.id})" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                                ✏️ Editar
+                            </button>
+                            <button onclick="excluirContaBancaria(${c.id})" class="btn" style="padding: 8px 16px; font-size: 13px; background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
+                                🗑️ Excluir
+                            </button>
+                            <button class="btn" onclick="toggleContaAtiva(${c.id})" style="padding: 8px 16px; font-size: 13px; background: ${c.ativa ? 'rgba(239, 71, 111, 0.2)' : 'rgba(6, 214, 160, 0.2)'}; color: ${c.ativa ? 'var(--danger)' : 'var(--success)'}; border: 1px solid ${c.ativa ? 'var(--danger)' : 'var(--success)'};">
+                                ${c.ativa ? '🗑️ Desativar' : '✅ Ativar'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -9481,6 +9633,114 @@ CNPJ: [CNPJ]"
                 carregarContasNosSelects();
             }
         }
+        
+        // Editar Conta Bancária
+        function editarContaBancaria(contaId) {
+            const contas = DB.get('contas');
+            const conta = contas.find(c => c.id === contaId);
+            
+            if (!conta) {
+                alert('❌ Conta não encontrada!');
+                return;
+            }
+            
+            // Preencher modal
+            document.getElementById('contaNome').value = conta.nome;
+            document.getElementById('contaBanco').value = conta.banco;
+            document.getElementById('contaTipo').value = conta.tipo;
+            document.getElementById('contaAgencia').value = conta.agencia || '';
+            document.getElementById('contaNumero').value = conta.numero || '';
+            document.getElementById('contaSaldoInicial').value = conta.saldoInicial || 0;
+            document.getElementById('contaObservacoes').value = conta.observacoes || '';
+            
+            openModal('conta');
+            
+            // Mudar submit para edição
+            const form = document.querySelector('#modalConta form');
+            const btnSubmit = form.querySelector('button[type="submit"]');
+            const originalText = btnSubmit.innerHTML;
+            const originalSubmit = form.onsubmit;
+            
+            btnSubmit.innerHTML = '💾 Salvar Alterações';
+            
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                // Atualizar dados
+                conta.nome = document.getElementById('contaNome').value;
+                conta.banco = document.getElementById('contaBanco').value;
+                conta.tipo = document.getElementById('contaTipo').value;
+                conta.agencia = document.getElementById('contaAgencia').value;
+                conta.numero = document.getElementById('contaNumero').value;
+                conta.saldoInicial = parseFloat(document.getElementById('contaSaldoInicial').value) || 0;
+                conta.observacoes = document.getElementById('contaObservacoes').value;
+                
+                DB.set('contas', contas);
+                
+                alert('✅ Conta atualizada com sucesso!');
+                
+                // Restaurar
+                form.onsubmit = originalSubmit;
+                btnSubmit.innerHTML = originalText;
+                
+                closeModal('conta');
+                form.reset();
+                renderContasBancarias();
+                carregarContasNosSelects();
+            };
+        }
+        
+        // Excluir Conta Bancária
+        function excluirContaBancaria(contaId) {
+            const contas = DB.get('contas');
+            const conta = contas.find(c => c.id === contaId);
+            
+            if (!conta) {
+                alert('❌ Conta não encontrada!');
+                return;
+            }
+            
+            // Verificar transações vinculadas
+            const receitas = DB.get('receitas').filter(r => r.contaId == contaId);
+            const despesas = DB.get('despesas').filter(d => d.contaId == contaId);
+            const totalTransacoes = receitas.length + despesas.length;
+            
+            let mensagem = `Tem certeza que deseja excluir a conta "${conta.nome}"?`;
+            
+            if (totalTransacoes > 0) {
+                mensagem += `\n\n⚠️ ATENÇÃO: Esta conta possui ${totalTransacoes} transação(ões) vinculada(s)!`;
+                mensagem += '\n\nAo excluir a conta, as transações permanecerão no sistema mas sem vínculo com conta.';
+            }
+            
+            if (!confirm(mensagem)) return;
+            
+            // Remover vínculo das transações
+            if (receitas.length > 0) {
+                const todasReceitas = DB.get('receitas');
+                todasReceitas.forEach(r => {
+                    if (r.contaId == contaId) r.contaId = null;
+                });
+                DB.set('receitas', todasReceitas);
+            }
+            
+            if (despesas.length > 0) {
+                const todasDespesas = DB.get('despesas');
+                todasDespesas.forEach(d => {
+                    if (d.contaId == contaId) d.contaId = null;
+                });
+                DB.set('despesas', todasDespesas);
+            }
+            
+            // Excluir conta
+            const novasContas = contas.filter(c => c.id !== contaId);
+            DB.set('contas', novasContas);
+            
+            alert(`✅ Conta "${conta.nome}" excluída com sucesso!`);
+            
+            renderContasBancarias();
+            carregarContasNosSelects();
+        }
+
 
         // Export data
         function exportData() {
@@ -10963,32 +11223,46 @@ if (!DB.get('configuracoes')) {
                 return;
             }
             
+            // Pegar todos os dados do localStorage
+            const dados = {
+                eventos: DB.get('eventos') || [],
+                clientes: DB.get('clientes') || [],
+                receitas: DB.get('receitas') || [],
+                despesas: DB.get('despesas') || [],
+                contas: DB.get('contas') || [],
+                servicos: DB.get('servicos') || [],
+                custosGerais: DB.get('custosGerais') || [],
+                custosEventos: DB.get('custosEventos') || [],
+                receitasPessoais: DB.get('receitasPessoais') || [],
+                despesasPessoais: DB.get('despesasPessoais') || [],
+                contasPessoais: DB.get('contasPessoais') || [],
+                contasPagar: DB.get('contasPagar') || [],
+                configuracoes: DB.get('configuracoes') || {}
+            };
+            
+            // Gerar hash dos dados para detectar mudanças
+            const dadosString = JSON.stringify(dados);
+            const hashAtual = simpleHash(dadosString);
+            const hashAnterior = localStorage.getItem('lastSyncHash');
+            
+            // Se não houve mudanças, não sincronizar (exceto se for manual)
+            if (hashAnterior === hashAtual && arguments[0] !== 'manual') {
+                console.log('✅ Dados não foram alterados, sincronização não necessária');
+                return;
+            }
+            
             atualizarStatusSync('syncing', 'Sincronizando...');
             
             try {
-                // Pegar todos os dados do localStorage
-                const dados = {
-                    eventos: DB.get('eventos') || [],
-                    clientes: DB.get('clientes') || [],
-                    receitas: DB.get('receitas') || [],
-                    despesas: DB.get('despesas') || [],
-                    contas: DB.get('contas') || [],
-                    servicos: DB.get('servicos') || [],
-                    custosGerais: DB.get('custosGerais') || [],
-                    custosEventos: DB.get('custosEventos') || [],
-                    receitasPessoais: DB.get('receitasPessoais') || [],
-                    despesasPessoais: DB.get('despesasPessoais') || [],
-                    contasPessoais: DB.get('contasPessoais') || [],
-                    contasPagar: DB.get('contasPagar') || [],
-                    configuracoes: DB.get('configuracoes') || {},
-                    lastSync: new Date().toISOString()
-                };
+                // Adicionar timestamp
+                dados.lastSync = new Date().toISOString();
                 
                 // Enviar para Firebase
                 await firebaseDatabase.ref('eventprodj').set(dados);
                 
-                // Salvar timestamp local
+                // Salvar timestamp e hash local
                 localStorage.setItem('lastSyncLocal', dados.lastSync);
+                localStorage.setItem('lastSyncHash', hashAtual);
                 
                 atualizarStatusSync('online', 'Sincronizado');
                 
@@ -11010,6 +11284,27 @@ if (!DB.get('configuracoes')) {
                     alert('❌ Erro ao sincronizar dados:\n\n' + error.message + '\n\nVerifique sua conexão e as configurações do Firebase.');
                 }
             }
+        }
+        
+        // Função simples de hash para detectar mudanças
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(36);
+        }
+        
+        // Salvar hash dos dados após sincronização
+        function salvarHashDados(dados) {
+            const dadosSemTimestamp = {...dados};
+            delete dadosSemTimestamp.lastSync;
+            const dadosString = JSON.stringify(dadosSemTimestamp);
+            const hashDados = simpleHash(dadosString);
+            localStorage.setItem('lastSyncHash', hashDados);
+            console.log('📝 Hash dos dados salvo:', hashDados);
         }
         
         // Sincronização automática a cada 2 minutos
@@ -11073,10 +11368,35 @@ if (!DB.get('configuracoes')) {
                         // Tem dados locais e na nuvem
                         // Verificar qual é mais recente
                         const lastSyncLocal = localStorage.getItem('lastSyncLocal');
+                        const lastSyncCheck = localStorage.getItem('lastSyncCheck');
                         
-                        if (!lastSyncLocal || new Date(lastSync) > new Date(lastSyncLocal)) {
-                            // Nuvem mais recente
-                            mostrarDialogoSincronizacao();
+                        // Controle de frequência: só mostrar modal 1x por hora
+                        const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000);
+                        const deveVerificar = !lastSyncCheck || new Date(lastSyncCheck) < umaHoraAtras;
+                        
+                        if (!lastSyncLocal) {
+                            // Primeira sincronização - sempre mostrar
+                            if (deveVerificar) {
+                                mostrarDialogoSincronizacao();
+                            } else {
+                                console.log('⏰ Aguardando 1 hora para verificar novamente');
+                            }
+                        } else if (deveVerificar) {
+                            // Verificar se diferença é significativa (> 5 minutos)
+                            const diffMinutos = (new Date(lastSync) - new Date(lastSyncLocal)) / 1000 / 60;
+                            
+                            console.log('🔍 Diferença de sincronização:', Math.round(diffMinutos), 'minutos');
+                            
+                            if (diffMinutos > 5) {
+                                // Diferença significativa - mostrar modal
+                                mostrarDialogoSincronizacao();
+                            } else {
+                                // Diferença pequena - não incomodar usuário
+                                console.log('✅ Dados estão praticamente sincronizados');
+                                localStorage.setItem('lastSyncCheck', new Date().toISOString());
+                            }
+                        } else {
+                            console.log('⏰ Aguardando 1 hora para verificar novamente');
                         }
                     }
                 }
@@ -11113,6 +11433,9 @@ if (!DB.get('configuracoes')) {
                 
                 // Salvar timestamp local
                 localStorage.setItem('lastSyncLocal', dados.lastSync || new Date().toISOString());
+                
+                // Salvar hash dos dados baixados
+                salvarHashDados(dados);
                 
                 // Atualizar interface
                 updateDashboard();
@@ -11238,6 +11561,9 @@ if (!DB.get('configuracoes')) {
                 
                 // Salvar timestamp local
                 localStorage.setItem('lastSyncLocal', dados.lastSync || new Date().toISOString());
+                
+                // Salvar hash dos dados baixados
+                salvarHashDados(dados);
                 
                 // Atualizar interface
                 updateDashboard();
@@ -13433,18 +13759,189 @@ if (!DB.get('configuracoes')) {
                     // Usar função específica para orçamento profissional
                     nomeArquivo = `Orcamento_${cliente.nome.replace(/\s/g, '_')}.pdf`;
                     await gerarOrcamentoProfissional(cliente, evento, config, nomeArquivo);
+                    closeModal('documentos');
                 } else if (tipo === 'contrato') {
                     nomeArquivo = `Contrato_${cliente.nome.replace(/\s/g, '_')}.pdf`;
                     await gerarContratoProfissional(cliente, evento, config, nomeArquivo);
+                    closeModal('documentos');
                 } else if (tipo === 'recibo') {
-                    nomeArquivo = `Recibo_${cliente.nome.replace(/\s/g, '_')}.pdf`;
-                    await gerarReciboProfissional(cliente, evento, config, nomeArquivo);
+                    // Abrir modal para escolher qual pagamento
+                    abrirModalEscolherRecibo(cliente, evento, config);
+                } else if (tipo === 'resumo') {
+                    nomeArquivo = `Resumo_Financeiro_${cliente.nome.replace(/\s/g, '_')}.pdf`;
+                    await gerarResumoFinanceiroProfissional(cliente, evento, config, nomeArquivo);
+                    closeModal('documentos');
                 }
-                
-                closeModal('documentos');
             } catch (error) {
                 console.error('Erro ao gerar documento:', error);
                 alert('❌ Erro ao gerar documento. Verifique os dados e tente novamente.');
+            }
+        }
+        
+        // Abrir modal para escolher tipo de recibo
+        function abrirModalEscolherRecibo(cliente, evento, config) {
+            // Preencher nome do cliente
+            document.getElementById('reciboClienteNome').textContent = cliente.nome;
+            document.getElementById('reciboClienteId').value = cliente.id;
+            
+            const listaPagamentos = document.getElementById('listaPagamentosRecibo');
+            const valorTotal = cliente.financeiro?.valorTotal || evento?.valor || 0;
+            const sinalValor = cliente.financeiro?.sinalValor || 0;
+            const sinalData = cliente.financeiro?.sinalData || '';
+            
+            let totalPago = sinalValor;
+            let html = '';
+            
+            // SINAL / ENTRADA
+            if (sinalValor > 0) {
+                html += `
+                    <button class="btn btn-primary" onclick="gerarReciboSelecionado('sinal')" style="padding: 16px; font-size: 15px; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">💵 Entrada / Sinal</div>
+                                <div style="font-size: 13px; opacity: 0.8; margin-top: 4px;">
+                                    Pago em: ${sinalData ? formatDate(sinalData) : 'Data não informada'}
+                                </div>
+                            </div>
+                            <div style="font-size: 18px; font-weight: 700;">
+                                ${formatMoney(sinalValor)}
+                            </div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // ADIANTAMENTOS / PAGAMENTOS ADICIONAIS
+            if (cliente.financeiro?.pagamentosAdicionais && cliente.financeiro.pagamentosAdicionais.length > 0) {
+                cliente.financeiro.pagamentosAdicionais.forEach((pag, index) => {
+                    const valor = pag.valor || 0;
+                    totalPago += valor;
+                    
+                    html += `
+                        <button class="btn btn-primary" onclick="gerarReciboSelecionado('adiantamento', ${index})" style="padding: 16px; font-size: 15px; text-align: left;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600;">💳 Adiantamento ${index + 1}</div>
+                                    <div style="font-size: 13px; opacity: 0.8; margin-top: 4px;">
+                                        Pago em: ${formatDate(pag.data)}
+                                        ${pag.formaPagamento ? ` • ${pag.formaPagamento.toUpperCase()}` : ''}
+                                    </div>
+                                </div>
+                                <div style="font-size: 18px; font-weight: 700;">
+                                    ${formatMoney(valor)}
+                                </div>
+                            </div>
+                        </button>
+                    `;
+                });
+            }
+            
+            // SALDO DEVEDOR / PAGAMENTO FINAL
+            const saldoDevedor = valorTotal - totalPago;
+            if (saldoDevedor > 0) {
+                html += `
+                    <button class="btn btn-primary" onclick="gerarReciboSelecionado('saldo')" style="padding: 16px; font-size: 15px; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">✅ Pagamento Final / Saldo</div>
+                                <div style="font-size: 13px; opacity: 0.8; margin-top: 4px;">
+                                    A receber
+                                </div>
+                            </div>
+                            <div style="font-size: 18px; font-weight: 700;">
+                                ${formatMoney(saldoDevedor)}
+                            </div>
+                        </div>
+                    </button>
+                `;
+            }
+            
+            // VALOR TOTAL (opção para gerar recibo do valor completo)
+            html += `
+                <button class="btn btn-secondary" onclick="gerarReciboSelecionado('total')" style="padding: 16px; font-size: 15px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600;">💰 Valor Total do Serviço</div>
+                            <div style="font-size: 13px; opacity: 0.8; margin-top: 4px;">
+                                Recibo completo
+                            </div>
+                        </div>
+                        <div style="font-size: 18px; font-weight: 700;">
+                            ${formatMoney(valorTotal)}
+                        </div>
+                    </div>
+                </button>
+            `;
+            
+            listaPagamentos.innerHTML = html;
+            
+            // Fechar modal de documentos e abrir modal de escolha
+            closeModal('documentos');
+            openModal('escolherRecibo');
+        }
+        
+        // Gerar recibo do pagamento selecionado
+        async function gerarReciboSelecionado(tipo, index = null) {
+            const clienteId = parseInt(document.getElementById('reciboClienteId').value);
+            const cliente = DB.get('clientes').find(c => c.id === clienteId);
+            if (!cliente) return;
+            
+            const configuracoes = DB.get('configuracoes');
+            const config = configuracoes.length > 0 ? configuracoes[0] : {};
+            
+            const eventos = DB.get('eventos');
+            const evento = eventos.find(e => e.cliente === cliente.nome);
+            
+            let descricao = '';
+            let valor = 0;
+            let data = '';
+            let referente = '';
+            
+            if (tipo === 'sinal') {
+                descricao = 'Entrada / Sinal';
+                valor = cliente.financeiro?.sinalValor || 0;
+                data = cliente.financeiro?.sinalData || new Date().toISOString().split('T')[0];
+                referente = evento ? `Contratação do evento: ${evento.tipo}` : 'Contratação de serviços';
+            } else if (tipo === 'adiantamento' && index !== null) {
+                const pag = cliente.financeiro.pagamentosAdicionais[index];
+                descricao = `Adiantamento ${index + 1}`;
+                valor = pag.valor;
+                data = pag.data;
+                referente = evento ? `Pagamento parcial referente ao evento: ${evento.tipo}` : 'Pagamento parcial de serviços';
+            } else if (tipo === 'saldo') {
+                const valorTotal = cliente.financeiro?.valorTotal || evento?.valor || 0;
+                const sinalValor = cliente.financeiro?.sinalValor || 0;
+                let totalPago = sinalValor;
+                
+                if (cliente.financeiro?.pagamentosAdicionais) {
+                    totalPago += cliente.financeiro.pagamentosAdicionais.reduce((sum, p) => sum + p.valor, 0);
+                }
+                
+                descricao = 'Pagamento Final / Saldo Devedor';
+                valor = valorTotal - totalPago;
+                data = new Date().toISOString().split('T')[0];
+                referente = evento ? `Quitação do evento: ${evento.tipo}` : 'Quitação de serviços';
+            } else if (tipo === 'total') {
+                descricao = 'Valor Total do Serviço';
+                valor = cliente.financeiro?.valorTotal || evento?.valor || 0;
+                data = new Date().toISOString().split('T')[0];
+                referente = evento ? `Pagamento completo do evento: ${evento.tipo}` : 'Pagamento completo de serviços';
+            }
+            
+            const nomeArquivo = `Recibo_${cliente.nome.replace(/\s/g, '_')}_${descricao.replace(/\s/g, '_')}.pdf`;
+            
+            try {
+                await gerarReciboProfissional(cliente, evento, config, nomeArquivo, {
+                    descricao,
+                    valor,
+                    data,
+                    referente
+                });
+                
+                closeModal('escolherRecibo');
+            } catch (error) {
+                console.error('Erro ao gerar recibo:', error);
+                alert('❌ Erro ao gerar recibo. Verifique os dados e tente novamente.');
             }
         }
         
@@ -14340,7 +14837,7 @@ if (!DB.get('configuracoes')) {
             mostrarModalCompartilhar(pdfBlob, nomeArquivo || `Contrato_${cliente.nome}.pdf`);
         }
 
-        async function gerarReciboProfissional(cliente, evento, config, nomeArquivo) {
+        async function gerarReciboProfissional(cliente, evento, config, nomeArquivo, dadosRecibo = null) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
@@ -14433,8 +14930,10 @@ if (!DB.get('configuracoes')) {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             
-            const valorRecebido = cliente.financeiro?.sinalValor || 0;
-            const dataRecebimento = cliente.financeiro?.sinalData ? formatDate(cliente.financeiro.sinalData) : dataAtual;
+            const valorRecebido = dadosRecibo ? dadosRecibo.valor : (cliente.financeiro?.sinalValor || 0);
+            const dataRecebimento = dadosRecibo ? formatDate(dadosRecibo.data) : (cliente.financeiro?.sinalData ? formatDate(cliente.financeiro.sinalData) : dataAtual);
+            const descricaoPagamento = dadosRecibo ? dadosRecibo.descricao : 'Sinal';
+            const referentePagamento = dadosRecibo ? dadosRecibo.referente : (evento ? `Contratação do evento: ${evento.tipo}` : 'Contratação de serviços');
             
             // Montar endereço sem duplicação
             let enderecoCompleto = '';
@@ -14450,7 +14949,7 @@ if (!DB.get('configuracoes')) {
                 enderecoCompleto = 'não informado';
             }
             
-            const declaracao = `Declaro que recebi de ${cliente.nome}, inscrito no CPF sob o n. ${cliente.cpf || '000.000.000-00'}, com endereço em ${enderecoCompleto}, o valor de R$ ${formatMoney(valorRecebido)} (${numeroParaExtenso(valorRecebido)}) em ${dataRecebimento}, referente ao Sinal para os Serviços abaixo listados e agendamento da data para o Evento solicitado.`;
+            const declaracao = `Declaro que recebi de ${cliente.nome}, inscrito no CPF sob o n. ${cliente.cpf || '000.000.000-00'}, com endereço em ${enderecoCompleto}, o valor de R$ ${formatMoney(valorRecebido)} (${numeroParaExtenso(valorRecebido)}) em ${dataRecebimento}, referente a ${referentePagamento}.`;
             
             const declaracaoLines = doc.splitTextToSize(declaracao, larguraPagina);
             declaracaoLines.forEach(linha => {
@@ -14629,6 +15128,403 @@ if (!DB.get('configuracoes')) {
             
             // Para valores maiores, formato simplificado
             return formatMoney(valor);
+        }
+        
+        // ============================================
+        // RESUMO FINANCEIRO PROFISSIONAL
+        // ============================================
+        async function gerarResumoFinanceiroProfissional(cliente, evento, config, nomeArquivo) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Configurações
+            const margemEsquerda = 15;
+            const margemDireita = 195;
+            const larguraPagina = margemDireita - margemEsquerda;
+            let y = 20;
+            
+            // ===== CABEÇALHO =====
+            if (config.logoBase64) {
+                try {
+                    doc.addImage(config.logoBase64, 'PNG', margemEsquerda, y, 30, 30);
+                } catch (e) {
+                    console.log('Erro ao adicionar logo:', e);
+                }
+            }
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 50, y + 5);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            if (config.cnpj) doc.text(`CNPJ: ${config.cnpj}`, 50, y + 10);
+            if (config.email) doc.text(`Email: ${config.email}`, 50, y + 14);
+            if (config.telefone) doc.text(`Tel: ${config.telefone}`, 50, y + 18);
+            if (config.whatsapp) doc.text(`WhatsApp: ${config.whatsapp}`, 50, y + 22);
+            
+            const enderecoLines = [];
+            if (config.endereco) enderecoLines.push(config.endereco);
+            if (config.cidade && config.estado) enderecoLines.push(`${config.cidade}/${config.estado}`);
+            if (config.cep) enderecoLines.push(`CEP: ${config.cep}`);
+            
+            let yEnd = y + 26;
+            enderecoLines.forEach(linha => {
+                doc.text(linha, 50, yEnd);
+                yEnd += 4;
+            });
+            
+            y = yEnd + 5;
+            doc.setLineWidth(0.5);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            y += 10;
+            
+            // ===== TÍTULO =====
+            doc.setFillColor(220, 220, 220);
+            doc.rect(margemEsquerda, y, larguraPagina, 8, 'F');
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Resumo Financeiro', margemEsquerda + 2, y + 5.5);
+            y += 15;
+            
+            // ===== DADOS DO CLIENTE =====
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Cliente: ${cliente.nome}`, margemEsquerda, y);
+            y += 5;
+            
+            doc.setFont('helvetica', 'normal');
+            if (cliente.cpf) {
+                doc.text(`CPF: ${cliente.cpf}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            if (cliente.telefone) {
+                doc.text(`Telefone: ${cliente.telefone}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            if (cliente.email) {
+                doc.text(`Email: ${cliente.email}`, margemEsquerda, y);
+                y += 5;
+            }
+            
+            // Endereço - Verificar se campo já tem tudo ou está separado
+            if (cliente.endereco && cliente.endereco.includes('-')) {
+                const endCompleto = cliente.endereco;
+                const match = endCompleto.match(/^([^,]+,\s*\d+)\s*-?\s*(.+)$/);
+                
+                if (match) {
+                    doc.text(match[1].trim(), margemEsquerda, y);
+                    y += 4;
+                    doc.text(match[2].trim(), margemEsquerda, y);
+                    y += 4;
+                } else {
+                    const linhas = doc.splitTextToSize(endCompleto, larguraPagina);
+                    linhas.forEach(linha => {
+                        doc.text(linha, margemEsquerda, y);
+                        y += 4;
+                    });
+                }
+            } else if (cliente.endereco || cliente.bairro || cliente.cidade) {
+                if (cliente.endereco) {
+                    let linha1 = cliente.endereco;
+                    if (cliente.numero && !linha1.includes(cliente.numero)) {
+                        linha1 += ', ' + cliente.numero;
+                    }
+                    doc.text(linha1, margemEsquerda, y);
+                    y += 4;
+                }
+                
+                const partes = [];
+                if (cliente.bairro) partes.push(cliente.bairro);
+                if (cliente.cidade && cliente.estado) partes.push(`${cliente.cidade}/${cliente.estado}`);
+                if (cliente.cep) partes.push(`CEP: ${cliente.cep}`);
+                
+                if (partes.length > 0) {
+                    doc.text(partes.join(' - '), margemEsquerda, y);
+                    y += 4;
+                }
+            }
+            
+            // ===== INFORMAÇÕES DO EVENTO =====
+            y += 5;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Informações do Evento', margemEsquerda + 2, y + 4);
+            y += 10;
+            
+            doc.setFontSize(10);
+            
+            // LINHA 1
+            doc.setFont('helvetica', 'bold');
+            doc.text('Tipo de evento: ', margemEsquerda, y);
+            const w1 = doc.getTextWidth('Tipo de evento: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? evento.tipo : 'A definir', margemEsquerda + w1, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.text('Data do evento: ', 105, y);
+            const w2 = doc.getTextWidth('Data do evento: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? formatDate(evento.data) : 'A definir', 105 + w2, y);
+            y += 5;
+            
+            // LINHA 2
+            doc.setFont('helvetica', 'bold');
+            doc.text('Horário: ', margemEsquerda, y);
+            const w3 = doc.getTextWidth('Horário: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento ? `${evento.horaInicio} - ${evento.horaFim}` : 'A definir', margemEsquerda + w3, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.text('Duração do Serviço: ', 105, y);
+            const w4 = doc.getTextWidth('Duração do Serviço: ');
+            doc.setFont('helvetica', 'normal');
+            doc.text(evento && evento.duracao ? evento.duracao : '5h', 105 + w4, y);
+            y += 5;
+            
+            // LINHA 3
+            doc.setFont('helvetica', 'bold');
+            doc.text('Local do evento: ', margemEsquerda, y);
+            const w5 = doc.getTextWidth('Local do evento: ');
+            doc.setFont('helvetica', 'normal');
+            const localEvento = evento && evento.complemento ? evento.complemento : (evento ? evento.local : 'A definir');
+            const localLines = doc.splitTextToSize(localEvento, 140);
+            doc.text(localLines, margemEsquerda + w5, y);
+            y += Math.max(5, localLines.length * 4);
+            
+            // ===== SERVIÇOS =====
+            y += 5;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Serviços', margemEsquerda + 2, y + 4);
+            y += 10;
+            
+            // Cabeçalho da tabela
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Descrição', margemEsquerda, y);
+            doc.text('Valor', margemDireita, y, { align: 'right' });
+            y += 4;
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            y += 6;
+            
+            let totalServicos = 0;
+            
+            // Serviços do array de servicos
+            if (evento && evento.servicos && evento.servicos.length > 0) {
+                doc.setFont('helvetica', 'normal');
+                evento.servicos.forEach(servico => {
+                    const nome = servico.nome || servico.descricao || 'Serviço';
+                    const valor = servico.valor || 0;
+                    totalServicos += valor;
+                    
+                    doc.text(nome, margemEsquerda, y);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                    doc.setFont('helvetica', 'normal');
+                    y += 6;
+                });
+            } else if (evento && evento.observacoes) {
+                // Extrair serviços das observações
+                const servicosMatch = evento.observacoes.match(/Serviços:\n([\s\S]*?)(?:\n\nOutras Taxas:|\n\nObservações:|$)/);
+                if (servicosMatch && servicosMatch[1]) {
+                    const servicosTexto = servicosMatch[1].trim();
+                    const servicosLinhas = servicosTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                    
+                    doc.setFont('helvetica', 'normal');
+                    servicosLinhas.forEach(linha => {
+                        const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                        if (match) {
+                            const descricao = match[1].trim();
+                            const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                            const valor = parseFloat(valorStr);
+                            
+                            doc.text(descricao, margemEsquerda, y);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                            doc.setFont('helvetica', 'normal');
+                            totalServicos += valor;
+                            y += 6;
+                        }
+                    });
+                }
+            }
+            
+            // ===== OUTRAS TAXAS =====
+            if (evento && evento.observacoes) {
+                const taxasMatch = evento.observacoes.match(/Outras Taxas:\n([\s\S]*?)(?:\n\nObservações:|$)/);
+                if (taxasMatch && taxasMatch[1]) {
+                    y += 4;
+                    doc.setFillColor(240, 240, 240);
+                    doc.rect(margemEsquerda, y, larguraPagina, 6, 'F');
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Outras Taxas', margemEsquerda + 2, y + 4);
+                    y += 10;
+                    
+                    const taxasTexto = taxasMatch[1].trim();
+                    const taxasLinhas = taxasTexto.split('\n').filter(l => l.trim().startsWith('•'));
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    
+                    taxasLinhas.forEach(linha => {
+                        const match = linha.match(/•\s*(.+?)\s*-\s*R?\$?\s*([\d.,]+)/);
+                        if (match) {
+                            const descricao = match[1].trim();
+                            const valorStr = match[2].replace(/\./g, '').replace(',', '.');
+                            const valor = parseFloat(valorStr);
+                            
+                            doc.text(descricao, margemEsquerda, y);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                            doc.setFont('helvetica', 'normal');
+                            totalServicos += valor;
+                            y += 6;
+                        }
+                    });
+                    y += 2;
+                }
+            }
+            
+            // ===== TOTAL =====
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            y += 6;
+            
+            // Calcular desconto automaticamente
+            const valorTotal = cliente.financeiro?.valorTotal || totalServicos;
+            const desconto = totalServicos - valorTotal;
+            
+            if (desconto > 0) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Subtotal', 115, y);
+                doc.text(formatMoney(totalServicos), margemDireita, y, { align: 'right' });
+                y += 5;
+                
+                doc.setFont('helvetica', 'normal');
+                doc.text('Desconto', 115, y);
+                doc.text('- ' + formatMoney(desconto), margemDireita, y, { align: 'right' });
+                y += 5;
+                
+                doc.setLineWidth(0.2);
+                doc.line(margemEsquerda, y, margemDireita, y);
+                y += 6;
+            }
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('VALOR TOTAL', 115, y);
+            doc.text(formatMoney(valorTotal), margemDireita, y, { align: 'right' });
+            
+            // ===== TABELA DE PAGAMENTOS =====
+            y += 8;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margemEsquerda, y, larguraPagina, 7, 'F');
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PAGAMENTOS', margemEsquerda + 2, y + 5);
+            doc.text('Vencimento', 115, y + 5);
+            doc.text('Valor', margemDireita, y + 5, { align: 'right' });
+            
+            y += 7;
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            
+            const sinalValor = cliente.financeiro?.sinalValor || 0;
+            const sinalData = cliente.financeiro?.sinalData ? formatDate(cliente.financeiro.sinalData) : formatDate(new Date());
+            
+            let totalPago = sinalValor;
+            
+            y += 5;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Entrada', margemEsquerda + 2, y);
+            doc.text(sinalData, 115, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(formatMoney(sinalValor), margemDireita, y, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            
+            y += 5;
+            
+            // ===== ADIANTAMENTOS / PAGAMENTOS ADICIONAIS =====
+            if (cliente.financeiro?.pagamentosAdicionais && cliente.financeiro.pagamentosAdicionais.length > 0) {
+                cliente.financeiro.pagamentosAdicionais.forEach((pag, index) => {
+                    const valor = pag.valor || 0;
+                    totalPago += valor;
+                    
+                    doc.text(`Adiantamento ${index + 1}`, margemEsquerda + 2, y);
+                    doc.text(formatDate(pag.data), 115, y);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(formatMoney(valor), margemDireita, y, { align: 'right' });
+                    doc.setFont('helvetica', 'normal');
+                    y += 5;
+                });
+            }
+            
+            // Saldo a receber
+            const saldoAPagar = valorTotal - totalPago;
+            const vencimento = cliente.financeiro?.vencimento ? formatDate(cliente.financeiro.vencimento) : (evento ? formatDate(evento.data) : formatDate(new Date()));
+            
+            doc.text('A receber', margemEsquerda + 2, y);
+            doc.text(vencimento, 115, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(formatMoney(saldoAPagar), margemDireita, y, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            
+            y += 6;
+            doc.setLineWidth(0.3);
+            doc.line(margemEsquerda, y, margemDireita, y);
+            
+            y += 10;
+            
+            // ===== ASSINATURA DA EMPRESA (SEM ASSINATURA DO CLIENTE) =====
+            y += 10; // Espaçamento menor
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Assinatura', 105, y, { align: 'center' });
+            y += 15;
+            
+            // APENAS ASSINATURA DA EMPRESA (CENTRALIZADA)
+            doc.setFontSize(10);
+            doc.setLineWidth(0.3);
+            doc.line(55, y, 155, y);
+            
+            if (config.assinaturaBase64) {
+                try {
+                    doc.addImage(config.assinaturaBase64, 'PNG', 75, y - 10, 60, 10);
+                } catch (e) {
+                    console.log('Erro ao adicionar assinatura:', e);
+                }
+            }
+            
+            doc.setFont('helvetica', 'normal');
+            doc.text('Assinatura do responsável da empresa', 105, y + 4, { align: 'center' });
+            doc.setFont('helvetica', 'bold');
+            doc.text(config.nomeEmpresa || 'CRISTIAN DJ SONORIZAÇÃO', 105, y + 8, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            const dataExtenso = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+            doc.text(`${config.cidade || 'Rio de Janeiro'}, ${dataExtenso}`, 105, y + 12, { align: 'center' });
+            
+            // Rodapé - Sempre página única
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text('Página 1/1', 105, 285, { align: 'center' });
+            doc.setTextColor(0);
+            
+            const pdfBlob = doc.output('blob');
+            mostrarModalCompartilhar(pdfBlob, nomeArquivo);
         }
         
         async function gerarPDF(conteudo, nomeArquivo, config) {
