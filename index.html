@@ -7471,6 +7471,7 @@ CNPJ: [CNPJ]"
             closeModal('receita');
             updateDashboard();
             renderFinanceiro();
+            sincronizarAposMudanca(); // Sincronizar
         }
 
         // Add despesa
@@ -7497,6 +7498,7 @@ CNPJ: [CNPJ]"
             closeModal('despesa');
             updateDashboard();
             renderFinanceiro();
+            sincronizarAposMudanca(); // Sincronizar
         }
 
         // Add evento
@@ -7556,6 +7558,10 @@ CNPJ: [CNPJ]"
             closeModal('evento');
             updateDashboard();
             renderEventsList();
+            
+            // Sincronizar após mudança
+            sincronizarAposMudanca();
+            
             alert('✅ Evento cadastrado com sucesso!');
         }
 
@@ -7757,6 +7763,8 @@ CNPJ: [CNPJ]"
             limparCamposEnderecoOrcamento();
             closeModal('orcamento');
             
+            sincronizarAposMudanca(); // Sincronizar
+            
             // Mensagem de sucesso para CRIAÇÃO
             alert('✅ Orçamento gerado e evento criado com sucesso!\n\nO evento foi criado com status "Aguardando Aprovação".');
             
@@ -7865,6 +7873,9 @@ CNPJ: [CNPJ]"
             updateDashboard(); // ✅ Atualizar dashboard
             renderClientsList(); // ✅ Atualizar lista de clientes
             updateClientsStats(); // ✅ Atualizar stats
+            
+            // Sincronizar após mudança
+            sincronizarAposMudanca();
             
             // Ir para aba clientes
             switchTabProgramatically('clientes');
@@ -8920,6 +8931,8 @@ CNPJ: [CNPJ]"
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
             
+            sincronizarAposMudanca(); // Sincronizar
+            
             alert('✅ Dados financeiros salvos com sucesso!');
         }
 
@@ -8968,6 +8981,7 @@ CNPJ: [CNPJ]"
             renderServicos();
             renderOrcamentoServicos();
             renderServicosPerformance(); // Atualizar aba de gestão de serviços
+            sincronizarAposMudanca(); // Sincronizar
             alert('✓ Serviço cadastrado com sucesso!');
         }
 
@@ -11335,6 +11349,23 @@ if (!DB.get('configuracoes')) {
             }
         }
         
+        // Sincronizar após uma ação do usuário (com debounce de 3 segundos)
+        let syncDebounceTimer = null;
+        function sincronizarAposMudanca() {
+            if (!isFirebaseConnected) return;
+            
+            // Cancelar timer anterior
+            if (syncDebounceTimer) {
+                clearTimeout(syncDebounceTimer);
+            }
+            
+            // Agendar sincronização para daqui 3 segundos
+            syncDebounceTimer = setTimeout(() => {
+                console.log('🔄 Sincronizando após mudança...');
+                sincronizarAgora();
+            }, 3000);
+        }
+        
         // Verificar se deve sincronizar ao inicializar
         async function verificarSincronizacaoInicial() {
             // Verificar se há dados locais
@@ -12410,6 +12441,9 @@ if (!DB.get('configuracoes')) {
             renderCustosGerais();
             updateCustosGeraisStats();
             updateDashboard();
+            
+            // Sincronizar após mudança
+            sincronizarAposMudanca();
             
             // Atualizar financeiro se estiver visível
             if (document.getElementById('financeiroTab').classList.contains('active')) {
