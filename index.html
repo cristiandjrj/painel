@@ -11138,7 +11138,7 @@ if (!DB.get('configuracoes')) {
         // ⚠️ CONFIGURAÇÃO DO FIREBASE
         // ============================================
         // Cole suas credenciais do Firebase aqui:
-        const FIREBASE_CONFIG = {
+       const FIREBASE_CONFIG = {
             apiKey: "AIzaSyB3isxgzmM5PJnoW9Cn0uzOmQLpHm5WABI",                    // Cole aqui: AIzaSy...
             authDomain: "eventprodj.firebaseapp.com",                // Cole aqui: seu-projeto.firebaseapp.com
             databaseURL: "https://eventprodj-default-rtdb.firebaseio.com",               // Cole aqui: https://seu-projeto.firebaseio.com
@@ -11401,33 +11401,39 @@ if (!DB.get('configuracoes')) {
                         const lastSyncLocal = localStorage.getItem('lastSyncLocal');
                         const lastSyncCheck = localStorage.getItem('lastSyncCheck');
                         
-                        // Controle de frequência: só mostrar modal 1x por hora
-                        const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000);
-                        const deveVerificar = !lastSyncCheck || new Date(lastSyncCheck) < umaHoraAtras;
-                        
                         if (!lastSyncLocal) {
                             // Primeira sincronização - sempre mostrar
-                            if (deveVerificar) {
-                                mostrarDialogoSincronizacao();
-                            } else {
-                                console.log('⏰ Aguardando 1 hora para verificar novamente');
-                            }
-                        } else if (deveVerificar) {
-                            // Verificar se diferença é significativa (> 5 minutos)
+                            mostrarDialogoSincronizacao();
+                        } else {
+                            // Verificar diferença de tempo entre nuvem e local
                             const diffMinutos = (new Date(lastSync) - new Date(lastSyncLocal)) / 1000 / 60;
                             
                             console.log('🔍 Diferença de sincronização:', Math.round(diffMinutos), 'minutos');
                             
-                            if (diffMinutos > 5) {
-                                // Diferença significativa - mostrar modal
-                                mostrarDialogoSincronizacao();
+                            if (diffMinutos > 1) {
+                                // Há mudanças na nuvem (diferença > 1 minuto)
+                                
+                                // Controle de frequência: só mostrar modal 1x por hora SE não houver mudanças significativas
+                                const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000);
+                                const deveVerificar = !lastSyncCheck || new Date(lastSyncCheck) < umaHoraAtras;
+                                
+                                // Se diferença > 5 minutos, SEMPRE mostrar (ignorar 1 hora)
+                                if (diffMinutos > 5) {
+                                    console.log('📢 Mudanças significativas detectadas! Mostrando modal...');
+                                    mostrarDialogoSincronizacao();
+                                } else if (deveVerificar) {
+                                    // Diferença pequena (1-5 min), mas já passou 1 hora desde última verificação
+                                    console.log('📢 Passou 1 hora, verificando mudanças pequenas...');
+                                    mostrarDialogoSincronizacao();
+                                } else {
+                                    // Diferença pequena E não passou 1 hora
+                                    console.log('⏰ Mudanças pequenas detectadas, aguardando 1 hora para verificar');
+                                }
                             } else {
-                                // Diferença pequena - não incomodar usuário
-                                console.log('✅ Dados estão praticamente sincronizados');
+                                // Dados estão sincronizados (diferença < 1 minuto)
+                                console.log('✅ Dados estão sincronizados');
                                 localStorage.setItem('lastSyncCheck', new Date().toISOString());
                             }
-                        } else {
-                            console.log('⏰ Aguardando 1 hora para verificar novamente');
                         }
                     }
                 }
