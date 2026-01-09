@@ -6013,10 +6013,16 @@ CNPJ: [CNPJ]"
             const container = document.getElementById('servicosSelecionadosList');
             if (!container) return;
             
+            // Mostrar/esconder container pai
+            const containerPai = document.getElementById('servicosSelecionados');
+            
             if (servicosSelecionados.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 10px;">Nenhum serviço selecionado</p>';
+                if (containerPai) containerPai.style.display = 'none';
                 return;
             }
+            
+            if (containerPai) containerPai.style.display = 'block';
             
             const html = servicosSelecionados.map((s, index) => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px;">
@@ -6062,13 +6068,33 @@ CNPJ: [CNPJ]"
         
         // Função para remover serviço
         function removerServico(index) {
+            const servicoRemovido = servicosSelecionados[index];
+            
+            // Remover do array
             servicosSelecionados.splice(index, 1);
+            
+            // Desmarcar checkbox correspondente
+            if (servicoRemovido && servicoRemovido.nome) {
+                const checkboxes = document.querySelectorAll('#orcamentosServicosList input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    if (cb.dataset.nome === servicoRemovido.nome) {
+                        cb.checked = false;
+                    }
+                });
+            }
+            
             atualizarListaServicos();
         }
         
         // Função para remover taxa
         function removerTaxa(index) {
+            console.log('🗑️ removerTaxa chamada com index:', index);
+            console.log('  outrasTaxas antes:', [...outrasTaxas]);
+            
             outrasTaxas.splice(index, 1);
+            
+            console.log('  outrasTaxas depois:', [...outrasTaxas]);
+            
             atualizarListaTaxas();
         }
         
@@ -6076,11 +6102,47 @@ CNPJ: [CNPJ]"
         function atualizarTotalOrcamento() {
             const totalServicos = servicosSelecionados.reduce((sum, s) => sum + s.valor, 0);
             const totalTaxas = outrasTaxas.reduce((sum, t) => sum + t.valor, 0);
-            const total = totalServicos + totalTaxas;
+            const desconto = parseFloat(document.getElementById('orcDesconto')?.value || 0);
+            const total = totalServicos + totalTaxas - desconto;
             
+            console.log('💰 atualizarTotalOrcamento:', {
+                totalServicos,
+                totalTaxas,
+                desconto,
+                total
+            });
+            
+            // Atualizar display do total (se existir)
             const totalElement = document.getElementById('totalOrcamentoDisplay');
             if (totalElement) {
                 totalElement.textContent = formatMoney(total);
+            }
+            
+            // Atualizar input do valor total
+            const valorTotalInput = document.getElementById('orcValorTotal');
+            if (valorTotalInput) {
+                valorTotalInput.value = total.toFixed(2);
+            }
+            
+            // Atualizar resumo financeiro no modal de orçamento
+            const orcSubtotalServicos = document.getElementById('orcSubtotalServicos');
+            if (orcSubtotalServicos) {
+                orcSubtotalServicos.textContent = formatMoney(totalServicos);
+            }
+            
+            const orcTotalTaxas = document.getElementById('orcTotalTaxas');
+            if (orcTotalTaxas) {
+                orcTotalTaxas.textContent = formatMoney(totalTaxas);
+            }
+            
+            const orcTotalDesconto = document.getElementById('orcTotalDesconto');
+            if (orcTotalDesconto) {
+                orcTotalDesconto.textContent = desconto > 0 ? '- ' + formatMoney(desconto) : 'R$ 0,00';
+            }
+            
+            const orcValorTotalDisplay = document.getElementById('orcValorTotalDisplay');
+            if (orcValorTotalDisplay) {
+                orcValorTotalDisplay.textContent = formatMoney(total);
             }
         }
 
@@ -7111,19 +7173,33 @@ CNPJ: [CNPJ]"
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0); // Zerar hora para comparar apenas data
             
-            const eventos = DB.get('eventos')
-                .filter(e => {
-                    // Filtrar apenas eventos futuros ou de hoje
-                    const dataEvento = new Date(e.data);
-                    dataEvento.setHours(0, 0, 0, 0);
-                    
-                    // Apenas eventos confirmados ou em andamento
-                    const statusPermitidos = ['confirmado', 'andamento'];
-                    
-                    return dataEvento >= hoje && statusPermitidos.includes(e.status);
-                })
+            const todosEventos = DB.get('eventos');
+            console.log('📅 TOTAL DE EVENTOS:', todosEventos.length);
+            
+            const eventosFiltrados = todosEventos.filter(e => {
+                // Filtrar apenas eventos futuros ou de hoje
+                const dataEvento = new Date(e.data);
+                dataEvento.setHours(0, 0, 0, 0);
+                
+                // Apenas eventos confirmados ou em andamento
+                const statusPermitidos = ['confirmado', 'andamento'];
+                
+                const isDataValida = dataEvento >= hoje;
+                const isStatusValido = statusPermitidos.includes(e.status);
+                
+                console.log(`Evento: ${e.nome} | Data: ${e.data} | Status: ${e.status} | DataValida: ${isDataValida} | StatusValido: ${isStatusValido}`);
+                
+                return isDataValida && isStatusValido;
+            });
+            
+            console.log('✅ EVENTOS APÓS FILTRO:', eventosFiltrados.length);
+            
+            const eventos = eventosFiltrados
                 .sort((a, b) => new Date(a.data) - new Date(b.data)) // Ordenar por data (mais próximo primeiro)
                 .slice(0, 5); // Limitar a 5 eventos
+            
+            console.log('📊 EVENTOS EXIBIDOS:', eventos.length);
+            console.log('Eventos a exibir:', eventos.map(e => `${e.nome} (${e.data})`))
 
             const html = eventos.map(e => {
                 // Definir classe CSS baseada no status
@@ -7391,27 +7467,12 @@ CNPJ: [CNPJ]"
                 if (cidade && estado) enderecoCompleto += ' - ' + cidade + '/' + estado;
             }
             
-            // Coletar serviços selecionados (usar global + checkboxes marcados)
-            const checkboxes = document.querySelectorAll('#orcamentosServicosList input[type="checkbox"]:checked');
+            // Coletar serviços selecionados
+            // Usar servicosSelecionados que já está atualizado pelas funções de adicionar/remover
+            const todosServicos = [...servicosSelecionados];
             
-            // Limpar e recoletar serviços dos checkboxes
-            const servicosCheckboxes = [];
-            checkboxes.forEach(cb => {
-                servicosCheckboxes.push({
-                    id: parseInt(cb.dataset.id),
-                    nome: cb.dataset.nome,
-                    valor: parseFloat(cb.dataset.valor)
-                });
-            });
-            
-            // Combinar serviços dos checkboxes com serviços já na lista global
-            const todosServicos = [...servicosCheckboxes];
-            // Adicionar serviços da global que não estão nos checkboxes
-            servicosSelecionados.forEach(s => {
-                if (!servicosCheckboxes.find(sc => sc.nome === s.nome)) {
-                    todosServicos.push(s);
-                }
-            });
+            console.log('📦 Serviços a salvar:', todosServicos);
+            console.log('📦 Taxas a salvar:', outrasTaxas);
             
             const valorTotal = parseFloat(document.getElementById('orcValorTotal').value);
             const observacoes = document.getElementById('orcObservacoes').value;
@@ -8068,13 +8129,6 @@ CNPJ: [CNPJ]"
             calcularTotalOrcamento();
         }
 
-        // Remover taxa
-        function removerTaxa(taxaId) {
-            document.getElementById(taxaId).remove();
-            outrasTaxas = outrasTaxas.filter(t => t.id !== taxaId);
-            calcularTotalOrcamento();
-        }
-
         // Calcular total do orçamento
         function calcularTotalOrcamento() {
             // Somar serviços selecionados
@@ -8454,18 +8508,29 @@ CNPJ: [CNPJ]"
                 const percentPaid = (totalPago / valorTotal) * 100;
                 
                 document.getElementById('resumoFinanceiroModal').style.display = 'block';
-                // Calcular desconto se houver
-            const valorServicos = evento?.valorServicos || valorTotal;
-            const desconto = valorServicos - valorTotal;
-            
-            document.getElementById('resumoServicosModal').textContent = formatMoney(valorServicos);
-            if (desconto > 0) {
-                document.getElementById('linhaDesconto').style.display = 'flex';
-                document.getElementById('resumoDescontoModal').textContent = '- ' + formatMoney(desconto);
-            } else {
-                document.getElementById('linhaDesconto').style.display = 'none';
-            }
-            document.getElementById('resumoTotalModal').textContent = formatMoney(valorTotal);
+                
+                // Calcular desconto se houver (buscar evento do cliente)
+                let valorServicos = valorTotal;
+                let desconto = 0;
+                
+                if (cliente) {
+                    const eventos = DB.get('eventos');
+                    const evento = eventos.find(e => e.cliente === cliente.nome || e.clienteId === cliente.id);
+                    
+                    if (evento && evento.valorServicos) {
+                        valorServicos = evento.valorServicos;
+                        desconto = valorServicos - valorTotal;
+                    }
+                }
+                
+                document.getElementById('resumoServicosModal').textContent = formatMoney(valorServicos);
+                if (desconto > 0) {
+                    document.getElementById('linhaDesconto').style.display = 'flex';
+                    document.getElementById('resumoDescontoModal').textContent = '- ' + formatMoney(desconto);
+                } else {
+                    document.getElementById('linhaDesconto').style.display = 'none';
+                }
+                document.getElementById('resumoTotalModal').textContent = formatMoney(valorTotal);
                 document.getElementById('resumoSinalModal').textContent = formatMoney(sinalValor);
                 document.getElementById('resumoTotalPagoModal').textContent = formatMoney(totalPago);
                 document.getElementById('resumoSaldoModal').textContent = formatMoney(valorPagar);
@@ -8887,38 +8952,21 @@ CNPJ: [CNPJ]"
         // Update orçamento total
         function updateOrcamentoTotal() {
             const checkboxes = document.querySelectorAll('#orcamentosServicosList input[type="checkbox"]:checked');
-            let total = 0;
-            const selecionados = [];
-
+            
+            // Atualizar servicosSelecionados baseado nos checkboxes
+            servicosSelecionados = [];
+            
             checkboxes.forEach(cb => {
-                const valor = parseFloat(cb.dataset.valor);
+                const id = parseInt(cb.dataset.id);
                 const nome = cb.dataset.nome;
-                total += valor;
-                selecionados.push({ nome, valor });
+                const valor = parseFloat(cb.dataset.valor);
+                
+                servicosSelecionados.push({ id, nome, valor });
             });
-
-            document.getElementById('orcValorTotal').value = total.toFixed(2);
-
-            // Mostrar serviços selecionados
-            const containerSelecionados = document.getElementById('servicosSelecionados');
-            const listaSelecionados = document.getElementById('servicosSelecionadosList');
-
-            if (selecionados.length > 0) {
-                containerSelecionados.style.display = 'block';
-                listaSelecionados.innerHTML = selecionados.map(s => `
-                    <div class="servico-selecionado-item">
-                        <span>${s.nome}</span>
-                        <span style="font-weight: 600;">${formatMoney(s.valor)}</span>
-                    </div>
-                `).join('') + `
-                    <div class="servico-selecionado-item" style="border-top: 2px solid var(--success); margin-top: 8px; padding-top: 8px; font-weight: 700; color: var(--success);">
-                        <span>TOTAL:</span>
-                        <span>${formatMoney(total)}</span>
-                    </div>
-                `;
-            } else {
-                containerSelecionados.style.display = 'none';
-            }
+            
+            // Atualizar visual usando a função que tem botões de remover
+            atualizarListaServicos();
+            atualizarTotalOrcamento();
         }
 
         // Modal functions
