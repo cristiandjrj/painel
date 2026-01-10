@@ -4345,6 +4345,9 @@ CNPJ: [CNPJ]"
                                     <button onclick="mostrarDebugSync()" class="btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border: 1px solid #8B5CF6;">
                                         🔍 Debug Sincronização
                                     </button>
+                                    <button onclick="resetarSincronizacao()" class="btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
+                                        🔄 Resetar Sincronização
+                                    </button>
                                 </div>
                             </div>
 
@@ -11164,11 +11167,33 @@ if (!DB.get('configuracoes')) {
             let firebaseConfig;
             
             if (hasEmbeddedConfig) {
-                // Usar config embutida
+                // SEMPRE usar config embutida se existir
                 console.log('✅ Usando configuração Firebase embutida no código');
                 firebaseConfig = FIREBASE_CONFIG;
                 
-                // Salvar no localStorage para aparecer na interface
+                // Verificar se há config diferente no localStorage
+                const oldConfig = localStorage.getItem('firebaseConfig');
+                if (oldConfig) {
+                    try {
+                        const oldConfigObj = JSON.parse(oldConfig);
+                        // Comparar projectId para detectar diferença
+                        if (oldConfigObj.projectId !== FIREBASE_CONFIG.projectId) {
+                            console.warn('⚠️ DETECTADO CONFLITO DE CONFIGURAÇÃO!');
+                            console.warn('   Config antiga ProjectID:', oldConfigObj.projectId);
+                            console.warn('   Config nova ProjectID:', FIREBASE_CONFIG.projectId);
+                            console.warn('   Sobrescrevendo com config do código...');
+                            
+                            // Limpar TUDO para forçar nova sincronização
+                            localStorage.removeItem('lastSyncCheck');
+                            localStorage.removeItem('lastSyncHash');
+                            localStorage.removeItem('lastSyncLocal');
+                        }
+                    } catch (e) {
+                        console.log('Erro ao comparar configs:', e);
+                    }
+                }
+                
+                // FORÇAR salvar no localStorage (sobrescrever qualquer config antiga)
                 localStorage.setItem('firebaseConfig', JSON.stringify(FIREBASE_CONFIG));
             } else {
                 // Tentar pegar do localStorage (config manual)
@@ -11728,6 +11753,27 @@ if (!DB.get('configuracoes')) {
             const lastSyncLocal = localStorage.getItem('lastSyncLocal');
             const firebaseConfig = localStorage.getItem('firebaseConfig');
             
+            let configInfo = '';
+            if (firebaseConfig) {
+                try {
+                    const config = JSON.parse(firebaseConfig);
+                    const hasEmbeddedConfig = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL;
+                    
+                    configInfo = `
+🔧 CONFIGURAÇÃO DO FIREBASE:
+   • Fonte: ${hasEmbeddedConfig ? 'CÓDIGO (embutida)' : 'LOCALSTORAGE (manual)'}
+   • Project ID: ${config.projectId || 'N/A'}
+   • Database URL: ${config.databaseURL || 'N/A'}
+   • App ID: ${config.appId ? config.appId.substring(0, 30) + '...' : 'N/A'}
+
+⚠️ IMPORTANTE:
+   ${hasEmbeddedConfig ? '✅ Config está no código (todos dispositivos usam a mesma)' : '❌ Config está no localStorage (cada dispositivo pode ter diferente!)'}
+`;
+                } catch (e) {
+                    configInfo = '\n⚠️ Erro ao ler configuração\n';
+                }
+            }
+            
             let debugInfo = `
 🔍 DEBUG DE SINCRONIZAÇÃO
 ═══════════════════════════════
@@ -11747,6 +11793,7 @@ if (!DB.get('configuracoes')) {
 🔌 STATUS DO FIREBASE:
    • Conectado: ${isFirebaseConnected ? 'SIM ✅' : 'NÃO ❌'}
    • Config existe: ${firebaseConfig ? 'SIM ✅' : 'NÃO ❌'}
+${configInfo}
 `;
             
             // Tentar buscar dados da nuvem
@@ -11787,6 +11834,50 @@ if (!DB.get('configuracoes')) {
             
             // Também mostrar no console
             console.log(debugInfo);
+        }
+        
+        // ============================================
+        // RESETAR SINCRONIZAÇÃO
+        // ============================================
+        function resetarSincronizacao() {
+            if (!confirm('⚠️ ATENÇÃO!\n\nIsso vai:\n• Limpar configurações antigas do Firebase\n• Forçar reconexão\n• Sincronizar novamente\n\nSeus dados locais NÃO serão apagados.\n\nContinuar?')) {
+                return;
+            }
+            
+            // Limpar tudo relacionado à sincronização
+            localStorage.removeItem('firebaseConfig');
+            localStorage.removeItem('lastSyncLocal');
+            localStorage.removeItem('lastSyncHash');
+            localStorage.removeItem('lastSyncCheck');
+            
+            // Reconectar Firebase
+            if (firebaseApp) {
+                try {
+                    firebaseApp.delete();
+                } catch (e) {
+                    console.log('Erro ao desconectar Firebase:', e);
+                }
+            }
+            
+            firebaseApp = null;
+            firebaseDatabase = null;
+            isFirebaseConnected = false;
+            
+            // Reinicializar
+            const resultado = initFirebase();
+            
+            if (resultado) {
+                alert('✅ Sincronização resetada!\n\nFirebase reconectado com sucesso.');
+                atualizarStatusFirebase();
+                
+                // Forçar verificação de sincronização
+                setTimeout(() => {
+                    verificarSincronizacaoInicial();
+                }, 1000);
+            } else {
+                alert('⚠️ Firebase resetado.\n\nConfigure novamente em Configurações → Sincronização.');
+                atualizarStatusFirebase();
+            }
         }
         
         // Testar conexão
