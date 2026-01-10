@@ -4342,6 +4342,9 @@ CNPJ: [CNPJ]"
                                     <button onclick="enviarParaNuvem()" class="btn btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                                         ⬆️ Enviar para Nuvem
                                     </button>
+                                    <button onclick="mostrarDebugSync()" class="btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border: 1px solid #8B5CF6;">
+                                        🔍 Debug Sincronização
+                                    </button>
                                 </div>
                             </div>
 
@@ -9446,16 +9449,18 @@ CNPJ: [CNPJ]"
             });
             
             // Últimas Transações
+            const custosEventos = DB.get('custosEventos');
             const todasTransacoes = [
                 ...receitas.map(r => ({...r, tipo: 'receita'})),
-                ...despesas.map(d => ({...d, tipo: 'despesa'}))
+                ...despesas.map(d => ({...d, tipo: 'despesa'})),
+                ...custosEventos.map(c => ({...c, tipo: 'custo_evento', descricao: c.descricao || 'Custo de Evento'}))
             ].sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 10);
             
             const transacoesDiv = document.getElementById('ultimasTransacoes');
             transacoesDiv.innerHTML = todasTransacoes.map(t => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
                     <div>
-                        <div style="font-weight: 600;">${t.tipo === 'receita' ? '💰' : '💸'} ${t.descricao}</div>
+                        <div style="font-weight: 600;">${t.tipo === 'receita' ? '💰' : t.tipo === 'custo_evento' ? '📦' : '💸'} ${t.descricao}</div>
                         <div style="font-size: 12px; color: var(--text-secondary);">${formatDate(t.data)}</div>
                     </div>
                     <div style="font-size: 18px; font-weight: 700; color: ${t.tipo === 'receita' ? 'var(--success)' : 'var(--danger)'};">
@@ -11138,7 +11143,7 @@ if (!DB.get('configuracoes')) {
         // ⚠️ CONFIGURAÇÃO DO FIREBASE
         // ============================================
         // Cole suas credenciais do Firebase aqui:
-       const FIREBASE_CONFIG = {
+        const FIREBASE_CONFIG = {
             apiKey: "AIzaSyB3isxgzmM5PJnoW9Cn0uzOmQLpHm5WABI",                    // Cole aqui: AIzaSy...
             authDomain: "eventprodj.firebaseapp.com",                // Cole aqui: seu-projeto.firebaseapp.com
             databaseURL: "https://eventprodj-default-rtdb.firebaseio.com",               // Cole aqui: https://seu-projeto.firebaseio.com
@@ -11271,8 +11276,21 @@ if (!DB.get('configuracoes')) {
                 // Adicionar timestamp
                 dados.lastSync = new Date().toISOString();
                 
+                // LOG DETALHADO DO QUE ESTÁ SENDO ENVIADO
+                console.log('📤 ENVIANDO PARA NUVEM:');
+                console.log('   Clientes:', dados.clientes.length);
+                console.log('   Eventos:', dados.eventos.length);
+                console.log('   Receitas:', dados.receitas.length);
+                console.log('   Despesas:', dados.despesas.length);
+                console.log('   Custos Gerais:', dados.custosGerais.length);
+                console.log('   Custos Eventos:', dados.custosEventos.length);
+                console.log('   Timestamp:', dados.lastSync);
+                console.log('   Caminho Firebase: eventprodj');
+                
                 // Enviar para Firebase
                 await firebaseDatabase.ref('eventprodj').set(dados);
+                
+                console.log('✅ Dados enviados para Firebase com sucesso!');
                 
                 // Salvar timestamp e hash local
                 localStorage.setItem('lastSyncLocal', dados.lastSync);
@@ -11352,12 +11370,21 @@ if (!DB.get('configuracoes')) {
         // Sincronizar após uma ação do usuário (com debounce de 3 segundos)
         let syncDebounceTimer = null;
         function sincronizarAposMudanca() {
-            if (!isFirebaseConnected) return;
+            console.log('🔔 sincronizarAposMudanca() chamada');
+            console.log('   Firebase conectado?', isFirebaseConnected);
+            
+            if (!isFirebaseConnected) {
+                console.warn('⚠️ Firebase não conectado, sincronização cancelada');
+                return;
+            }
             
             // Cancelar timer anterior
             if (syncDebounceTimer) {
                 clearTimeout(syncDebounceTimer);
+                console.log('   ⏱️ Timer anterior cancelado');
             }
+            
+            console.log('   ⏱️ Agendando sincronização para 3 segundos...');
             
             // Agendar sincronização para daqui 3 segundos
             syncDebounceTimer = setTimeout(() => {
@@ -11445,13 +11472,21 @@ if (!DB.get('configuracoes')) {
         // Baixar dados da nuvem sem confirmação (usado na inicialização)
         async function baixarDaNuvemSilencioso() {
             try {
+                console.log('📥 [SILENCIOSO] Buscando dados da nuvem...');
+                
                 const snapshot = await firebaseDatabase.ref('eventprodj').once('value');
                 const dados = snapshot.val();
                 
                 if (!dados) {
-                    console.log('Nenhum dado na nuvem');
+                    console.log('⚠️ [SILENCIOSO] Nenhum dado na nuvem');
                     return;
                 }
+                
+                console.log('📦 [SILENCIOSO] Dados recebidos:');
+                console.log('   Clientes:', dados.clientes?.length || 0);
+                console.log('   Eventos:', dados.eventos?.length || 0);
+                console.log('   Receitas:', dados.receitas?.length || 0);
+                console.log('   Despesas:', dados.despesas?.length || 0);
                 
                 // Restaurar todos os dados
                 if (dados.eventos) DB.set('eventos', dados.eventos);
@@ -11480,7 +11515,7 @@ if (!DB.get('configuracoes')) {
                 renderEventsList();
                 atualizarFinanceiroPorPeriodo();
                 
-                console.log('✅ Dados baixados da nuvem automaticamente');
+                console.log('✅ [SILENCIOSO] Dados baixados da nuvem automaticamente');
                 
                 // Mostrar notificação discreta
                 atualizarStatusSync('online', 'Sincronizado');
@@ -11572,14 +11607,29 @@ if (!DB.get('configuracoes')) {
             atualizarStatusSync('syncing', 'Baixando...');
             
             try {
+                console.log('📥 BUSCANDO DADOS DA NUVEM...');
+                console.log('   Caminho Firebase: eventprodj');
+                
                 const snapshot = await firebaseDatabase.ref('eventprodj').once('value');
                 const dados = snapshot.val();
                 
+                console.log('📦 DADOS RECEBIDOS DA NUVEM:');
+                console.log('   Dados existem?', !!dados);
+                
                 if (!dados) {
+                    console.warn('⚠️ Nuvem está vazia!');
                     alert('ℹ️ Não há dados na nuvem para baixar.');
                     atualizarStatusSync('online', 'Conectado');
                     return;
                 }
+                
+                console.log('   Clientes:', dados.clientes?.length || 0);
+                console.log('   Eventos:', dados.eventos?.length || 0);
+                console.log('   Receitas:', dados.receitas?.length || 0);
+                console.log('   Despesas:', dados.despesas?.length || 0);
+                console.log('   Custos Gerais:', dados.custosGerais?.length || 0);
+                console.log('   Custos Eventos:', dados.custosEventos?.length || 0);
+                console.log('   Timestamp:', dados.lastSync);
                 
                 // Restaurar todos os dados
                 if (dados.eventos) DB.set('eventos', dados.eventos);
@@ -11595,6 +11645,8 @@ if (!DB.get('configuracoes')) {
                 if (dados.contasPessoais) DB.set('contasPessoais', dados.contasPessoais);
                 if (dados.contasPagar) DB.set('contasPagar', dados.contasPagar);
                 if (dados.configuracoes) DB.set('configuracoes', dados.configuracoes);
+                
+                console.log('✅ Dados salvos no localStorage!');
                 
                 // Salvar timestamp local
                 localStorage.setItem('lastSyncLocal', dados.lastSync || new Date().toISOString());
@@ -11657,6 +11709,84 @@ if (!DB.get('configuracoes')) {
             } else {
                 alert('⚠️ Configuração salva, mas houve um erro ao conectar.\n\nVerifique os dados e tente novamente.');
             }
+        }
+        
+        // ============================================
+        // DEBUG DE SINCRONIZAÇÃO (VISUAL)
+        // ============================================
+        async function mostrarDebugSync() {
+            const dados = {
+                eventos: DB.get('eventos') || [],
+                clientes: DB.get('clientes') || [],
+                receitas: DB.get('receitas') || [],
+                despesas: DB.get('despesas') || [],
+                contas: DB.get('contas') || [],
+                custosGerais: DB.get('custosGerais') || [],
+                custosEventos: DB.get('custosEventos') || []
+            };
+            
+            const lastSyncLocal = localStorage.getItem('lastSyncLocal');
+            const firebaseConfig = localStorage.getItem('firebaseConfig');
+            
+            let debugInfo = `
+🔍 DEBUG DE SINCRONIZAÇÃO
+═══════════════════════════════
+
+📊 DADOS LOCAIS:
+   • Clientes: ${dados.clientes.length}
+   • Eventos: ${dados.eventos.length}
+   • Receitas: ${dados.receitas.length}
+   • Despesas: ${dados.despesas.length}
+   • Contas: ${dados.contas.length}
+   • Custos Gerais: ${dados.custosGerais.length}
+   • Custos Eventos: ${dados.custosEventos.length}
+
+⏰ ÚLTIMA SINCRONIZAÇÃO LOCAL:
+   ${lastSyncLocal ? new Date(lastSyncLocal).toLocaleString('pt-BR') : 'Nunca sincronizado'}
+
+🔌 STATUS DO FIREBASE:
+   • Conectado: ${isFirebaseConnected ? 'SIM ✅' : 'NÃO ❌'}
+   • Config existe: ${firebaseConfig ? 'SIM ✅' : 'NÃO ❌'}
+`;
+            
+            // Tentar buscar dados da nuvem
+            if (isFirebaseConnected) {
+                debugInfo += '\n📥 BUSCANDO DADOS DA NUVEM...\n';
+                
+                try {
+                    const snapshot = await firebaseDatabase.ref('eventprodj').once('value');
+                    const dadosNuvem = snapshot.val();
+                    
+                    if (dadosNuvem) {
+                        debugInfo += `
+☁️ DADOS NA NUVEM:
+   • Clientes: ${dadosNuvem.clientes?.length || 0}
+   • Eventos: ${dadosNuvem.eventos?.length || 0}
+   • Receitas: ${dadosNuvem.receitas?.length || 0}
+   • Despesas: ${dadosNuvem.despesas?.length || 0}
+   • Contas: ${dadosNuvem.contas?.length || 0}
+   • Custos Gerais: ${dadosNuvem.custosGerais?.length || 0}
+   • Custos Eventos: ${dadosNuvem.custosEventos?.length || 0}
+   • Timestamp: ${dadosNuvem.lastSync ? new Date(dadosNuvem.lastSync).toLocaleString('pt-BR') : 'Sem timestamp'}
+
+🔍 COMPARAÇÃO:
+   • Local vs Nuvem CLIENTES: ${dados.clientes.length} vs ${dadosNuvem.clientes?.length || 0} ${dados.clientes.length === (dadosNuvem.clientes?.length || 0) ? '✅' : '❌'}
+   • Local vs Nuvem EVENTOS: ${dados.eventos.length} vs ${dadosNuvem.eventos?.length || 0} ${dados.eventos.length === (dadosNuvem.eventos?.length || 0) ? '✅' : '❌'}
+   • Local vs Nuvem DESPESAS: ${dados.despesas.length} vs ${dadosNuvem.despesas?.length || 0} ${dados.despesas.length === (dadosNuvem.despesas?.length || 0) ? '✅' : '❌'}
+`;
+                    } else {
+                        debugInfo += '\n⚠️ NUVEM ESTÁ VAZIA!\n';
+                    }
+                } catch (error) {
+                    debugInfo += `\n❌ ERRO AO BUSCAR NUVEM:\n   ${error.message}\n`;
+                }
+            }
+            
+            // Mostrar em alert (funciona em todos navegadores)
+            alert(debugInfo);
+            
+            // Também mostrar no console
+            console.log(debugInfo);
         }
         
         // Testar conexão
@@ -12510,6 +12640,9 @@ if (!DB.get('configuracoes')) {
             e.target.reset();
             renderCustosEvento();
             updateDashboard();
+            
+            // Sincronizar após mudança
+            sincronizarAposMudanca();
             
             // Atualizar financeiro se estiver visível
             if (document.getElementById('financeiroTab').classList.contains('active')) {
