@@ -11460,9 +11460,11 @@ if (!DB.get('configuracoes')) {
                             const diffMinutos = (new Date(lastSync) - new Date(lastSyncLocal)) / 1000 / 60;
                             
                             console.log('🔍 Diferença de sincronização:', Math.round(diffMinutos), 'minutos');
+                            console.log('   Nuvem:', new Date(lastSync).toLocaleString());
+                            console.log('   Local:', new Date(lastSyncLocal).toLocaleString());
                             
-                            if (diffMinutos > 1) {
-                                // Há mudanças na nuvem (diferença > 1 minuto)
+                            if (diffMinutos > 0.1) {
+                                // Há mudanças na nuvem (diferença > 6 segundos)
                                 
                                 // Controle de frequência: só mostrar modal 1x por hora SE não houver mudanças significativas
                                 const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000);
@@ -11473,15 +11475,16 @@ if (!DB.get('configuracoes')) {
                                     console.log('📢 Mudanças significativas detectadas! Mostrando modal...');
                                     mostrarDialogoSincronizacao();
                                 } else if (deveVerificar) {
-                                    // Diferença pequena (1-5 min), mas já passou 1 hora desde última verificação
+                                    // Diferença pequena (0.1-5 min), mas já passou 1 hora desde última verificação
                                     console.log('📢 Passou 1 hora, verificando mudanças pequenas...');
                                     mostrarDialogoSincronizacao();
                                 } else {
                                     // Diferença pequena E não passou 1 hora
                                     console.log('⏰ Mudanças pequenas detectadas, aguardando 1 hora para verificar');
+                                    console.log('   ℹ️ Ou recarregue a página após 1 hora');
                                 }
                             } else {
-                                // Dados estão sincronizados (diferença < 1 minuto)
+                                // Dados estão sincronizados (diferença < 6 segundos)
                                 console.log('✅ Dados estão sincronizados');
                                 localStorage.setItem('lastSyncCheck', new Date().toISOString());
                             }
@@ -12785,6 +12788,9 @@ ${configInfo}
             };
             
             DB.add('custosEventos', custo);
+            
+            console.log('✅ Custo de evento adicionado:', custo);
+            console.log('📊 Total de custosEventos agora:', DB.get('custosEventos').length);
             
             // Se foi selecionada uma conta, criar uma despesa correspondente
             if (contaId && contaId !== '') {
