@@ -4345,6 +4345,9 @@ CNPJ: [CNPJ]"
                                     <button onclick="mostrarDebugSync()" class="btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border: 1px solid #8B5CF6;">
                                         🔍 Debug Sincronização
                                     </button>
+                                    <button onclick="testarSincronizacaoCompleta()" class="btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(34, 197, 94, 0.2); color: #22C55E; border: 1px solid #22C55E;">
+                                        🧪 Teste Completo
+                                    </button>
                                     <button onclick="resetarSincronizacao()" class="btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(239, 71, 111, 0.2); color: var(--danger); border: 1px solid var(--danger);">
                                         🔄 Resetar Sincronização
                                     </button>
@@ -11834,6 +11837,86 @@ ${configInfo}
             
             // Também mostrar no console
             console.log(debugInfo);
+        }
+        
+        // ============================================
+        // TESTE COMPLETO DE SINCRONIZAÇÃO
+        // ============================================
+        async function testarSincronizacaoCompleta() {
+            if (!isFirebaseConnected) {
+                alert('❌ Firebase não está conectado!\n\nConecte primeiro.');
+                return;
+            }
+            
+            let resultado = '🧪 TESTE DE SINCRONIZAÇÃO\n═══════════════════════════════\n\n';
+            
+            // 1. Gerar dados de teste únicos
+            const timestamp = Date.now();
+            const deviceName = /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'iPhone' : 'Desktop';
+            
+            const dadosTeste = {
+                teste: true,
+                timestamp: timestamp,
+                device: deviceName,
+                data: new Date().toISOString()
+            };
+            
+            resultado += `📱 DISPOSITIVO: ${deviceName}\n`;
+            resultado += `🕐 TIMESTAMP: ${timestamp}\n\n`;
+            
+            // 2. Enviar para nuvem
+            resultado += '📤 ENVIANDO DADOS DE TESTE...\n';
+            
+            try {
+                await firebaseDatabase.ref('eventprodj/teste_sync').set(dadosTeste);
+                resultado += '✅ Dados enviados com sucesso!\n\n';
+            } catch (error) {
+                resultado += `❌ ERRO AO ENVIAR: ${error.message}\n`;
+                alert(resultado);
+                return;
+            }
+            
+            // 3. Aguardar 1 segundo
+            resultado += '⏳ Aguardando 1 segundo...\n\n';
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 4. Ler de volta
+            resultado += '📥 LENDO DADOS DA NUVEM...\n';
+            
+            try {
+                const snapshot = await firebaseDatabase.ref('eventprodj/teste_sync').once('value');
+                const dadosRecebidos = snapshot.val();
+                
+                if (dadosRecebidos) {
+                    resultado += '✅ Dados recebidos com sucesso!\n\n';
+                    resultado += '🔍 COMPARAÇÃO:\n';
+                    resultado += `   • Timestamp enviado: ${timestamp}\n`;
+                    resultado += `   • Timestamp recebido: ${dadosRecebidos.timestamp}\n`;
+                    resultado += `   • Device enviado: ${deviceName}\n`;
+                    resultado += `   • Device recebido: ${dadosRecebidos.device}\n\n`;
+                    
+                    if (dadosRecebidos.timestamp === timestamp) {
+                        resultado += '✅ TESTE PASSOU!\n';
+                        resultado += '✅ Sincronização está funcionando!\n\n';
+                        resultado += '🎯 CONCLUSÃO:\n';
+                        resultado += '   O Firebase está conectado e\n';
+                        resultado += '   sincronizando corretamente.\n';
+                        resultado += '   Se não está vendo dados de outros\n';
+                        resultado += '   dispositivos, eles podem estar\n';
+                        resultado += '   usando configuração diferente.';
+                    } else {
+                        resultado += '❌ TESTE FALHOU!\n';
+                        resultado += '   Dados recebidos são diferentes!';
+                    }
+                } else {
+                    resultado += '❌ Nenhum dado recebido da nuvem!\n';
+                }
+            } catch (error) {
+                resultado += `❌ ERRO AO LER: ${error.message}\n`;
+            }
+            
+            alert(resultado);
+            console.log(resultado);
         }
         
         // ============================================
