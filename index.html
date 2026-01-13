@@ -13298,6 +13298,11 @@ ${eventosNuvemInfo}
                                     <div style="display: flex; align-items: center; gap: 6px;">
                                         💰 <strong>${formatMoney(e.valor)}</strong>
                                     </div>
+                                    ${e.desconto && e.desconto.valor > 0 ? `
+                                        <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
+                                            🏷️ Desconto: <strong>${e.desconto.tipo === 'percentual' ? e.desconto.valor + '%' : formatMoney(e.desconto.valor)}</strong>
+                                        </div>
+                                    ` : ''}
                                     ${temCustos ? `
                                         <div style="display: flex; align-items: center; gap: 6px; color: var(--danger);">
                                             💸 <strong>${formatMoney(totalCustos)}</strong> em custos
@@ -13655,6 +13660,21 @@ ${eventosNuvemInfo}
                         });
                         
                         atualizarListaTaxas();
+                    }
+                }
+                
+                // Carregar desconto se existir
+                if (evento.desconto) {
+                    const descontoValor = evento.desconto.valor || 0;
+                    const descontoTipo = evento.desconto.tipo || 'valor';
+                    
+                    console.log('💰 Carregando desconto:', descontoValor, 'Tipo:', descontoTipo);
+                    
+                    if (document.getElementById('orcDesconto')) {
+                        document.getElementById('orcDesconto').value = descontoValor;
+                    }
+                    if (document.getElementById('orcDescontoTipo')) {
+                        document.getElementById('orcDescontoTipo').value = descontoTipo;
                     }
                 }
                 
