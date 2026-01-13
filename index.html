@@ -7679,6 +7679,11 @@ CNPJ: [CNPJ]"
                 cep, rua, numero, complemento, bairro, cidade, estado,
                 valor: valorTotal,
                 servicos: todosServicos,
+                outrasTaxas: [...outrasTaxas], // ✅ Salvar taxas
+                desconto: { // ✅ Salvar desconto
+                    valor: parseFloat(document.getElementById('orcDesconto').value) || 0,
+                    tipo: document.getElementById('orcDescontoTipo').value
+                },
                 status: status,
                 observacoes: `Orçamento criado em ${formatDate(dataCriacao)}\n\nServiços:\n${todosServicos.map(s => `• ${s.nome} - ${formatMoney(s.valor)}`).join('\n')}${outrasTaxas.length > 0 ? '\n\nOutras Taxas:\n' + outrasTaxas.map(t => `• ${t.descricao} - ${formatMoney(t.valor)}`).join('\n') : ''}${observacoes ? '\n\nObservações:\n' + observacoes : ''}`
             };
@@ -8318,6 +8323,14 @@ CNPJ: [CNPJ]"
             
             // Calcular total
             const total = Math.max(0, subtotalServicos + totalTaxas - desconto);
+            
+            // LOG DETALHADO
+            console.log('💰 CÁLCULO DO ORÇAMENTO:');
+            console.log('   Subtotal Serviços:', subtotalServicos);
+            console.log('   Total Taxas:', totalTaxas);
+            console.log('   Desconto:', desconto);
+            console.log('   TOTAL:', total);
+            console.log('   Fórmula:', subtotalServicos, '+', totalTaxas, '-', desconto, '=', total);
             
             // Atualizar display
             document.getElementById('orcSubtotalServicos').textContent = formatMoney(subtotalServicos);
@@ -11739,6 +11752,12 @@ if (!DB.get('configuracoes')) {
             const lastSyncLocal = localStorage.getItem('lastSyncLocal');
             const firebaseConfig = localStorage.getItem('firebaseConfig');
             
+            // INFO ESPECÍFICA DOS EVENTOS
+            let eventosInfo = '\n📅 EVENTOS LOCAIS:\n';
+            dados.eventos.forEach((e, i) => {
+                eventosInfo += `   ${i+1}. ${e.nome || e.tipo} - Status: ${e.status}\n`;
+            });
+            
             let configInfo = '';
             if (firebaseConfig) {
                 try {
@@ -11772,7 +11791,7 @@ if (!DB.get('configuracoes')) {
    • Contas: ${dados.contas.length}
    • Custos Gerais: ${dados.custosGerais.length}
    • Custos Eventos: ${dados.custosEventos.length}
-
+${eventosInfo}
 ⏰ ÚLTIMA SINCRONIZAÇÃO LOCAL:
    ${lastSyncLocal ? new Date(lastSyncLocal).toLocaleString('pt-BR') : 'Nunca sincronizado'}
 
@@ -11791,6 +11810,16 @@ ${configInfo}
                     const dadosNuvem = snapshot.val();
                     
                     if (dadosNuvem) {
+                        // INFO ESPECÍFICA DOS EVENTOS DA NUVEM
+                        let eventosNuvemInfo = '\n📅 EVENTOS NA NUVEM:\n';
+                        if (dadosNuvem.eventos && dadosNuvem.eventos.length > 0) {
+                            dadosNuvem.eventos.forEach((e, i) => {
+                                eventosNuvemInfo += `   ${i+1}. ${e.nome || e.tipo} - Status: ${e.status}\n`;
+                            });
+                        } else {
+                            eventosNuvemInfo += '   (nenhum evento)\n';
+                        }
+                        
                         debugInfo += `
 ☁️ DADOS NA NUVEM:
    • Clientes: ${dadosNuvem.clientes?.length || 0}
@@ -11801,7 +11830,7 @@ ${configInfo}
    • Custos Gerais: ${dadosNuvem.custosGerais?.length || 0}
    • Custos Eventos: ${dadosNuvem.custosEventos?.length || 0}
    • Timestamp: ${dadosNuvem.lastSync ? new Date(dadosNuvem.lastSync).toLocaleString('pt-BR') : 'Sem timestamp'}
-
+${eventosNuvemInfo}
 🔍 COMPARAÇÃO:
    • Local vs Nuvem CLIENTES: ${dados.clientes.length} vs ${dadosNuvem.clientes?.length || 0} ${dados.clientes.length === (dadosNuvem.clientes?.length || 0) ? '✅' : '❌'}
    • Local vs Nuvem EVENTOS: ${dados.eventos.length} vs ${dadosNuvem.eventos?.length || 0} ${dados.eventos.length === (dadosNuvem.eventos?.length || 0) ? '✅' : '❌'}
@@ -13446,6 +13475,9 @@ ${configInfo}
                 renderEventsList();
                 renderKanbanView();
                 updateDashboard();
+                
+                // Sincronizar após mudança
+                sincronizarAposMudanca();
             }
         }
 
@@ -13472,6 +13504,9 @@ ${configInfo}
             renderEventsList();
             renderKanbanView();
             updateDashboard();
+            
+            // Sincronizar após mudança
+            sincronizarAposMudanca();
         }
 
         // Editar evento
@@ -13556,6 +13591,8 @@ ${configInfo}
                                 const valorStr = match[2].replace(/\./g, '').replace(',', '.');
                                 const valor = parseFloat(valorStr);
                                 
+                                console.log('📝 Serviço extraído:', nome, '-', valor);
+                                
                                 servicosSelecionados.push({
                                     id: 'servico_' + Date.now() + Math.random(),
                                     nome: nome,
@@ -13564,17 +13601,36 @@ ${configInfo}
                             }
                         });
                         
-                        // Marcar checkboxes dos serviços
-                        const checkboxes = document.querySelectorAll('#orcamentosServicosList input[type="checkbox"]');
-                        checkboxes.forEach(cb => {
-                            const nomeServico = cb.dataset.nome;
-                            const servicoSelecionado = servicosSelecionados.find(s => s.nome === nomeServico);
-                            if (servicoSelecionado) {
-                                cb.checked = true;
-                            }
-                        });
-                        
+                        // Renderizar lista de serviços ANTES de marcar checkboxes
                         atualizarListaServicos();
+                        
+                        // Aguardar renderização e então marcar checkboxes
+                        setTimeout(() => {
+                            const checkboxes = document.querySelectorAll('#orcamentosServicosList input[type="checkbox"]');
+                            console.log('🔍 Marcando checkboxes dos serviços salvos:', servicosSelecionados.length);
+                            console.log('📋 Serviços salvos:', servicosSelecionados.map(s => s.nome));
+                            
+                            checkboxes.forEach(cb => {
+                                const nomeServico = (cb.dataset.nome || '').trim();
+                                const servicoSelecionado = servicosSelecionados.find(s => {
+                                    const nomeSalvo = (s.nome || '').trim();
+                                    // Comparação case-insensitive e sem espaços extras
+                                    return nomeSalvo.toLowerCase() === nomeServico.toLowerCase();
+                                });
+                                
+                                if (servicoSelecionado) {
+                                    cb.checked = true;
+                                    console.log('   ✅ Marcado:', nomeServico);
+                                } else {
+                                    console.log('   ❌ NÃO encontrado:', nomeServico);
+                                }
+                            });
+                            
+                            console.log('📊 Checkboxes marcados:', Array.from(checkboxes).filter(cb => cb.checked).length);
+                            
+                            // Recalcular orçamento após marcar checkboxes
+                            calcularOrcamento();
+                        }, 100);
                     }
                     
                     // Extrair e preencher outras taxas
@@ -13699,6 +13755,9 @@ ${configInfo}
             renderKanbanView();
             updateDashboard();
             
+            // Sincronizar após mudança
+            sincronizarAposMudanca();
+            
             alert('✅ Evento atualizado com sucesso!');
         }
 
@@ -13709,6 +13768,9 @@ ${configInfo}
                 renderEventsList();
                 renderKanbanView();
                 updateDashboard();
+                
+                // Sincronizar após mudança
+                sincronizarAposMudanca();
             }
         }
 
