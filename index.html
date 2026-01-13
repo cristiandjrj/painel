@@ -11290,13 +11290,9 @@ if (!DB.get('configuracoes')) {
             // Gerar hash dos dados para detectar mudanças
             const dadosString = JSON.stringify(dados);
             const hashAtual = simpleHash(dadosString);
-            const hashAnterior = localStorage.getItem('lastSyncHash');
             
-            // Se não houve mudanças, não sincronizar (exceto se for manual)
-            if (hashAnterior === hashAtual && arguments[0] !== 'manual') {
-                console.log('✅ Dados não foram alterados, sincronização não necessária');
-                return;
-            }
+            // Log do hash para debug
+            console.log('📝 Hash dos dados atual:', hashAtual);
             
             atualizarStatusSync('syncing', 'Sincronizando...');
             
