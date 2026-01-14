@@ -2921,6 +2921,37 @@
             }
             }
         }
+        
+        /* Estilos de Impressão para Relatório MEI */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            #meiTab, #meiTab * {
+                visibility: visible;
+            }
+            
+            #meiTab {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            
+            .nav-container, .dashboard-header, button {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none;
+                border: 1px solid #000;
+            }
+            
+            table {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2946,6 +2977,7 @@
                 <button class="nav-tab" onclick="switchTab('financeiro')">💰 Financeiro</button>
                 <button class="nav-tab" onclick="switchTab('custos')">Custos</button>
                 <button class="nav-tab" onclick="switchTab('servicos')">📦 Serviços</button>
+                <button class="nav-tab" onclick="switchTab('mei')">📋 MEI</button>
                 <button class="nav-tab" onclick="switchTab('configuracoes')">⚙️ Config</button>
             </nav>
             
@@ -2953,6 +2985,7 @@
             <div class="sync-status" id="syncStatus">
                 <div class="sync-indicator" id="syncIndicator"></div>
                 <span class="sync-text" id="syncText">Offline</span>
+                <button class="sync-button" onclick="mostrarStatusSync()" title="Ver status da sincronização" style="margin-right: 4px;">📊</button>
                 <button class="sync-button" onclick="sincronizarAgora('manual')" title="Sincronizar agora">🔄</button>
             </div>
         </div>
@@ -2979,6 +3012,7 @@
             <button class="nav-tab" onclick="switchTabMobile('financeiro')">💰 Financeiro</button>
             <button class="nav-tab" onclick="switchTabMobile('custos')">💸 Custos</button>
             <button class="nav-tab" onclick="switchTabMobile('servicos')">📦 Serviços</button>
+            <button class="nav-tab" onclick="switchTabMobile('mei')">📋 MEI</button>
             <button class="nav-tab" onclick="switchTabMobile('configuracoes')">⚙️ Configurações</button>
         </div>
         
@@ -3004,7 +3038,7 @@
 
             <!-- Stats Cards -->
             <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-                <div class="stat-card">
+                <div class="stat-card" onclick="switchTab('financeiro')" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="stat-icon bg-success">💰</div>
                     <div class="stat-label">Receitas do Mês</div>
                     <div class="stat-value" id="totalReceitas">R$ 0,00</div>
@@ -3014,7 +3048,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card">
+                <div class="stat-card" onclick="mostrarValoresAReceber()" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="stat-icon" style="background: rgba(79, 70, 229, 0.2); color: #4F46E5;">⏳</div>
                     <div class="stat-label">Valores a Receber</div>
                     <div class="stat-value" id="valoresAReceberDashboard">R$ 0,00</div>
@@ -3024,7 +3058,7 @@
                     </div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card" onclick="abrirCustosGerais()" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="stat-icon bg-danger">💸</div>
                     <div class="stat-label">Despesas do Mês</div>
                     <div class="stat-value" id="totalDespesas">R$ 0,00</div>
@@ -3034,7 +3068,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card">
+                <div class="stat-card" onclick="abrirCustosEventos()" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="stat-icon" style="background: rgba(255, 107, 53, 0.2); color: var(--primary);">🎯</div>
                     <div class="stat-label">Custos de Eventos</div>
                     <div class="stat-value" id="totalCustosEventos">R$ 0,00</div>
@@ -3054,7 +3088,7 @@
                     </div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card" onclick="abrirEventosAndamento()" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="stat-icon bg-accent">🎉</div>
                     <div class="stat-label">Eventos em Andamento</div>
                     <div class="stat-value" id="totalEventosAndamento">0</div>
@@ -3064,7 +3098,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-card">
+                <div class="stat-card" onclick="abrirEventosConcluidos()" style="cursor: pointer;" title="Clique para ver detalhes">
                     <div class="stat-icon" style="background: rgba(6, 214, 160, 0.2); color: var(--success);">✅</div>
                     <div class="stat-label">Eventos Concluídos</div>
                     <div class="stat-value" id="totalEventosConcluidos">0</div>
@@ -3262,7 +3296,7 @@
                         <div class="stat-label">Total de Clientes</div>
                         <div class="stat-value" id="totalClientes">0</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="mostrarAniversariantesDoMes()" style="cursor: pointer;" title="Clique para ver aniversariantes">
                         <div class="stat-icon bg-success">🎂</div>
                         <div class="stat-label">Aniversários Este Mês</div>
                         <div class="stat-value" id="aniversariantesProximos">0</div>
@@ -3407,6 +3441,21 @@
                         </div>
                     </div>
                     
+                    <!-- Últimas Transações -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                            <h3 style="font-family: 'Syne', sans-serif; margin: 0;">📝 Últimas Transações</h3>
+                            <select id="filtroTipoTransacao" onchange="renderFinanceiro()" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); color: var(--text-primary); font-size: 13px; cursor: pointer;">
+                                <option value="todas">📊 Todas</option>
+                                <option value="receitas">💰 Receitas</option>
+                                <option value="despesas">💸 Despesas</option>
+                            </select>
+                        </div>
+                        <div id="ultimasTransacoes">
+                            <!-- Será preenchido dinamicamente -->
+                        </div>
+                    </div>
+                    
                     <!-- Card de Origem dos Pagamentos -->
                     <div class="card" style="margin-top: 24px;">
                         <div class="card-header">
@@ -3424,14 +3473,6 @@
                     <div class="card" style="margin-top: 24px;">
                         <h3 style="font-family: 'Syne', sans-serif; margin-bottom: 16px;">📊 Receitas por Forma de Pagamento</h3>
                         <div id="graficoFormasPagamento" style="display: grid; gap: 12px;">
-                            <!-- Será preenchido dinamicamente -->
-                        </div>
-                    </div>
-
-                    <!-- Últimas Transações -->
-                    <div class="card" style="margin-top: 24px;">
-                        <h3 style="font-family: 'Syne', sans-serif; margin-bottom: 16px;">📝 Últimas Transações</h3>
-                        <div id="ultimasTransacoes">
                             <!-- Será preenchido dinamicamente -->
                         </div>
                     </div>
@@ -3810,6 +3851,131 @@
         </div>
         <!-- End Serviços Tab -->
 
+        <!-- MEI Tab -->
+        <div id="meiTab" class="tab-content">
+            <div class="dashboard">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">📋 Relatório Mensal MEI</h1>
+                    <p class="dashboard-subtitle">Relatório Mensal das Receitas Brutas - Anexo I da Resolução CGSN nº 140/2018</p>
+                </div>
+
+                <!-- Seletor de Mês/Ano -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="padding: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">Mês de Referência</label>
+                                <select id="meiMes" class="form-input" onchange="carregarRelatorioMei()">
+                                    <option value="1">Janeiro</option>
+                                    <option value="2">Fevereiro</option>
+                                    <option value="3">Março</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Maio</option>
+                                    <option value="6">Junho</option>
+                                    <option value="7">Julho</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Ano</label>
+                                <select id="meiAno" class="form-input" onchange="carregarRelatorioMei()">
+                                    <!-- Será preenchido dinamicamente -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Conta Bancária / MEI</label>
+                                <select id="meiConta" class="form-input" onchange="carregarRelatorioMei()">
+                                    <option value="todas">📊 Todas as Contas</option>
+                                    <!-- Será preenchido dinamicamente -->
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: flex-end;">
+                                <button onclick="preencherAutomatico()" class="btn btn-primary" style="width: 100%;">
+                                    🔄 Preencher Automático
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relatório -->
+                <div class="card">
+                    <div style="padding: 24px;">
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">
+                                RELATÓRIO MENSAL DAS RECEITAS BRUTAS
+                            </h2>
+                            <p style="font-size: 13px; color: var(--text-secondary);">
+                                Anexo I da Resolução CGSN nº 140/2018 - Art. 104-A
+                            </p>
+                        </div>
+
+                        <!-- Tabela do Relatório -->
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: var(--bg-card); border-bottom: 2px solid var(--border);">
+                                        <th style="padding: 12px; text-align: left; border: 1px solid var(--border);">DATA</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid var(--border);">IDENTIFICAÇÃO DO CLIENTE</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid var(--border);">CPF/CNPJ</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid var(--border);">DOCUMENTO FISCAL</th>
+                                        <th style="padding: 12px; text-align: right; border: 1px solid var(--border);">VALOR (R$)</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid var(--border); width: 80px;">AÇÕES</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="meiTabelaBody">
+                                    <!-- Será preenchido dinamicamente -->
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background: var(--bg-card); font-weight: 700; border-top: 2px solid var(--border);">
+                                        <td colspan="4" style="padding: 16px; text-align: right; border: 1px solid var(--border);">
+                                            TOTAL DAS RECEITAS DO MÊS:
+                                        </td>
+                                        <td id="meiTotalMes" style="padding: 16px; text-align: right; font-size: 16px; color: var(--success); border: 1px solid var(--border);">
+                                            R$ 0,00
+                                        </td>
+                                        <td style="border: 1px solid var(--border);"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                            <button onclick="adicionarLinhaMei()" class="btn btn-primary">
+                                ➕ Nova Receita
+                            </button>
+                            <button onclick="salvarRelatorioMei()" class="btn btn-secondary">
+                                💾 Salvar Relatório
+                            </button>
+                            <button onclick="imprimirRelatorioMei()" class="btn btn-secondary">
+                                🖨️ Imprimir
+                            </button>
+                            <button onclick="exportarMeiPDF()" class="btn btn-secondary">
+                                📄 Exportar PDF
+                            </button>
+                        </div>
+
+                        <!-- Observações -->
+                        <div style="margin-top: 32px; padding: 16px; background: rgba(79, 70, 229, 0.1); border-radius: 8px; border-left: 4px solid #4F46E5;">
+                            <h4 style="margin-bottom: 8px; color: #4F46E5;">📝 Observações Importantes:</h4>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                                <li>Este relatório deve ser preenchido mensalmente pelo MEI</li>
+                                <li>Registre todas as receitas brutas do mês, mesmo sem emissão de nota fiscal</li>
+                                <li>O documento fiscal pode ser: NF-e, Nota Fiscal Avulsa, Recibo ou "Sem documento"</li>
+                                <li>Guarde este relatório por 5 anos para fins de fiscalização</li>
+                                <li>O botão "Preencher Automático" importa receitas cadastradas no sistema</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Configurações Tab -->
         <div id="configuracoesTab" class="tab-content">
             <div class="dashboard">
@@ -3982,113 +4148,6 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                                 </button>
                                 <button onclick="resetarClausulas()" class="btn btn-secondary">
                                     🔄 Resetar para Padrão
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Orçamento -->
-                    <div class="card" style="margin-bottom: 24px;">
-                        <div class="card-header">
-                            <h2 class="card-title">💼 Orçamento</h2>
-                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
-                                Configure o modelo de orçamento que será enviado aos seus clientes
-                            </p>
-                        </div>
-                        <div style="padding: 24px;">
-                            <div class="form-group">
-                                <label class="form-label">Texto do Orçamento</label>
-                                <textarea 
-                                    id="configModeloOrcamento" 
-                                    class="form-input" 
-                                    rows="15" 
-                                    style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
-                                    placeholder="Digite aqui o modelo do orçamento...
-
-Exemplo:
-
-ORÇAMENTO DE SERVIÇOS
-
-Prezado(a) [CLIENTE],
-
-Segue orçamento para os serviços solicitados:
-
-DADOS DO EVENTO:
-- Tipo: [TIPO]
-- Data: [DATA]
-- Horário: [HORARIO]
-- Local: [LOCAL]
-
-SERVIÇOS INCLUSOS:
-[SERVICOS]
-
-VALOR TOTAL: R$ [VALOR]
-
-CONDIÇÕES DE PAGAMENTO:
-- Sinal: R$ [SINAL] (50%)
-- Restante: R$ [RESTANTE] até [VENCIMENTO]
-
-VALIDADE DO ORÇAMENTO: [VALIDADE]
-
-Atenciosamente,
-[EMPRESA]"
-                                ></textarea>
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
-                                    💡 Placeholders: [CLIENTE], [DATA], [VALOR], [EMPRESA], etc.
-                                </div>
-                            </div>
-
-                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                                <button onclick="salvarModeloOrcamento()" class="btn btn-primary">
-                                    ✅ Salvar Orçamento
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recibo -->
-                    <div class="card" style="margin-bottom: 24px;">
-                        <div class="card-header">
-                            <h2 class="card-title">🧾 Recibo</h2>
-                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
-                                Configure o modelo de recibo que será emitido aos seus clientes
-                            </p>
-                        </div>
-                        <div style="padding: 24px;">
-                            <div class="form-group">
-                                <label class="form-label">Texto do Recibo</label>
-                                <textarea 
-                                    id="configModeloRecibo" 
-                                    class="form-input" 
-                                    rows="15" 
-                                    style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
-                                    placeholder="Digite aqui o modelo do recibo...
-
-Exemplo:
-
-RECIBO DE PAGAMENTO
-
-Recebi de [CLIENTE], CPF/CNPJ [CPF], a quantia de R$ [VALOR] ([VALOR_EXTENSO]), referente a [DESCRICAO].
-
-DADOS DO PAGAMENTO:
-- Forma: [FORMA_PAGAMENTO]
-- Data: [DATA]
-- Referente a: [EVENTO]
-
-Local e Data: [CIDADE], [DATA_COMPLETA]
-
-_______________________________
-[EMPRESA]
-CNPJ: [CNPJ]"
-                                ></textarea>
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
-                                    💡 Placeholders: [CLIENTE], [VALOR], [DATA], [EMPRESA], [CNPJ], etc.
-                                </div>
-                            </div>
-
-                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                                <button onclick="salvarModeloRecibo()" class="btn btn-primary">
-                                    ✅ Salvar Recibo
                                 </button>
                             </div>
                         </div>
@@ -5475,7 +5534,7 @@ CNPJ: [CNPJ]"
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Número</label>
-                            <input type="text" class="form-input" id="eventoNumero" placeholder="Nº" required>
+                            <input type="text" class="form-input" id="eventoNumero" placeholder="Nº">
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom: 12px;">
@@ -5495,11 +5554,11 @@ CNPJ: [CNPJ]"
                     <div class="form-row">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Cidade</label>
-                            <input type="text" class="form-input" id="eventoCidade" placeholder="Digite a cidade" required>
+                            <input type="text" class="form-input" id="eventoCidade" placeholder="Digite a cidade">
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Estado</label>
-                            <input type="text" class="form-input" id="eventoEstado" placeholder="UF" style="text-transform: uppercase;" maxlength="2" required>
+                            <input type="text" class="form-input" id="eventoEstado" placeholder="UF" style="text-transform: uppercase;" maxlength="2">
                         </div>
                     </div>
                     <div id="cepEventoLoading" style="display: none; text-align: center; padding: 8px; background: rgba(255, 210, 63, 0.1); border-radius: 8px; margin-top: 8px; font-size: 13px; color: var(--accent);">
@@ -5640,7 +5699,7 @@ CNPJ: [CNPJ]"
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label class="form-label">Número</label>
-                                <input type="text" class="form-input" id="orcNumero" placeholder="Nº" required>
+                                <input type="text" class="form-input" id="orcNumero" placeholder="Nº">
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 12px;">
@@ -5660,11 +5719,11 @@ CNPJ: [CNPJ]"
                         <div class="form-row">
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label class="form-label">Cidade</label>
-                                <input type="text" class="form-input" id="orcCidade" placeholder="Digite a cidade" required>
+                                <input type="text" class="form-input" id="orcCidade" placeholder="Digite a cidade">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label class="form-label">Estado</label>
-                                <input type="text" class="form-input" id="orcEstado" placeholder="UF" style="text-transform: uppercase;" maxlength="2" required>
+                                <input type="text" class="form-input" id="orcEstado" placeholder="UF" style="text-transform: uppercase;" maxlength="2">
                             </div>
                         </div>
                         <div id="cepOrcLoading" style="display: none; text-align: center; padding: 8px; background: rgba(255, 210, 63, 0.1); border-radius: 8px; margin-top: 8px; font-size: 13px; color: var(--accent);">
@@ -6031,10 +6090,60 @@ CNPJ: [CNPJ]"
             set: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
             add: (key, item) => {
                 const data = DB.get(key);
-                const newItem = { ...item, id: Date.now() };
+                const newItem = { 
+                    ...item, 
+                    id: item.id || Date.now(),
+                    version: 1,
+                    lastModified: new Date().toISOString(),
+                    modifiedBy: getDeviceId()
+                };
                 data.push(newItem);
                 DB.set(key, data);
-                return newItem; // RETORNAR O ITEM CRIADO
+                
+                // Registrar no histórico
+                ChangeHistory.log(key, 'create', newItem);
+                
+                return newItem;
+            },
+            update: (key, id, updates) => {
+                const data = DB.get(key);
+                const index = data.findIndex(item => item.id == id);
+                
+                if (index >= 0) {
+                    const before = {...data[index]};
+                    const updated = {
+                        ...data[index],
+                        ...updates,
+                        version: (data[index].version || 0) + 1,
+                        lastModified: new Date().toISOString(),
+                        modifiedBy: getDeviceId()
+                    };
+                    
+                    data[index] = updated;
+                    DB.set(key, data);
+                    
+                    // Registrar no histórico
+                    ChangeHistory.log(key, 'update', updated, before);
+                    
+                    return updated;
+                }
+                return null;
+            },
+            delete: (key, id) => {
+                const data = DB.get(key);
+                const index = data.findIndex(item => item.id == id);
+                
+                if (index >= 0) {
+                    const deleted = data[index];
+                    data.splice(index, 1);
+                    DB.set(key, data);
+                    
+                    // Registrar no histórico
+                    ChangeHistory.log(key, 'delete', deleted, deleted);
+                    
+                    return deleted;
+                }
+                return null;
             }
         };
 
@@ -9403,6 +9512,410 @@ CNPJ: [CNPJ]"
         }
         
         // Render Financeiro
+        // ============================================
+        // GESTÃO MEI - RELATÓRIO MENSAL
+        // ============================================
+        
+        // Inicializar seletor de ano e contas
+        function initMeiAnoSelector() {
+            const anoSelect = document.getElementById('meiAno');
+            const anoAtual = new Date().getFullYear();
+            
+            for (let ano = anoAtual - 2; ano <= anoAtual + 1; ano++) {
+                const option = document.createElement('option');
+                option.value = ano;
+                option.textContent = ano;
+                if (ano === anoAtual) option.selected = true;
+                anoSelect.appendChild(option);
+            }
+            
+            // Selecionar mês atual
+            const mesAtual = new Date().getMonth() + 1;
+            document.getElementById('meiMes').value = mesAtual;
+            
+            // Carregar contas bancárias
+            carregarContasMei();
+        }
+        
+        // Carregar contas bancárias no seletor
+        function carregarContasMei() {
+            const contaSelect = document.getElementById('meiConta');
+            const contas = DB.get('contas') || [];
+            
+            // Limpar opções (mantendo "Todas")
+            contaSelect.innerHTML = '<option value="todas">📊 Todas as Contas</option>';
+            
+            // Adicionar contas
+            contas.forEach(conta => {
+                const option = document.createElement('option');
+                option.value = conta.id;
+                option.textContent = `${conta.banco} - ${conta.nome}`;
+                contaSelect.appendChild(option);
+            });
+        }
+        
+        // Carregar relatório MEI do localStorage
+        function carregarRelatorioMei() {
+            const mes = document.getElementById('meiMes').value;
+            const ano = document.getElementById('meiAno').value;
+            const contaId = document.getElementById('meiConta').value;
+            const contaNome = contaId === 'todas' ? 'Todas as Contas' : document.getElementById('meiConta').selectedOptions[0]?.text || '';
+            
+            const chave = `mei_${ano}_${mes}_${contaId}`;
+            
+            console.log('🔄 Carregando relatório MEI:', {mes, ano, contaId, contaNome});
+            console.log('🔑 Chave de busca:', chave);
+            
+            // Listar todas as chaves MEI no localStorage
+            const todasChavesMei = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('mei_')) {
+                    todasChavesMei.push(key);
+                }
+            }
+            console.log('📦 Todas as chaves MEI no localStorage:', todasChavesMei);
+            
+            const relatorio = localStorage.getItem(chave);
+            
+            if (relatorio) {
+                const dados = JSON.parse(relatorio);
+                console.log('✅ Relatório encontrado:', dados.receitas?.length || 0, 'receitas');
+                renderizarTabelaMei(dados.receitas || []);
+            } else {
+                console.log('⚠️ Nenhum relatório encontrado para:', chave);
+                console.log('💡 Chaves disponíveis:', todasChavesMei);
+                renderizarTabelaMei([]);
+            }
+        }
+        
+        // Renderizar tabela MEI
+        function renderizarTabelaMei(receitas) {
+            console.log('🎨 Renderizando tabela MEI com', receitas?.length || 0, 'receitas');
+            console.log('📋 Receitas:', receitas);
+            
+            const tbody = document.getElementById('meiTabelaBody');
+            
+            if (!tbody) {
+                console.error('❌ Elemento meiTabelaBody não encontrado!');
+                return;
+            }
+            
+            if (receitas.length === 0) {
+                console.log('⚠️ Nenhuma receita, mostrando mensagem vazia');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                            Nenhuma receita registrada para este mês.<br>
+                            Clique em "Nova Receita" ou "Preencher Automático" para adicionar.
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('meiTotalMes').textContent = 'R$ 0,00';
+                return;
+            }
+            
+            let total = 0;
+            tbody.innerHTML = receitas.map((r, index) => {
+                total += parseFloat(r.valor) || 0;
+                return `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 12px; border: 1px solid var(--border);">${r.data}</td>
+                        <td style="padding: 12px; border: 1px solid var(--border);">${r.cliente}</td>
+                        <td style="padding: 12px; border: 1px solid var(--border);">${r.cpfCnpj || '-'}</td>
+                        <td style="padding: 12px; border: 1px solid var(--border);">${r.documento || 'Sem documento'}</td>
+                        <td style="padding: 12px; text-align: right; border: 1px solid var(--border);">${formatMoney(r.valor)}</td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid var(--border);">
+                            <button onclick="editarLinhaMei(${index})" style="background: none; border: none; cursor: pointer; font-size: 16px;" title="Editar">
+                                ✏️
+                            </button>
+                            <button onclick="excluirLinhaMei(${index})" style="background: none; border: none; cursor: pointer; font-size: 16px;" title="Excluir">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('meiTotalMes').textContent = formatMoney(total);
+            console.log('✅ Tabela renderizada com', receitas.length, 'linhas. Total:', formatMoney(total));
+        }
+        
+        // Adicionar nova linha
+        function adicionarLinhaMei() {
+            const data = prompt('Data (DD/MM/AAAA):', new Date().toLocaleDateString('pt-BR'));
+            if (!data) return;
+            
+            const cliente = prompt('Nome do Cliente:');
+            if (!cliente) return;
+            
+            const cpfCnpj = prompt('CPF/CNPJ (opcional):') || '';
+            const documento = prompt('Número do Documento Fiscal (ou deixe vazio):') || 'Sem documento';
+            const valor = prompt('Valor (R$):');
+            if (!valor) return;
+            
+            const mes = document.getElementById('meiMes').value;
+            const ano = document.getElementById('meiAno').value;
+            const contaId = document.getElementById('meiConta').value;
+            const chave = `mei_${ano}_${mes}_${contaId}`;
+            
+            console.log('➕ Adicionando linha com chave:', chave);
+            
+            const relatorio = localStorage.getItem(chave);
+            const dados = relatorio ? JSON.parse(relatorio) : { receitas: [] };
+            
+            dados.receitas.push({
+                data,
+                cliente,
+                cpfCnpj,
+                documento,
+                valor: parseFloat(valor.replace(',', '.'))
+            });
+            
+            console.log('💾 Salvando com', dados.receitas.length, 'receitas');
+            localStorage.setItem(chave, JSON.stringify(dados));
+            renderizarTabelaMei(dados.receitas);
+            
+            alert('✅ Receita adicionada com sucesso!');
+        }
+        
+        // Editar linha
+        function editarLinhaMei(index) {
+            const mes = document.getElementById('meiMes').value;
+            const ano = document.getElementById('meiAno').value;
+            const contaId = document.getElementById('meiConta').value;
+            const chave = `mei_${ano}_${mes}_${contaId}`;
+            
+            const relatorio = localStorage.getItem(chave);
+            const dados = JSON.parse(relatorio);
+            const receita = dados.receitas[index];
+            
+            const data = prompt('Data (DD/MM/AAAA):', receita.data);
+            if (data === null) return;
+            
+            const cliente = prompt('Nome do Cliente:', receita.cliente);
+            if (cliente === null) return;
+            
+            const cpfCnpj = prompt('CPF/CNPJ:', receita.cpfCnpj);
+            if (cpfCnpj === null) return;
+            
+            const documento = prompt('Documento Fiscal:', receita.documento);
+            if (documento === null) return;
+            
+            const valor = prompt('Valor (R$):', receita.valor);
+            if (valor === null) return;
+            
+            dados.receitas[index] = {
+                data,
+                cliente,
+                cpfCnpj,
+                documento,
+                valor: parseFloat(valor.replace(',', '.'))
+            };
+            
+            localStorage.setItem(chave, JSON.stringify(dados));
+            renderizarTabelaMei(dados.receitas);
+            
+            alert('✅ Receita atualizada com sucesso!');
+        }
+        
+        // Excluir linha
+        function excluirLinhaMei(index) {
+            if (!confirm('Deseja realmente excluir esta receita?')) return;
+            
+            const mes = document.getElementById('meiMes').value;
+            const ano = document.getElementById('meiAno').value;
+            const contaId = document.getElementById('meiConta').value;
+            const chave = `mei_${ano}_${mes}_${contaId}`;
+            
+            const relatorio = localStorage.getItem(chave);
+            const dados = JSON.parse(relatorio);
+            
+            dados.receitas.splice(index, 1);
+            
+            localStorage.setItem(chave, JSON.stringify(dados));
+            renderizarTabelaMei(dados.receitas);
+            
+            alert('✅ Receita excluída com sucesso!');
+        }
+        
+        // Preencher automático com receitas do sistema
+        function preencherAutomatico() {
+            const mes = parseInt(document.getElementById('meiMes').value);
+            const ano = parseInt(document.getElementById('meiAno').value);
+            const contaId = document.getElementById('meiConta').value;
+            
+            // Buscar receitas do mês
+            let receitas = DB.get('receitas').filter(r => {
+                const data = new Date(r.data);
+                return data.getMonth() + 1 === mes && data.getFullYear() === ano;
+            });
+            
+            // Filtrar por conta se não for "todas"
+            if (contaId !== 'todas') {
+                receitas = receitas.filter(r => r.contaId == contaId);
+            }
+            
+            if (receitas.length === 0) {
+                const msgConta = contaId === 'todas' ? '' : ' para a conta selecionada';
+                alert(`⚠️ Não há receitas cadastradas para este período${msgConta}.`);
+                return;
+            }
+            
+            const nomeConta = contaId === 'todas' ? 'todas as contas' : document.getElementById('meiConta').selectedOptions[0].text;
+            if (!confirm(`Encontradas ${receitas.length} receita(s) para ${getNomeMes(mes)}/${ano}\nConta: ${nomeConta}\n\nDeseja importar automaticamente?`)) {
+                return;
+            }
+            
+            const chave = `mei_${ano}_${mes}_${contaId}`;
+            const dados = { receitas: [] };
+            
+            receitas.forEach(r => {
+                console.log('📝 Processando receita:', r);
+                
+                // Buscar cliente de várias formas
+                const clientes = DB.get('clientes');
+                let cliente = null;
+                
+                // Tentar pelos campos da receita
+                if (r.origem) {
+                    cliente = clientes.find(c => 
+                        c.nome === r.origem || 
+                        c.nome?.toLowerCase() === r.origem?.toLowerCase()
+                    );
+                }
+                
+                // Se não achou e tem descrição, tentar pela descrição
+                if (!cliente && r.descricao) {
+                    cliente = clientes.find(c => 
+                        r.descricao.includes(c.nome) || 
+                        c.nome?.toLowerCase().includes(r.descricao?.toLowerCase())
+                    );
+                }
+                
+                // Pegar dados do cliente
+                const nomeCliente = cliente?.nome || r.origem || r.descricao || 'Cliente';
+                const cpfCnpj = cliente?.cnpj || cliente?.cpf || '';
+                
+                console.log('   Cliente encontrado:', cliente?.nome || 'Não encontrado');
+                console.log('   Nome usado:', nomeCliente);
+                console.log('   CPF/CNPJ:', cpfCnpj);
+                
+                dados.receitas.push({
+                    data: new Date(r.data).toLocaleDateString('pt-BR'),
+                    cliente: nomeCliente,
+                    cpfCnpj: cpfCnpj,
+                    documento: r.observacoes || 'Sem documento',
+                    valor: r.valor
+                });
+            });
+            
+            console.log('💾 Salvando relatório com chave:', chave);
+            console.log('📊 Total de receitas:', dados.receitas.length);
+            localStorage.setItem(chave, JSON.stringify(dados));
+            renderizarTabelaMei(dados.receitas);
+            
+            alert(`✅ ${receitas.length} receita(s) importada(s) com sucesso!`);
+        }
+        
+        // Salvar relatório
+        function salvarRelatorioMei() {
+            const mes = document.getElementById('meiMes').value;
+            const ano = document.getElementById('meiAno').value;
+            const contaId = document.getElementById('meiConta').value;
+            const nomeConta = contaId === 'todas' ? 'Todas as contas' : document.getElementById('meiConta').selectedOptions[0].text;
+            
+            alert(`✅ Relatório de ${getNomeMes(mes)}/${ano}\nConta: ${nomeConta}\n\nSalvo com sucesso!`);
+        }
+        
+        // Imprimir relatório
+        function imprimirRelatorioMei() {
+            window.print();
+        }
+        
+        // Exportar para PDF
+        function exportarMeiPDF() {
+            const mes = document.getElementById('meiMes').value;
+            const ano = document.getElementById('meiAno').value;
+            const contaId = document.getElementById('meiConta').value;
+            const chave = `mei_${ano}_${mes}_${contaId}`;
+            
+            const relatorio = localStorage.getItem(chave);
+            if (!relatorio) {
+                alert('⚠️ Não há dados para exportar neste período.');
+                return;
+            }
+            
+            const dados = JSON.parse(relatorio);
+            const nomeConta = contaId === 'todas' ? 'Todas as Contas' : document.getElementById('meiConta').selectedOptions[0].text;
+            
+            // Criar PDF com jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Cabeçalho
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RELATÓRIO MENSAL DAS RECEITAS BRUTAS', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Anexo I da Resolução CGSN nº 140/2018 - Art. 104-A', 105, 27, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Período: ${getNomeMes(mes)}/${ano}`, 105, 35, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Conta: ${nomeConta}`, 105, 42, { align: 'center' });
+            
+            // Tabela
+            const startY = 50;
+            const headers = [['DATA', 'CLIENTE', 'CPF/CNPJ', 'DOC. FISCAL', 'VALOR (R$)']];
+            const rows = dados.receitas.map(r => [
+                r.data,
+                r.cliente,
+                r.cpfCnpj || '-',
+                r.documento,
+                formatMoney(r.valor)
+            ]);
+            
+            doc.autoTable({
+                head: headers,
+                body: rows,
+                startY: startY,
+                theme: 'grid',
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [79, 70, 229], textColor: 255 }
+            });
+            
+            // Total
+            const total = dados.receitas.reduce((sum, r) => sum + r.valor, 0);
+            const finalY = doc.lastAutoTable.finalY + 10;
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('TOTAL DAS RECEITAS DO MÊS:', 20, finalY);
+            doc.text(formatMoney(total), 190, finalY, { align: 'right' });
+            
+            // Salvar
+            const nomeArquivo = contaId === 'todas' ? `relatorio-mei-${mes}-${ano}.pdf` : `relatorio-mei-${mes}-${ano}-conta${contaId}.pdf`;
+            doc.save(nomeArquivo);
+            
+            alert('✅ PDF gerado com sucesso!');
+        }
+        
+        // Obter nome do mês
+        function getNomeMes(mes) {
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            return meses[parseInt(mes) - 1];
+        }
+
+        // ============================================
+        // GESTÃO FINANCEIRA
+        // ============================================
         function renderFinanceiro() {
             if (document.getElementById('financeiroTab').classList.contains('active')) {
                 if (document.getElementById('financeiroVisaoGeral').style.display !== 'none') {
@@ -9469,24 +9982,43 @@ CNPJ: [CNPJ]"
             
             // Últimas Transações
             const custosEventos = DB.get('custosEventos');
-            const todasTransacoes = [
+            
+            // Obter filtro selecionado
+            const filtroTipo = document.getElementById('filtroTipoTransacao')?.value || 'todas';
+            
+            let todasTransacoes = [
                 ...receitas.map(r => ({...r, tipo: 'receita'})),
                 ...despesas.map(d => ({...d, tipo: 'despesa'})),
                 ...custosEventos.map(c => ({...c, tipo: 'custo_evento', descricao: c.descricao || 'Custo de Evento'}))
-            ].sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 10);
+            ];
+            
+            // Aplicar filtro
+            if (filtroTipo === 'receitas') {
+                todasTransacoes = todasTransacoes.filter(t => t.tipo === 'receita');
+            } else if (filtroTipo === 'despesas') {
+                todasTransacoes = todasTransacoes.filter(t => t.tipo === 'despesa' || t.tipo === 'custo_evento');
+            }
+            
+            // Ordenar e limitar a 10
+            todasTransacoes = todasTransacoes.sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 10);
             
             const transacoesDiv = document.getElementById('ultimasTransacoes');
-            transacoesDiv.innerHTML = todasTransacoes.map(t => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
-                    <div>
-                        <div style="font-weight: 600;">${t.tipo === 'receita' ? '💰' : t.tipo === 'custo_evento' ? '📦' : '💸'} ${t.descricao}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">${formatDate(t.data)}</div>
+            
+            if (todasTransacoes.length === 0) {
+                transacoesDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhuma transação encontrada</p>';
+            } else {
+                transacoesDiv.innerHTML = todasTransacoes.map(t => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <div style="font-weight: 600;">${t.tipo === 'receita' ? '💰' : t.tipo === 'custo_evento' ? '📦' : '💸'} ${t.descricao}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">${formatDate(t.data)}</div>
+                        </div>
+                        <div style="font-size: 18px; font-weight: 700; color: ${t.tipo === 'receita' ? 'var(--success)' : 'var(--danger)'};">
+                            ${t.tipo === 'receita' ? '+' : '-'} ${formatMoney(t.valor)}
+                        </div>
                     </div>
-                    <div style="font-size: 18px; font-weight: 700; color: ${t.tipo === 'receita' ? 'var(--success)' : 'var(--danger)'};">
-                        ${t.tipo === 'receita' ? '+' : '-'} ${formatMoney(t.valor)}
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+            }
         }
         
         // Render Por Conta
@@ -9843,6 +10375,241 @@ CNPJ: [CNPJ]"
             return new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
         }
 
+        // ============================================
+        // NAVEGAÇÃO DOS CARDS DA DASHBOARD
+        // ============================================
+        
+        // Abrir Custos Gerais
+        function abrirCustosGerais() {
+            console.log('🏢 Abrindo Custos Gerais...');
+            currentCustosView = 'gerais'; // Define ANTES de abrir a aba
+            switchTab('custos');
+            setTimeout(() => {
+                console.log('⏱️ Chamando toggleCustosView("gerais")...');
+                toggleCustosView('gerais');
+            }, 150);
+        }
+        
+        // Abrir Custos de Eventos
+        function abrirCustosEventos() {
+            console.log('🎯 Abrindo Custos de Eventos...');
+            currentCustosView = 'eventos'; // Define ANTES de abrir a aba
+            switchTab('custos');
+            setTimeout(() => {
+                console.log('⏱️ Chamando toggleCustosView("eventos")...');
+                toggleCustosView('eventos');
+            }, 150);
+        }
+        
+        // Abrir Eventos em Andamento
+        function abrirEventosAndamento() {
+            switchTab('eventos');
+            setTimeout(() => {
+                filterEvents('andamento');
+            }, 100);
+        }
+        
+        // Abrir Eventos Concluídos
+        function abrirEventosConcluidos() {
+            switchTab('eventos');
+            setTimeout(() => {
+                filterEvents('concluido');
+            }, 100);
+        }
+        
+        // Mostrar modal de Valores a Receber
+        function mostrarValoresAReceber() {
+            const clientes = DB.get('clientes');
+            const hoje = new Date();
+            
+            // Filtrar clientes com pagamentos pendentes
+            const clientesPendentes = clientes.filter(c => {
+                const valorTotal = c.financeiro?.valorTotal || 0;
+                const totalPago = c.financeiro?.totalPago || 0;
+                const saldo = valorTotal - totalPago;
+                return saldo > 0;
+            }).map(c => {
+                const valorTotal = c.financeiro?.valorTotal || 0;
+                const totalPago = c.financeiro?.totalPago || 0;
+                const saldo = valorTotal - totalPago;
+                const vencimento = c.financeiro?.dataVencimento ? new Date(c.financeiro.dataVencimento) : null;
+                const atrasado = vencimento && vencimento < hoje;
+                
+                return {
+                    nome: c.nome,
+                    valorTotal: valorTotal,
+                    valorPago: totalPago,
+                    saldo: saldo,
+                    vencimento: vencimento,
+                    atrasado: atrasado,
+                    telefone: c.telefone,
+                    email: c.email
+                };
+            });
+            
+            if (clientesPendentes.length === 0) {
+                alert('✅ Não há valores a receber!\n\nTodos os clientes estão em dia.');
+                return;
+            }
+            
+            // Ordenar por data de vencimento (atrasados primeiro)
+            clientesPendentes.sort((a, b) => {
+                if (a.atrasado && !b.atrasado) return -1;
+                if (!a.atrasado && b.atrasado) return 1;
+                if (!a.vencimento) return 1;
+                if (!b.vencimento) return -1;
+                return a.vencimento - b.vencimento;
+            });
+            
+            // Criar HTML do modal
+            let html = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
+                    <div style="background: var(--bg-card); border-radius: 12px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 24px;" onclick="event.stopPropagation()">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; font-size: 24px;">⏳ Valores a Receber</h2>
+                            <button onclick="this.closest('div[style*=fixed]').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">×</button>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px; padding: 12px; background: rgba(79, 70, 229, 0.1); border-radius: 8px; border-left: 4px solid #4F46E5;">
+                            <strong>${clientesPendentes.length}</strong> cliente(s) com pagamentos pendentes
+                        </div>
+                        
+                        ${clientesPendentes.map(c => `
+                            <div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; ${c.atrasado ? 'background: rgba(239, 71, 111, 0.1); border-color: var(--danger);' : ''}">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                    <div>
+                                        <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">
+                                            ${c.nome}
+                                            ${c.atrasado ? '<span style="background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">ATRASADO</span>' : ''}
+                                        </div>
+                                        <div style="font-size: 13px; color: var(--text-secondary);">
+                                            ${c.telefone ? '📱 ' + c.telefone : ''} ${c.email ? '📧 ' + c.email : ''}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 20px; font-weight: 700; color: ${c.atrasado ? 'var(--danger)' : 'var(--primary)'};">
+                                            ${formatMoney(c.saldo)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+                                    <div>
+                                        <div style="color: var(--text-secondary);">Valor Total</div>
+                                        <div style="font-weight: 600;">${formatMoney(c.valorTotal)}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: var(--text-secondary);">Valor Pago</div>
+                                        <div style="font-weight: 600; color: var(--success);">${formatMoney(c.valorPago)}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color: var(--text-secondary);">Vencimento</div>
+                                        <div style="font-weight: 600; color: ${c.atrasado ? 'var(--danger)' : 'inherit'};">
+                                            ${c.vencimento ? formatDate(c.vencimento.toISOString().split('T')[0]) : 'Não definido'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        <div style="margin-top: 20px; display: flex; gap: 12px;">
+                            <button onclick="switchTab('clientes'); this.closest('div[style*=fixed]').remove()" class="btn btn-primary" style="flex: 1;">
+                                👥 Ver Clientes
+                            </button>
+                            <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-secondary" style="flex: 1;">
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+        
+        // Mostrar aniversariantes do mês
+        function mostrarAniversariantesDoMes() {
+            const clientes = DB.get('clientes');
+            const mesAtual = new Date().getMonth() + 1;
+            
+            // Filtrar aniversariantes do mês
+            const aniversariantes = clientes.filter(c => {
+                if (!c.aniversario) return false;
+                const [dia, mes] = c.aniversario.split('/');
+                return parseInt(mes) === mesAtual;
+            }).map(c => {
+                const [dia, mes] = c.aniversario.split('/');
+                return {
+                    ...c,
+                    diaAniversario: parseInt(dia)
+                };
+            }).sort((a, b) => a.diaAniversario - b.diaAniversario);
+            
+            if (aniversariantes.length === 0) {
+                alert('🎂 Não há aniversariantes este mês!');
+                return;
+            }
+            
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const nomeMes = meses[mesAtual - 1];
+            
+            // Criar modal
+            let html = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
+                    <div style="background: var(--bg-card); border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 24px;" onclick="event.stopPropagation()">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; font-size: 24px;">🎂 Aniversariantes de ${nomeMes}</h2>
+                            <button onclick="this.closest('div[style*=fixed]').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">×</button>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px; padding: 12px; background: rgba(6, 214, 160, 0.1); border-radius: 8px; border-left: 4px solid var(--success);">
+                            <strong>${aniversariantes.length}</strong> aniversariante(s) este mês
+                        </div>
+                        
+                        ${aniversariantes.map(c => {
+                            const hoje = new Date().getDate();
+                            const ehHoje = c.diaAniversario === hoje;
+                            
+                            return `
+                                <div onclick="viewClient(${c.id}); this.closest('div[style*=fixed]').remove()" style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s; ${ehHoje ? 'background: rgba(255, 210, 63, 0.1); border-color: var(--accent);' : ''}" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'" onmouseout="this.style.background='${ehHoje ? 'rgba(255, 210, 63, 0.1)' : 'transparent'}'">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">
+                                                ${c.nome}
+                                                ${ehHoje ? '<span style="background: var(--accent); color: var(--bg-dark); padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">HOJE</span>' : ''}
+                                            </div>
+                                            <div style="font-size: 13px; color: var(--text-secondary);">
+                                                📅 ${c.aniversario}
+                                                ${c.telefone ? ' • 📱 ' + c.telefone : ''}
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 32px;">
+                                            ${ehHoje ? '🎉' : '🎂'}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                        
+                        <div style="margin-top: 20px;">
+                            <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-secondary" style="width: 100%;">
+                                Fechar
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 12px; padding: 12px; background: rgba(79, 70, 229, 0.1); border-radius: 8px; font-size: 13px; color: var(--text-secondary);">
+                            💡 Clique em um aniversariante para ver seus detalhes
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        // ============================================
+        // DASHBOARD
+        // ============================================
         function updateDashboard() {
             try {
                 updateStats();
@@ -11148,6 +11915,17 @@ if (!DB.get('configuracoes')) {
         };
         
         console.log('💡 Para testar: digite testarModal() no console');
+        console.log('🔧 Comandos de Sync:');
+        console.log('   SyncQueue.status() - Ver status da fila');
+        console.log('   BackupSystem.listar() - Ver backups disponíveis');
+        console.log('   BackupSystem.restaurar(0) - Restaurar último backup');
+        console.log('   ChangeHistory.get() - Ver histórico de mudanças');
+        console.log('   ChangeHistory.search({tabela: "clientes"}) - Buscar mudanças');
+        console.log('   IncrementalSync.syncAll() - Sync incremental manual');
+        console.log('   SelectiveSync.status() - Ver config de sync seletiva');
+        console.log('   SelectiveSync.toggle("receitasPessoais") - Ativar/desativar tabela');
+        console.log('   NetworkMonitor.quality - Ver qualidade da rede');
+        console.log('   RateLimiter.status() - Ver limites de requisições');
         
         // ============================================
         // SISTEMA DE SINCRONIZAÇÃO COM FIREBASE
@@ -11157,6 +11935,1369 @@ if (!DB.get('configuracoes')) {
         let firebaseDatabase = null;
         let isFirebaseConnected = false;
         let autoSyncEnabled = true;
+        
+        // ============================================
+        // 🚀 SISTEMA DE SINCRONIZAÇÃO ROBUSTO - FASE 1
+        // ============================================
+        
+        // FILA DE SINCRONIZAÇÃO PERSISTENTE
+        const SyncQueue = {
+            pendentes: [],
+            processando: false,
+            maxTentativas: 3,
+            
+            // Carregar fila do localStorage
+            carregar() {
+                try {
+                    const saved = localStorage.getItem('syncQueue');
+                    this.pendentes = saved ? JSON.parse(saved) : [];
+                    console.log('📥 Fila carregada:', this.pendentes.length, 'operações pendentes');
+                    return this.pendentes.length;
+                } catch (error) {
+                    console.error('❌ Erro ao carregar fila:', error);
+                    this.pendentes = [];
+                    return 0;
+                }
+            },
+            
+            // Salvar fila no localStorage
+            salvar() {
+                try {
+                    localStorage.setItem('syncQueue', JSON.stringify(this.pendentes));
+                    this.atualizarIndicador();
+                } catch (error) {
+                    console.error('❌ Erro ao salvar fila:', error);
+                }
+            },
+            
+            // Adicionar operação à fila
+            adicionar(operacao) {
+                const op = {
+                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    tipo: operacao.tipo, // 'full_sync', 'incremental', 'backup'
+                    tabela: operacao.tabela || 'all',
+                    dados: operacao.dados,
+                    timestamp: new Date().toISOString(),
+                    tentativas: 0,
+                    prioridade: operacao.prioridade || 'normal', // 'alta', 'normal', 'baixa'
+                    erro: null
+                };
+                
+                console.log('➕ Adicionando à fila:', op.tipo, op.tabela);
+                
+                this.pendentes.push(op);
+                
+                // Ordenar por prioridade
+                this.pendentes.sort((a, b) => {
+                    const prioridades = { alta: 3, normal: 2, baixa: 1 };
+                    return (prioridades[b.prioridade] || 2) - (prioridades[a.prioridade] || 2);
+                });
+                
+                this.salvar();
+                
+                // Processar imediatamente se for prioridade alta
+                if (op.prioridade === 'alta') {
+                    this.processar();
+                }
+                
+                return op.id;
+            },
+            
+            // Processar fila
+            async processar() {
+                if (this.processando) {
+                    console.log('⏳ Já processando fila...');
+                    return;
+                }
+                
+                if (!isFirebaseConnected) {
+                    console.log('⚠️ Firebase não conectado, aguardando...');
+                    return;
+                }
+                
+                if (this.pendentes.length === 0) {
+                    console.log('✅ Fila vazia');
+                    return;
+                }
+                
+                this.processando = true;
+                console.log('🔄 Processando fila:', this.pendentes.length, 'operações');
+                
+                while (this.pendentes.length > 0) {
+                    const op = this.pendentes[0];
+                    
+                    try {
+                        console.log(`📤 Processando [${op.tentativas + 1}/${this.maxTentativas}]:`, op.tipo, op.tabela);
+                        
+                        // Executar operação
+                        await this.executarOperacao(op);
+                        
+                        console.log('✅ Operação concluída:', op.id);
+                        
+                        // Remove da fila
+                        this.pendentes.shift();
+                        this.salvar();
+                        
+                    } catch (error) {
+                        console.error('❌ Erro na operação:', error.message);
+                        
+                        op.tentativas++;
+                        op.erro = error.message;
+                        
+                        if (op.tentativas >= this.maxTentativas) {
+                            console.error('🚫 Máximo de tentativas atingido, movendo para erros');
+                            this.moverParaErros(op);
+                            this.pendentes.shift();
+                        } else {
+                            console.log('🔁 Tentando novamente em 5 segundos...');
+                            this.salvar();
+                            await new Promise(resolve => setTimeout(resolve, 5000));
+                        }
+                        
+                        // Para e tenta depois se ainda tiver tentativas
+                        if (op.tentativas < this.maxTentativas) {
+                            break;
+                        }
+                    }
+                }
+                
+                this.processando = false;
+                
+                if (this.pendentes.length === 0) {
+                    console.log('✅ Fila processada completamente!');
+                    atualizarStatusSync('online', 'Sincronizado');
+                } else {
+                    console.log('⏸️ Fila pausada, tentará novamente depois');
+                }
+            },
+            
+            // Executar operação específica
+            async executarOperacao(op) {
+                if (op.tipo === 'full_sync') {
+                    await this.fullSync(op.dados);
+                } else if (op.tipo === 'incremental') {
+                    await IncrementalSync.syncAll();
+                } else if (op.tipo === 'backup') {
+                    await this.backup(op.dados);
+                }
+            },
+            
+            // Sincronização completa
+            async fullSync(dados) {
+                // Verificar rate limit
+                if (!RateLimiter.canExecute('sync')) {
+                    throw new Error('Rate limit atingido. Aguarde antes de sincronizar novamente.');
+                }
+                
+                // Verificar conexão
+                if (!NetworkMonitor.canSync()) {
+                    throw new Error('Sem conexão com a internet');
+                }
+                
+                if (!dados) {
+                    // Coleta todos os dados
+                    dados = {
+                        eventos: DB.get('eventos') || [],
+                        clientes: DB.get('clientes') || [],
+                        receitas: DB.get('receitas') || [],
+                        despesas: DB.get('despesas') || [],
+                        contas: DB.get('contas') || [],
+                        servicos: DB.get('servicos') || [],
+                        custosGerais: DB.get('custosGerais') || [],
+                        custosEventos: DB.get('custosEventos') || [],
+                        receitasPessoais: DB.get('receitasPessoais') || [],
+                        despesasPessoais: DB.get('despesasPessoais') || [],
+                        contasPessoais: DB.get('contasPessoais') || [],
+                        contasPagar: DB.get('contasPagar') || [],
+                        configuracoes: DB.get('configuracoes') || {}
+                    };
+                }
+                
+                dados.lastSync = new Date().toISOString();
+                dados.deviceId = getDeviceId();
+                
+                console.log('📤 Fazendo merge com dados da nuvem...');
+                
+                // Pegar dados atuais da nuvem com retry
+                const snapshot = await RetrySystem.executeWithRetry(
+                    () => firebaseDatabase.ref('eventprodj').once('value'),
+                    { maxRetries: 3, baseDelay: 1000 }
+                );
+                
+                const nuvem = snapshot.val();
+                
+                if (nuvem) {
+                    // Fazer merge inteligente de cada tabela
+                    for (let tabela in dados) {
+                        if (tabela === 'lastSync' || tabela === 'deviceId') continue;
+                        
+                        if (Array.isArray(dados[tabela]) && Array.isArray(nuvem[tabela])) {
+                            dados[tabela] = IncrementalSync.mergeData(dados[tabela], nuvem[tabela]);
+                        }
+                    }
+                    
+                    console.log('✅ Merge concluído');
+                }
+                
+                // Aplicar sync seletiva
+                const dadosFiltrados = SelectiveSync.filterData(dados);
+                
+                // Decidir tipo de sync baseado na rede
+                const syncType = SyncOptimizer.decideSyncType();
+                console.log(`🎯 Tipo de sync escolhido: ${syncType}`);
+                
+                // Otimizar dados
+                const optimized = SyncOptimizer.optimizeData(dadosFiltrados, syncType);
+                
+                console.log('📤 Enviando para Firebase...');
+                
+                // Enviar com retry
+                await RetrySystem.executeWithRetry(
+                    async () => {
+                        if (optimized.type === 'compressed') {
+                            // Salvar metadados de compressão
+                            await firebaseDatabase.ref('eventprodj_metadata').set(optimized.metadata);
+                            // Salvar dados comprimidos
+                            await firebaseDatabase.ref('eventprodj_compressed').set(optimized.data);
+                        } else {
+                            await firebaseDatabase.ref('eventprodj').set(optimized.data);
+                        }
+                    },
+                    { maxRetries: 3, baseDelay: 2000 }
+                );
+                
+                // Registrar chamada no rate limiter
+                RateLimiter.register('sync');
+                
+                // Salvar hash
+                const dadosString = JSON.stringify(dados);
+                const hash = simpleHash(dadosString);
+                localStorage.setItem('lastSyncHash', hash);
+                localStorage.setItem('lastSyncLocal', dados.lastSync);
+                
+                // Salvar snapshots para próxima sync incremental
+                const tabelas = ['eventos', 'clientes', 'receitas', 'despesas', 'contas', 
+                                'servicos', 'custosGerais', 'custosEventos'];
+                tabelas.forEach(tabela => IncrementalSync.saveSnapshot(tabela));
+                
+                console.log('✅ Sync completa concluída');
+                
+                if (optimized.metadata) {
+                    console.log(`💾 Economia: ${optimized.metadata.originalSize - optimized.metadata.compressedSize} bytes (${100 - parseFloat(optimized.metadata.ratio)}% redução)`);
+                }
+            },
+            
+            // Backup
+            async backup(dados) {
+                console.log('💾 Fazendo backup...');
+                const backupData = {
+                    timestamp: new Date().toISOString(),
+                    dados: dados
+                };
+                
+                await firebaseDatabase.ref('backups').push(backupData);
+                console.log('✅ Backup concluído');
+            },
+            
+            // Mover para fila de erros
+            moverParaErros(op) {
+                try {
+                    const erros = JSON.parse(localStorage.getItem('syncErros') || '[]');
+                    erros.push({
+                        ...op,
+                        dataErro: new Date().toISOString()
+                    });
+                    
+                    // Manter apenas últimos 50 erros
+                    if (erros.length > 50) {
+                        erros.splice(0, erros.length - 50);
+                    }
+                    
+                    localStorage.setItem('syncErros', JSON.stringify(erros));
+                    console.log('📝 Erro registrado');
+                } catch (error) {
+                    console.error('Erro ao registrar erro:', error);
+                }
+            },
+            
+            // Atualizar indicador visual
+            atualizarIndicador() {
+                const count = this.pendentes.length;
+                const syncText = document.getElementById('syncText');
+                const syncTextMobile = document.getElementById('syncTextMobile');
+                
+                if (count > 0) {
+                    const texto = `Sincronizando (${count})`;
+                    if (syncText) syncText.textContent = texto;
+                    if (syncTextMobile) syncTextMobile.textContent = texto;
+                } else if (isFirebaseConnected) {
+                    if (syncText) syncText.textContent = 'Sincronizado';
+                    if (syncTextMobile) syncTextMobile.textContent = 'Sincronizado';
+                }
+            },
+            
+            // Limpar fila (admin)
+            limpar() {
+                this.pendentes = [];
+                this.salvar();
+                console.log('🗑️ Fila limpa');
+            },
+            
+            // Ver status
+            status() {
+                return {
+                    pendentes: this.pendentes.length,
+                    processando: this.processando,
+                    operacoes: this.pendentes.map(op => ({
+                        tipo: op.tipo,
+                        tabela: op.tabela,
+                        tentativas: op.tentativas,
+                        timestamp: op.timestamp
+                    }))
+                };
+            }
+        };
+        
+        // SISTEMA DE BACKUP AUTOMÁTICO
+        const BackupSystem = {
+            intervalo: null,
+            
+            iniciar() {
+                // Backup a cada hora
+                this.intervalo = setInterval(() => {
+                    this.fazerBackup();
+                }, 3600000); // 1 hora
+                
+                console.log('💾 Sistema de backup iniciado (a cada 1 hora)');
+                
+                // Fazer backup inicial
+                setTimeout(() => this.fazerBackup(), 60000); // 1 minuto após iniciar
+            },
+            
+            parar() {
+                if (this.intervalo) {
+                    clearInterval(this.intervalo);
+                    this.intervalo = null;
+                    console.log('⏸️ Sistema de backup pausado');
+                }
+            },
+            
+            fazerBackup() {
+                try {
+                    console.log('💾 Fazendo backup local...');
+                    
+                    const backup = {
+                        timestamp: new Date().toISOString(),
+                        versao: '1.0.0',
+                        dados: {
+                            eventos: DB.get('eventos') || [],
+                            clientes: DB.get('clientes') || [],
+                            receitas: DB.get('receitas') || [],
+                            despesas: DB.get('despesas') || [],
+                            contas: DB.get('contas') || [],
+                            servicos: DB.get('servicos') || [],
+                            custosGerais: DB.get('custosGerais') || [],
+                            custosEventos: DB.get('custosEventos') || [],
+                            configuracoes: DB.get('configuracoes') || {}
+                        }
+                    };
+                    
+                    // Recuperar backups existentes
+                    const backups = JSON.parse(localStorage.getItem('backups') || '[]');
+                    
+                    // Adicionar novo backup
+                    backups.push(backup);
+                    
+                    // Manter apenas últimos 24 backups (24 horas)
+                    if (backups.length > 24) {
+                        backups.splice(0, backups.length - 24);
+                    }
+                    
+                    localStorage.setItem('backups', JSON.stringify(backups));
+                    
+                    console.log('✅ Backup salvo. Total de backups:', backups.length);
+                    
+                    // Se Firebase conectado, enviar backup para nuvem também
+                    if (isFirebaseConnected) {
+                        SyncQueue.adicionar({
+                            tipo: 'backup',
+                            dados: backup.dados,
+                            prioridade: 'baixa'
+                        });
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Erro ao fazer backup:', error);
+                }
+            },
+            
+            restaurar(index) {
+                try {
+                    const backups = JSON.parse(localStorage.getItem('backups') || '[]');
+                    
+                    if (index < 0 || index >= backups.length) {
+                        throw new Error('Índice de backup inválido');
+                    }
+                    
+                    const backup = backups[index];
+                    
+                    // Confirmar
+                    if (!confirm(`Restaurar backup de ${backup.timestamp}?\n\nIsso vai sobrescrever todos os dados atuais!`)) {
+                        return false;
+                    }
+                    
+                    // Restaurar dados
+                    for (let tabela in backup.dados) {
+                        DB.set(tabela, backup.dados[tabela]);
+                    }
+                    
+                    console.log('✅ Backup restaurado com sucesso!');
+                    alert('✅ Backup restaurado!\n\nAtualize a página para ver as mudanças.');
+                    
+                    return true;
+                    
+                } catch (error) {
+                    console.error('❌ Erro ao restaurar backup:', error);
+                    alert('❌ Erro ao restaurar backup:\n\n' + error.message);
+                    return false;
+                }
+            },
+            
+            listar() {
+                const backups = JSON.parse(localStorage.getItem('backups') || '[]');
+                return backups.map((b, i) => ({
+                    indice: i,
+                    timestamp: b.timestamp,
+                    versao: b.versao,
+                    tamanho: JSON.stringify(b).length
+                }));
+            }
+        };
+        
+        // UTILITÁRIOS
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+        
+        // ============================================
+        // 🎯 FASE 2 - VERSIONAMENTO E MERGE
+        // ============================================
+        
+        // SISTEMA DE VERSIONAMENTO
+        const VersionSystem = {
+            // Adicionar versionamento a um item
+            addVersion(item, tabela) {
+                if (!item.version) {
+                    item.version = 1;
+                } else {
+                    item.version++;
+                }
+                
+                item.lastModified = new Date().toISOString();
+                item.modifiedBy = getDeviceId();
+                item.modifiedTable = tabela;
+                
+                return item;
+            },
+            
+            // Comparar versões
+            compareVersions(local, remoto) {
+                if (!local || !remoto) {
+                    return local ? 'local_newer' : 'remote_newer';
+                }
+                
+                // Se versões forem diferentes, há conflito
+                if (local.version !== remoto.version) {
+                    // Compara timestamps para decidir
+                    const localTime = new Date(local.lastModified || 0).getTime();
+                    const remoteTime = new Date(remoto.lastModified || 0).getTime();
+                    
+                    if (localTime > remoteTime) {
+                        return 'local_newer';
+                    } else if (remoteTime > localTime) {
+                        return 'remote_newer';
+                    } else {
+                        return 'conflict';
+                    }
+                }
+                
+                return 'equal';
+            },
+            
+            // Detectar mudanças entre duas versões
+            detectChanges(oldItem, newItem) {
+                const changes = {};
+                
+                for (let key in newItem) {
+                    if (key === 'version' || key === 'lastModified' || key === 'modifiedBy') continue;
+                    
+                    if (JSON.stringify(oldItem[key]) !== JSON.stringify(newItem[key])) {
+                        changes[key] = {
+                            old: oldItem[key],
+                            new: newItem[key]
+                        };
+                    }
+                }
+                
+                return changes;
+            },
+            
+            // Criar snapshot de um item
+            snapshot(item) {
+                return {
+                    timestamp: new Date().toISOString(),
+                    version: item.version,
+                    data: JSON.parse(JSON.stringify(item))
+                };
+            }
+        };
+        
+        // SISTEMA DE MERGE INTELIGENTE
+        const MergeSystem = {
+            // Merge automático de dois itens
+            merge(local, remoto, strategy = 'auto') {
+                console.log('🔀 Fazendo merge:', {
+                    local: local?.id,
+                    remoto: remoto?.id,
+                    strategy
+                });
+                
+                if (!local) return remoto;
+                if (!remoto) return local;
+                
+                // Se são iguais, retorna local
+                if (JSON.stringify(local) === JSON.stringify(remoto)) {
+                    return local;
+                }
+                
+                // Estratégias de merge
+                switch (strategy) {
+                    case 'local_wins':
+                        return local;
+                    
+                    case 'remote_wins':
+                        return remoto;
+                    
+                    case 'newest_wins':
+                        return this.newestWins(local, remoto);
+                    
+                    case 'auto':
+                    default:
+                        return this.smartMerge(local, remoto);
+                }
+            },
+            
+            // Estratégia: Mais recente vence
+            newestWins(local, remoto) {
+                const localTime = new Date(local.lastModified || 0).getTime();
+                const remoteTime = new Date(remoto.lastModified || 0).getTime();
+                
+                if (localTime >= remoteTime) {
+                    console.log('✅ Local é mais recente');
+                    return local;
+                } else {
+                    console.log('✅ Remoto é mais recente');
+                    return remoto;
+                }
+            },
+            
+            // Merge inteligente campo por campo
+            smartMerge(local, remoto) {
+                console.log('🧠 Fazendo merge inteligente...');
+                
+                const merged = { ...remoto }; // Começa com remoto como base
+                
+                for (let key in local) {
+                    // Pular metadados
+                    if (['version', 'lastModified', 'modifiedBy', 'modifiedTable'].includes(key)) {
+                        continue;
+                    }
+                    
+                    // Se campo é diferente
+                    if (JSON.stringify(local[key]) !== JSON.stringify(remoto[key])) {
+                        merged[key] = this.mergeField(key, local[key], remoto[key], local, remoto);
+                    }
+                }
+                
+                // Incrementar versão do merge
+                merged.version = Math.max(local.version || 1, remoto.version || 1) + 1;
+                merged.lastModified = new Date().toISOString();
+                merged.modifiedBy = getDeviceId() + '_merged';
+                
+                console.log('✅ Merge inteligente concluído');
+                
+                return merged;
+            },
+            
+            // Merge de campo individual
+            mergeField(key, localValue, remoteValue, local, remoto) {
+                // Números: usa o maior
+                if (typeof localValue === 'number' && typeof remoteValue === 'number') {
+                    console.log(`   📊 ${key}: usando maior valor`);
+                    return Math.max(localValue, remoteValue);
+                }
+                
+                // Arrays: merge sem duplicatas
+                if (Array.isArray(localValue) && Array.isArray(remoteValue)) {
+                    console.log(`   📋 ${key}: fazendo merge de arrays`);
+                    return [...new Set([...localValue, ...remoteValue])];
+                }
+                
+                // Objetos: merge recursivo
+                if (typeof localValue === 'object' && typeof remoteValue === 'object' && 
+                    localValue !== null && remoteValue !== null && 
+                    !Array.isArray(localValue)) {
+                    console.log(`   📦 ${key}: merge recursivo de objeto`);
+                    return this.smartMerge(localValue, remoteValue);
+                }
+                
+                // Strings e outros: usa o mais recente
+                const localTime = new Date(local.lastModified || 0).getTime();
+                const remoteTime = new Date(remoto.lastModified || 0).getTime();
+                
+                if (localTime >= remoteTime) {
+                    console.log(`   📝 ${key}: usando valor local (mais recente)`);
+                    return localValue;
+                } else {
+                    console.log(`   📝 ${key}: usando valor remoto (mais recente)`);
+                    return remoteValue;
+                }
+            },
+            
+            // Verificar se há conflitos que precisam de decisão manual
+            hasConflicts(local, remoto) {
+                if (!local || !remoto) return false;
+                
+                // Conflito se versões divergiram muito
+                const versionDiff = Math.abs((local.version || 0) - (remoto.version || 0));
+                if (versionDiff > 5) {
+                    console.warn('⚠️ Versões muito divergentes:', versionDiff);
+                    return true;
+                }
+                
+                // Conflito se múltiplos dispositivos modificaram recentemente
+                const timeDiff = Math.abs(
+                    new Date(local.lastModified || 0).getTime() - 
+                    new Date(remoto.lastModified || 0).getTime()
+                );
+                
+                // Se modificados com menos de 1 minuto de diferença = possível conflito
+                if (timeDiff < 60000) {
+                    console.warn('⚠️ Modificações muito próximas:', timeDiff, 'ms');
+                    return true;
+                }
+                
+                return false;
+            }
+        };
+        
+        // SINCRONIZAÇÃO INCREMENTAL
+        const IncrementalSync = {
+            lastSync: {},
+            
+            // Detectar mudanças desde última sync
+            detectChanges(tabela) {
+                const dados = DB.get(tabela) || [];
+                const lastSyncData = this.lastSync[tabela] || [];
+                
+                const novos = [];
+                const modificados = [];
+                const deletados = [];
+                
+                // Detectar novos e modificados
+                dados.forEach(item => {
+                    const antigo = lastSyncData.find(old => old.id === item.id);
+                    
+                    if (!antigo) {
+                        novos.push(item);
+                    } else if (JSON.stringify(item) !== JSON.stringify(antigo)) {
+                        modificados.push(item);
+                    }
+                });
+                
+                // Detectar deletados
+                lastSyncData.forEach(old => {
+                    if (!dados.find(item => item.id === old.id)) {
+                        deletados.push(old.id);
+                    }
+                });
+                
+                return { novos, modificados, deletados };
+            },
+            
+            // Aplicar mudanças incrementais
+            async applyChanges(tabela, mudancas) {
+                console.log(`📝 Aplicando mudanças em ${tabela}:`, mudancas);
+                
+                const dados = DB.get(tabela) || [];
+                
+                // Aplicar novos
+                mudancas.novos?.forEach(item => {
+                    if (!dados.find(d => d.id === item.id)) {
+                        dados.push(item);
+                    }
+                });
+                
+                // Aplicar modificações
+                mudancas.modificados?.forEach(item => {
+                    const index = dados.findIndex(d => d.id === item.id);
+                    if (index >= 0) {
+                        // Fazer merge se necessário
+                        dados[index] = MergeSystem.merge(dados[index], item);
+                    }
+                });
+                
+                // Aplicar deleções
+                mudancas.deletados?.forEach(id => {
+                    const index = dados.findIndex(d => d.id === id);
+                    if (index >= 0) {
+                        dados.splice(index, 1);
+                    }
+                });
+                
+                DB.set(tabela, dados);
+                
+                console.log(`✅ Mudanças aplicadas em ${tabela}`);
+            },
+            
+            // Salvar snapshot para próxima comparação
+            saveSnapshot(tabela) {
+                const dados = DB.get(tabela) || [];
+                this.lastSync[tabela] = JSON.parse(JSON.stringify(dados));
+            },
+            
+            // Sync incremental de todas as tabelas
+            async syncAll() {
+                const tabelas = ['eventos', 'clientes', 'receitas', 'despesas', 'contas', 
+                                'servicos', 'custosGerais', 'custosEventos'];
+                
+                for (let tabela of tabelas) {
+                    const mudancas = this.detectChanges(tabela);
+                    
+                    if (mudancas.novos.length || mudancas.modificados.length || mudancas.deletados.length) {
+                        console.log(`📊 ${tabela}:`, {
+                            novos: mudancas.novos.length,
+                            modificados: mudancas.modificados.length,
+                            deletados: mudancas.deletados.length
+                        });
+                        
+                        // Enviar para Firebase
+                        await this.syncTable(tabela, mudancas);
+                        
+                        // Salvar snapshot
+                        this.saveSnapshot(tabela);
+                    }
+                }
+            },
+            
+            // Sync de uma tabela específica
+            async syncTable(tabela, mudancas) {
+                const path = `eventprodj/${tabela}`;
+                
+                // Pegar dados atuais do Firebase
+                const snapshot = await firebaseDatabase.ref(path).once('value');
+                const remotos = snapshot.val() || [];
+                
+                // Merge com dados locais
+                const merged = this.mergeData(DB.get(tabela) || [], remotos);
+                
+                // Enviar de volta
+                await firebaseDatabase.ref(path).set(merged);
+                
+                // Atualizar local
+                DB.set(tabela, merged);
+            },
+            
+            // Merge de array de dados
+            mergeData(local, remoto) {
+                const merged = [];
+                const processados = new Set();
+                
+                // Processar itens locais
+                local.forEach(item => {
+                    const remoteItem = remoto.find(r => r.id === item.id);
+                    merged.push(MergeSystem.merge(item, remoteItem));
+                    processados.add(item.id);
+                });
+                
+                // Adicionar itens remotos que não existem localmente
+                remoto.forEach(item => {
+                    if (!processados.has(item.id)) {
+                        merged.push(item);
+                    }
+                });
+                
+                return merged;
+            }
+        };
+        
+        // HISTÓRICO DE MUDANÇAS
+        const ChangeHistory = {
+            maxHistorySize: 100,
+            
+            // Registrar mudança
+            log(tabela, acao, item, before = null) {
+                try {
+                    const historico = this.get();
+                    
+                    const entry = {
+                        id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        timestamp: new Date().toISOString(),
+                        tabela,
+                        acao, // 'create', 'update', 'delete'
+                        itemId: item?.id,
+                        deviceId: getDeviceId(),
+                        before: before ? JSON.parse(JSON.stringify(before)) : null,
+                        after: item ? JSON.parse(JSON.stringify(item)) : null
+                    };
+                    
+                    historico.unshift(entry);
+                    
+                    // Manter apenas últimas N entradas
+                    if (historico.length > this.maxHistorySize) {
+                        historico.splice(this.maxHistorySize);
+                    }
+                    
+                    localStorage.setItem('changeHistory', JSON.stringify(historico));
+                    
+                } catch (error) {
+                    console.error('Erro ao registrar mudança:', error);
+                }
+            },
+            
+            // Obter histórico
+            get() {
+                try {
+                    return JSON.parse(localStorage.getItem('changeHistory') || '[]');
+                } catch {
+                    return [];
+                }
+            },
+            
+            // Buscar no histórico
+            search(filters) {
+                const historico = this.get();
+                
+                return historico.filter(entry => {
+                    if (filters.tabela && entry.tabela !== filters.tabela) return false;
+                    if (filters.acao && entry.acao !== filters.acao) return false;
+                    if (filters.itemId && entry.itemId !== filters.itemId) return false;
+                    return true;
+                });
+            },
+            
+            // Reverter mudança
+            async revert(entryId) {
+                const historico = this.get();
+                const entry = historico.find(e => e.id === entryId);
+                
+                if (!entry || !entry.before) {
+                    throw new Error('Não é possível reverter esta mudança');
+                }
+                
+                // Restaurar estado anterior
+                const dados = DB.get(entry.tabela) || [];
+                const index = dados.findIndex(d => d.id === entry.itemId);
+                
+                if (index >= 0) {
+                    dados[index] = entry.before;
+                    DB.set(entry.tabela, dados);
+                    
+                    // Registrar reversão
+                    this.log(entry.tabela, 'revert', entry.before, entry.after);
+                    
+                    console.log('✅ Mudança revertida');
+                    return true;
+                } else {
+                    throw new Error('Item não encontrado');
+                }
+            },
+            
+            // Limpar histórico
+            clear() {
+                localStorage.removeItem('changeHistory');
+                console.log('🗑️ Histórico limpo');
+            }
+        };
+        
+        // Mostrar status de sincronização
+        function mostrarStatusSync() {
+            const status = SyncQueue.status();
+            const backups = BackupSystem.listar();
+            const erros = JSON.parse(localStorage.getItem('syncErros') || '[]');
+            const historico = ChangeHistory.get();
+            
+            const lastSync = localStorage.getItem('lastSyncLocal');
+            const lastSyncFormatted = lastSync ? new Date(lastSync).toLocaleString('pt-BR') : 'Nunca';
+            
+            // Contar itens versionados
+            let totalVersionados = 0;
+            ['clientes', 'eventos', 'receitas', 'despesas'].forEach(tabela => {
+                const dados = DB.get(tabela);
+                totalVersionados += dados.filter(d => d.version).length;
+            });
+            
+            // Contar tabelas ativas para sync
+            const tabelasAtivas = Object.values(SelectiveSync.config).filter(v => v === true).length;
+            const tabelasTotal = Object.keys(SelectiveSync.config).length;
+            
+            let msg = '📊 STATUS DE SINCRONIZAÇÃO COMPLETO\n\n';
+            msg += `🔗 Firebase: ${isFirebaseConnected ? '✅ Conectado' : '❌ Desconectado'}\n`;
+            msg += `📶 Rede: ${NetworkMonitor.online ? '✅ Online' : '❌ Offline'} (${NetworkMonitor.quality})\n`;
+            msg += `⏰ Última Sync: ${lastSyncFormatted}\n`;
+            msg += `📥 Operações Pendentes: ${status.pendentes}\n`;
+            msg += `⚙️ Processando: ${status.processando ? 'Sim' : 'Não'}\n`;
+            msg += `💾 Backups: ${backups.length}\n`;
+            msg += `❌ Erros: ${erros.length}\n`;
+            msg += `📝 Histórico: ${historico.length} mudanças\n`;
+            msg += `🔢 Itens Versionados: ${totalVersionados}\n`;
+            msg += `🎯 Sync Seletiva: ${tabelasAtivas}/${tabelasTotal} tabelas ativas\n\n`;
+            
+            if (status.pendentes > 0) {
+                msg += '📋 FILA:\n';
+                status.operacoes.forEach((op, i) => {
+                    msg += `${i + 1}. ${op.tipo} (${op.tabela}) - ${op.tentativas} tentativas\n`;
+                });
+                msg += '\n';
+            }
+            
+            if (erros.length > 0) {
+                msg += '⚠️ ÚLTIMOS ERROS:\n';
+                erros.slice(-3).forEach((err, i) => {
+                    msg += `${i + 1}. ${err.tipo} - ${err.erro}\n`;
+                });
+                msg += '\n';
+            }
+            
+            if (historico.length > 0) {
+                msg += '📝 ÚLTIMAS MUDANÇAS:\n';
+                historico.slice(0, 5).forEach((h, i) => {
+                    const time = new Date(h.timestamp).toLocaleTimeString('pt-BR');
+                    msg += `${i + 1}. ${time} - ${h.acao} em ${h.tabela}\n`;
+                });
+                msg += '\n';
+            }
+            
+            if (backups.length > 0) {
+                msg += '💾 ÚLTIMO BACKUP:\n';
+                const ultimo = backups[backups.length - 1];
+                msg += `${new Date(ultimo.timestamp).toLocaleString('pt-BR')}\n\n`;
+            }
+            
+            msg += '💡 COMANDOS CONSOLE:\n';
+            msg += 'SelectiveSync.status() - Config de sync\n';
+            msg += 'NetworkMonitor.quality - Qualidade da rede\n';
+            msg += 'RateLimiter.status() - Rate limits\n';
+            msg += 'ChangeHistory.get() - Histórico completo\n';
+            
+            alert(msg);
+        }
+        
+        // ============================================
+        // 🎯 FASE 3 - OTIMIZAÇÕES AVANÇADAS
+        // ============================================
+        
+        // COMPRESSÃO DE DADOS
+        const CompressionSystem = {
+            // Comprime string usando algoritmo LZ simples
+            compress(str) {
+                try {
+                    // Usa btoa para Base64 após comprimir
+                    const compressed = this.lzCompress(str);
+                    return btoa(compressed);
+                } catch (error) {
+                    console.warn('Erro ao comprimir, usando original:', error);
+                    return str;
+                }
+            },
+            
+            // Descomprime string
+            decompress(str) {
+                try {
+                    const decoded = atob(str);
+                    return this.lzDecompress(decoded);
+                } catch (error) {
+                    console.warn('Erro ao descomprimir, usando original:', error);
+                    return str;
+                }
+            },
+            
+            // Algoritmo LZ simples
+            lzCompress(str) {
+                const dict = {};
+                let data = (str + '').split('');
+                let out = [];
+                let currChar;
+                let phrase = data[0];
+                let code = 256;
+                
+                for (let i = 1; i < data.length; i++) {
+                    currChar = data[i];
+                    if (dict[phrase + currChar] != null) {
+                        phrase += currChar;
+                    } else {
+                        out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+                        dict[phrase + currChar] = code;
+                        code++;
+                        phrase = currChar;
+                    }
+                }
+                out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+                
+                return String.fromCharCode.apply(null, out);
+            },
+            
+            lzDecompress(str) {
+                const dict = {};
+                let data = (str + '').split('');
+                let currChar = data[0];
+                let oldPhrase = currChar;
+                let out = [currChar];
+                let code = 256;
+                let phrase;
+                
+                for (let i = 1; i < data.length; i++) {
+                    let currCode = data[i].charCodeAt(0);
+                    if (currCode < 256) {
+                        phrase = data[i];
+                    } else {
+                        phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
+                    }
+                    out.push(phrase);
+                    currChar = phrase.charAt(0);
+                    dict[code] = oldPhrase + currChar;
+                    code++;
+                    oldPhrase = phrase;
+                }
+                
+                return out.join('');
+            },
+            
+            // Comprime dados JSON
+            compressData(data) {
+                const json = JSON.stringify(data);
+                const compressed = this.compress(json);
+                const ratio = (compressed.length / json.length * 100).toFixed(1);
+                
+                console.log(`📦 Compressão: ${json.length} → ${compressed.length} bytes (${ratio}%)`);
+                
+                return {
+                    compressed: compressed,
+                    originalSize: json.length,
+                    compressedSize: compressed.length,
+                    ratio: ratio
+                };
+            },
+            
+            // Descomprime dados JSON
+            decompressData(compressed) {
+                const json = this.decompress(compressed);
+                return JSON.parse(json);
+            }
+        };
+        
+        // SINCRONIZAÇÃO SELETIVA
+        const SelectiveSync = {
+            // Configuração padrão (tudo ativado)
+            config: {
+                clientes: true,
+                eventos: true,
+                receitas: true,
+                despesas: true,
+                contas: true,
+                servicos: true,
+                custosGerais: true,
+                custosEventos: true,
+                receitasPessoais: false,  // Dados pessoais off por padrão
+                despesasPessoais: false,
+                contasPessoais: false,
+                contasPagar: true,
+                configuracoes: true
+            },
+            
+            // Carregar configuração
+            load() {
+                try {
+                    const saved = localStorage.getItem('selectiveSyncConfig');
+                    if (saved) {
+                        this.config = { ...this.config, ...JSON.parse(saved) };
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar config de sync seletiva:', error);
+                }
+            },
+            
+            // Salvar configuração
+            save() {
+                localStorage.setItem('selectiveSyncConfig', JSON.stringify(this.config));
+                console.log('💾 Configuração de sync seletiva salva');
+            },
+            
+            // Ativar/desativar tabela
+            toggle(tabela) {
+                this.config[tabela] = !this.config[tabela];
+                this.save();
+                console.log(`${this.config[tabela] ? '✅' : '❌'} Sync de ${tabela}: ${this.config[tabela] ? 'ativada' : 'desativada'}`);
+            },
+            
+            // Filtrar dados para sync baseado na configuração
+            filterData(allData) {
+                const filtered = {};
+                
+                for (let tabela in allData) {
+                    if (this.config[tabela] !== false) {
+                        filtered[tabela] = allData[tabela];
+                    } else {
+                        console.log(`⏭️ Pulando ${tabela} (desativado)`);
+                    }
+                }
+                
+                return filtered;
+            },
+            
+            // Ver status
+            status() {
+                console.log('📊 CONFIGURAÇÃO DE SYNC SELETIVA:');
+                for (let tabela in this.config) {
+                    console.log(`   ${this.config[tabela] ? '✅' : '❌'} ${tabela}`);
+                }
+            }
+        };
+        
+        // RATE LIMITING INTELIGENTE
+        const RateLimiter = {
+            limits: {
+                sync: { max: 10, window: 60000 },      // 10 syncs por minuto
+                backup: { max: 2, window: 3600000 },   // 2 backups por hora
+                incremental: { max: 30, window: 60000 } // 30 incrementais por minuto
+            },
+            
+            calls: {},
+            
+            // Verificar se pode executar
+            canExecute(operation) {
+                const now = Date.now();
+                const limit = this.limits[operation];
+                
+                if (!limit) return true; // Sem limite definido
+                
+                if (!this.calls[operation]) {
+                    this.calls[operation] = [];
+                }
+                
+                // Remover chamadas antigas (fora da janela)
+                this.calls[operation] = this.calls[operation].filter(
+                    timestamp => now - timestamp < limit.window
+                );
+                
+                // Verificar se excedeu limite
+                if (this.calls[operation].length >= limit.max) {
+                    console.warn(`⚠️ Rate limit atingido para ${operation}. Tente novamente em ${Math.ceil((limit.window - (now - this.calls[operation][0])) / 1000)}s`);
+                    return false;
+                }
+                
+                return true;
+            },
+            
+            // Registrar chamada
+            register(operation) {
+                if (!this.calls[operation]) {
+                    this.calls[operation] = [];
+                }
+                this.calls[operation].push(Date.now());
+            },
+            
+            // Ver status
+            status() {
+                const now = Date.now();
+                console.log('📊 RATE LIMITS:');
+                
+                for (let op in this.limits) {
+                    const limit = this.limits[op];
+                    const calls = (this.calls[op] || []).filter(
+                        t => now - t < limit.window
+                    );
+                    console.log(`   ${op}: ${calls.length}/${limit.max} (${limit.window/1000}s)`);
+                }
+            }
+        };
+        
+        // RETRY COM BACKOFF EXPONENCIAL
+        const RetrySystem = {
+            async executeWithRetry(fn, options = {}) {
+                const maxRetries = options.maxRetries || 3;
+                const baseDelay = options.baseDelay || 1000;
+                const maxDelay = options.maxDelay || 30000;
+                
+                let lastError;
+                
+                for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                    try {
+                        return await fn();
+                    } catch (error) {
+                        lastError = error;
+                        
+                        if (attempt < maxRetries) {
+                            // Backoff exponencial: 1s, 2s, 4s, 8s...
+                            const delay = Math.min(
+                                baseDelay * Math.pow(2, attempt),
+                                maxDelay
+                            );
+                            
+                            console.log(`🔁 Tentativa ${attempt + 1}/${maxRetries} falhou. Tentando novamente em ${delay}ms...`);
+                            console.log(`   Erro: ${error.message}`);
+                            
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+                    }
+                }
+                
+                throw lastError;
+            }
+        };
+        
+        // DETECÇÃO DE REDE
+        const NetworkMonitor = {
+            online: navigator.onLine,
+            quality: 'unknown', // 'slow', 'medium', 'fast'
+            listeners: [],
+            
+            init() {
+                // Detectar mudanças de conexão
+                window.addEventListener('online', () => {
+                    this.online = true;
+                    console.log('🌐 Conexão restaurada');
+                    this.notifyListeners();
+                    
+                    // Processar fila pendente
+                    if (isFirebaseConnected) {
+                        SyncQueue.processar();
+                    }
+                });
+                
+                window.addEventListener('offline', () => {
+                    this.online = false;
+                    console.log('📡 Conexão perdida');
+                    this.notifyListeners();
+                });
+                
+                // Testar qualidade da conexão periodicamente
+                setInterval(() => this.testQuality(), 60000); // A cada minuto
+                
+                // Teste inicial
+                this.testQuality();
+            },
+            
+            async testQuality() {
+                if (!this.online) {
+                    this.quality = 'offline';
+                    return;
+                }
+                
+                try {
+                    const start = Date.now();
+                    
+                    // Faz request pequeno para testar latência
+                    await fetch('https://www.google.com/favicon.ico', { 
+                        mode: 'no-cors',
+                        cache: 'no-cache'
+                    });
+                    
+                    const latency = Date.now() - start;
+                    
+                    if (latency < 300) {
+                        this.quality = 'fast';
+                    } else if (latency < 1000) {
+                        this.quality = 'medium';
+                    } else {
+                        this.quality = 'slow';
+                    }
+                    
+                    console.log(`📶 Qualidade da rede: ${this.quality} (${latency}ms)`);
+                    
+                } catch (error) {
+                    this.quality = 'offline';
+                    this.online = false;
+                }
+            },
+            
+            onStatusChange(callback) {
+                this.listeners.push(callback);
+            },
+            
+            notifyListeners() {
+                this.listeners.forEach(cb => {
+                    try {
+                        cb(this.online, this.quality);
+                    } catch (error) {
+                        console.error('Erro em listener de rede:', error);
+                    }
+                });
+            },
+            
+            canSync() {
+                return this.online && this.quality !== 'offline';
+            }
+        };
+        
+        // OTIMIZADOR DE SYNC
+        const SyncOptimizer = {
+            // Decide qual tipo de sync usar
+            decideSyncType() {
+                const networkQuality = NetworkMonitor.quality;
+                const pendingItems = SyncQueue.pendentes.length;
+                
+                // Se offline, não sincroniza
+                if (!NetworkMonitor.online) {
+                    return 'none';
+                }
+                
+                // Se rede lenta e muitos itens, usa compressão
+                if (networkQuality === 'slow' && pendingItems > 5) {
+                    return 'compressed_incremental';
+                }
+                
+                // Se rede boa e poucos itens, sync normal
+                if (networkQuality === 'fast' && pendingItems < 10) {
+                    return 'full_sync';
+                }
+                
+                // Caso padrão: incremental
+                return 'incremental';
+            },
+            
+            // Otimiza dados antes de enviar
+            optimizeData(data, syncType) {
+                console.log(`🎯 Otimizando dados para ${syncType}`);
+                
+                // Filtrar dados seletivos
+                data = SelectiveSync.filterData(data);
+                
+                // Aplicar compressão se necessário
+                if (syncType.includes('compressed')) {
+                    const compressed = CompressionSystem.compressData(data);
+                    return {
+                        type: 'compressed',
+                        data: compressed.compressed,
+                        metadata: {
+                            originalSize: compressed.originalSize,
+                            compressedSize: compressed.compressedSize,
+                            ratio: compressed.ratio
+                        }
+                    };
+                }
+                
+                return {
+                    type: 'normal',
+                    data: data
+                };
+            }
+        };
         
         // ============================================
         // ⚠️ CONFIGURAÇÃO DO FIREBASE
@@ -11246,11 +13387,32 @@ if (!DB.get('configuracoes')) {
                         atualizarStatusSync('online', 'Conectado');
                         console.log('✅ Firebase conectado');
                         
+                        // 🚀 INICIALIZAR SISTEMAS ROBUSTOS
+                        console.log('🚀 Inicializando sistemas robustos...');
+                        
+                        // Inicializar sistemas da FASE 3
+                        SelectiveSync.load();
+                        NetworkMonitor.init();
+                        
+                        // Carregar fila pendente
+                        const pendentes = SyncQueue.carregar();
+                        if (pendentes > 0) {
+                            console.log(`📥 ${pendentes} operação(ões) pendente(s) encontrada(s)`);
+                            // Processar fila pendente
+                            setTimeout(() => SyncQueue.processar(), 2000);
+                        }
+                        
+                        // Iniciar sistema de backup
+                        BackupSystem.iniciar();
+                        
                         // Iniciar sincronização automática
                         iniciarSincronizacaoAutomatica();
                         
                         // Verificar se deve baixar dados da nuvem ao conectar
                         verificarSincronizacaoInicial();
+                        
+                        console.log('✅ Sistemas robustos inicializados');
+                        console.log('📶 Qualidade da rede:', NetworkMonitor.quality);
                     } else {
                         isFirebaseConnected = false;
                         atualizarStatusSync('offline', 'Desconectado');
@@ -11258,6 +13420,9 @@ if (!DB.get('configuracoes')) {
                         
                         // Parar sincronização automática
                         pararSincronizacaoAutomatica();
+                        
+                        // Parar backup
+                        BackupSystem.parar();
                     }
                 });
                 
@@ -11283,75 +13448,24 @@ if (!DB.get('configuracoes')) {
                 return;
             }
             
-            // Pegar todos os dados do localStorage
-            const dados = {
-                eventos: DB.get('eventos') || [],
-                clientes: DB.get('clientes') || [],
-                receitas: DB.get('receitas') || [],
-                despesas: DB.get('despesas') || [],
-                contas: DB.get('contas') || [],
-                servicos: DB.get('servicos') || [],
-                custosGerais: DB.get('custosGerais') || [],
-                custosEventos: DB.get('custosEventos') || [],
-                receitasPessoais: DB.get('receitasPessoais') || [],
-                despesasPessoais: DB.get('despesasPessoais') || [],
-                contasPessoais: DB.get('contasPessoais') || [],
-                contasPagar: DB.get('contasPagar') || [],
-                configuracoes: DB.get('configuracoes') || {}
-            };
+            console.log('🚀 Sincronização manual iniciada');
             
-            // Gerar hash dos dados para detectar mudanças
-            const dadosString = JSON.stringify(dados);
-            const hashAtual = simpleHash(dadosString);
+            // Adicionar à fila com prioridade alta
+            SyncQueue.adicionar({
+                tipo: 'full_sync',
+                prioridade: 'alta',
+                dados: null // Será coletado na execução
+            });
             
-            // Log do hash para debug
-            console.log('📝 Hash dos dados atual:', hashAtual);
-            
+            // Processar fila
             atualizarStatusSync('syncing', 'Sincronizando...');
+            await SyncQueue.processar();
             
-            try {
-                // Adicionar timestamp
-                dados.lastSync = new Date().toISOString();
-                
-                // LOG DETALHADO DO QUE ESTÁ SENDO ENVIADO
-                console.log('📤 ENVIANDO PARA NUVEM:');
-                console.log('   Clientes:', dados.clientes.length);
-                console.log('   Eventos:', dados.eventos.length);
-                console.log('   Receitas:', dados.receitas.length);
-                console.log('   Despesas:', dados.despesas.length);
-                console.log('   Custos Gerais:', dados.custosGerais.length);
-                console.log('   Custos Eventos:', dados.custosEventos.length);
-                console.log('   Timestamp:', dados.lastSync);
-                console.log('   Caminho Firebase: eventprodj');
-                
-                // Enviar para Firebase
-                await firebaseDatabase.ref('eventprodj').set(dados);
-                
-                console.log('✅ Dados enviados para Firebase com sucesso!');
-                
-                // Salvar timestamp e hash local
-                localStorage.setItem('lastSyncLocal', dados.lastSync);
-                localStorage.setItem('lastSyncHash', hashAtual);
-                
-                atualizarStatusSync('online', 'Sincronizado');
-                
-                console.log('✅ Dados sincronizados com sucesso!');
-                
-                // Mostrar feedback visual APENAS se for sincronização manual
-                if (arguments[0] === 'manual') {
-                    setTimeout(() => {
-                        alert('✅ Dados sincronizados com sucesso!');
-                    }, 100);
-                }
-                
-            } catch (error) {
-                console.error('Erro ao sincronizar:', error);
-                atualizarStatusSync('error', 'Erro');
-                
-                // Só mostrar alert se for sincronização manual
-                if (arguments[0] === 'manual') {
-                    alert('❌ Erro ao sincronizar dados:\n\n' + error.message + '\n\nVerifique sua conexão e as configurações do Firebase.');
-                }
+            // Mostrar feedback se for manual
+            if (arguments[0] === 'manual' && SyncQueue.pendentes.length === 0) {
+                setTimeout(() => {
+                    alert('✅ Dados sincronizados com sucesso!');
+                }, 100);
             }
         }
         
@@ -11404,7 +13518,7 @@ if (!DB.get('configuracoes')) {
             }
         }
         
-        // Sincronizar após uma ação do usuário (com debounce de 3 segundos)
+        // Sincronizar após uma ação do usuário - AGORA INSTANTÂNEO!
         let syncDebounceTimer = null;
         function sincronizarAposMudanca() {
             console.log('🔔 sincronizarAposMudanca() chamada');
@@ -11415,19 +13529,24 @@ if (!DB.get('configuracoes')) {
                 return;
             }
             
-            // Cancelar timer anterior
+            // NOVO: Adiciona à fila IMEDIATAMENTE (não espera 3 segundos)
+            console.log('⚡ Adicionando à fila de sincronização AGORA');
+            
+            SyncQueue.adicionar({
+                tipo: 'full_sync',
+                prioridade: 'normal',
+                dados: null
+            });
+            
+            // Processar fila com pequeno debounce (500ms) apenas para agrupar múltiplas ações
             if (syncDebounceTimer) {
                 clearTimeout(syncDebounceTimer);
-                console.log('   ⏱️ Timer anterior cancelado');
             }
             
-            console.log('   ⏱️ Agendando sincronização para 3 segundos...');
-            
-            // Agendar sincronização para daqui 3 segundos
             syncDebounceTimer = setTimeout(() => {
-                console.log('🔄 Sincronizando após mudança...');
-                sincronizarAgora();
-            }, 3000);
+                console.log('🔄 Processando fila após mudança...');
+                SyncQueue.processar();
+            }, 500); // Reduzido de 3000ms para 500ms
         }
         
         // Verificar se deve sincronizar ao inicializar
@@ -12256,6 +14375,10 @@ ${eventosNuvemInfo}
                 initFirebase();
                 
                 console.log('✅ EventProDJ inicializado com sucesso!');
+                
+                // Inicializar MEI
+                initMeiAnoSelector();
+                carregarRelatorioMei();
             } catch (error) {
                 console.error('❌ Erro ao inicializar EventProDJ:', error);
                 alert('Erro ao inicializar o sistema. Por favor, recarregue a página.\n\nErro: ' + error.message);
@@ -12300,13 +14423,27 @@ ${eventosNuvemInfo}
         function toggleCustosView(view) {
             currentCustosView = view;
             
-            // Update buttons
-            document.querySelectorAll('#custosTab .filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            console.log('🔄 Mudando view de custos para:', view);
+            
+            // Update buttons - buscar pelos textos dos botões
+            document.querySelectorAll('#custosTab .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                const btnText = btn.textContent.toLowerCase();
+                if ((view === 'gerais' && btnText.includes('gerais')) || 
+                    (view === 'eventos' && btnText.includes('evento'))) {
+                    btn.classList.add('active');
+                    console.log('✅ Botão ativado:', btn.textContent);
+                }
+            });
             
             // Toggle views
-            document.getElementById('custosGeraisView').style.display = view === 'gerais' ? 'block' : 'none';
-            document.getElementById('custosEventosView').style.display = view === 'eventos' ? 'block' : 'none';
+            const geraisView = document.getElementById('custosGeraisView');
+            const eventosView = document.getElementById('custosEventosView');
+            
+            if (geraisView) geraisView.style.display = view === 'gerais' ? 'block' : 'none';
+            if (eventosView) eventosView.style.display = view === 'eventos' ? 'block' : 'none';
+            
+            console.log('📊 Views atualizadas - Gerais:', view === 'gerais' ? 'visível' : 'oculto', 'Eventos:', view === 'eventos' ? 'visível' : 'oculto');
             
             if (view === 'gerais') {
                 renderCustosGerais();
@@ -13109,8 +15246,17 @@ ${eventosNuvemInfo}
                 checkBirthdays();
                 updateOrigemStats();
             } else if (tabName === 'custos') {
+                console.log('📊 Abrindo aba Custos - currentCustosView atual:', currentCustosView);
                 preencherAnosCustos();
-                toggleCustosView('gerais');
+                // Não forçar view, deixar que seja definida programaticamente
+                // ou manter a última view ativa
+                if (!currentCustosView) {
+                    console.log('⚠️ currentCustosView não definida, usando "gerais"');
+                    toggleCustosView('gerais');
+                } else {
+                    console.log('✅ Mantendo currentCustosView:', currentCustosView);
+                    toggleCustosView(currentCustosView);
+                }
             } else if (tabName === 'financeiro') {
                 mostrarFinanceiroVisaoGeral();
             } else if (tabName === 'servicos') {
@@ -13158,8 +15304,14 @@ ${eventosNuvemInfo}
             currentFilter = status;
             
             // Update filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                // Verificar se o botão corresponde ao status
+                if (btn.textContent.toLowerCase().includes(status.toLowerCase()) || 
+                    (status === 'todos' && btn.textContent.includes('Todos'))) {
+                    btn.classList.add('active');
+                }
+            });
             
             // Re-render current view
             if (currentView === 'list') renderEventsList();
@@ -16154,32 +18306,25 @@ ${eventosNuvemInfo}
             openModal('orcamento');
             
             setTimeout(() => {
-                if (document.getElementById('nomeCliente')) {
-                    document.getElementById('nomeCliente').value = cliente.nome;
-                }
-                if (document.getElementById('emailCliente')) {
-                    document.getElementById('emailCliente').value = cliente.email || '';
-                }
-                if (document.getElementById('telefoneCliente')) {
-                    document.getElementById('telefoneCliente').value = cliente.telefone || '';
-                }
-                if (document.getElementById('cpfCliente')) {
-                    document.getElementById('cpfCliente').value = cliente.cpf || '';
+                // Preencher nome do cliente
+                if (document.getElementById('orcCliente')) {
+                    document.getElementById('orcCliente').value = cliente.nome;
                 }
                 
+                // Preencher endereço do evento se cliente tiver
                 if (cliente.cep) {
-                    if (document.getElementById('cepEvento')) document.getElementById('cepEvento').value = cliente.cep;
-                    if (document.getElementById('ruaEvento')) document.getElementById('ruaEvento').value = cliente.rua || '';
-                    if (document.getElementById('numeroEvento')) document.getElementById('numeroEvento').value = cliente.numero || '';
-                    if (document.getElementById('complementoEvento')) document.getElementById('complementoEvento').value = cliente.complemento || '';
-                    if (document.getElementById('bairroEvento')) document.getElementById('bairroEvento').value = cliente.bairro || '';
-                    if (document.getElementById('cidadeEvento')) document.getElementById('cidadeEvento').value = cliente.cidade || '';
-                    if (document.getElementById('estadoEvento')) document.getElementById('estadoEvento').value = cliente.estado || '';
+                    if (document.getElementById('orcCep')) document.getElementById('orcCep').value = cliente.cep;
+                    if (document.getElementById('orcRua')) document.getElementById('orcRua').value = cliente.rua || '';
+                    if (document.getElementById('orcNumero')) document.getElementById('orcNumero').value = cliente.numero || '';
+                    if (document.getElementById('orcComplemento')) document.getElementById('orcComplemento').value = cliente.complemento || '';
+                    if (document.getElementById('orcBairro')) document.getElementById('orcBairro').value = cliente.bairro || '';
+                    if (document.getElementById('orcCidade')) document.getElementById('orcCidade').value = cliente.cidade || '';
+                    if (document.getElementById('orcEstado')) document.getElementById('orcEstado').value = cliente.estado || '';
                 }
                 
                 const form = document.getElementById('orcamentoForm');
                 if (form) form.setAttribute('data-cliente-id', id);
-            }, 100);
+            }, 200); // Aumentado para 200ms para garantir que o modal está aberto
         }
 
         function sendMessage(id) {
