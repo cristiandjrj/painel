@@ -12151,6 +12151,26 @@ if (!DB.get('configuracoes')) {
                 
                 console.log('📤 Enviando para Firebase...');
                 
+                // LIMPAR VALORES UNDEFINED (Firebase não aceita)
+                const limparUndefined = (obj) => {
+                    if (Array.isArray(obj)) {
+                        return obj.map(item => limparUndefined(item)).filter(item => item !== undefined);
+                    } else if (obj && typeof obj === 'object') {
+                        const limpo = {};
+                        for (let key in obj) {
+                            const valor = limparUndefined(obj[key]);
+                            if (valor !== undefined) {
+                                limpo[key] = valor;
+                            }
+                        }
+                        return limpo;
+                    }
+                    return obj;
+                };
+                
+                const dadosLimpos = limparUndefined(optimized.data);
+                console.log('🧹 Valores undefined removidos');
+                
                 // Enviar com retry
                 await RetrySystem.executeWithRetry(
                     async () => {
@@ -12158,9 +12178,9 @@ if (!DB.get('configuracoes')) {
                             // Salvar metadados de compressão
                             await firebaseDatabase.ref('eventprodj_metadata').set(optimized.metadata);
                             // Salvar dados comprimidos
-                            await firebaseDatabase.ref('eventprodj_compressed').set(optimized.data);
+                            await firebaseDatabase.ref('eventprodj_compressed').set(dadosLimpos);
                         } else {
-                            await firebaseDatabase.ref('eventprodj').set(optimized.data);
+                            await firebaseDatabase.ref('eventprodj').set(dadosLimpos);
                         }
                     },
                     { maxRetries: 3, baseDelay: 2000 }
@@ -12303,19 +12323,36 @@ if (!DB.get('configuracoes')) {
                     };
                     
                     // Recuperar backups existentes
-                    const backups = JSON.parse(localStorage.getItem('backups') || '[]');
+                    let backups = [];
+                    try {
+                        backups = JSON.parse(localStorage.getItem('backups') || '[]');
+                    } catch (e) {
+                        console.warn('Erro ao carregar backups antigos, criando novo array');
+                        backups = [];
+                    }
                     
                     // Adicionar novo backup
                     backups.push(backup);
                     
-                    // Manter apenas últimos 24 backups (24 horas)
-                    if (backups.length > 24) {
-                        backups.splice(0, backups.length - 24);
+                    // Manter apenas últimos 10 backups (reduzido de 24 para economizar espaço)
+                    if (backups.length > 10) {
+                        backups.splice(0, backups.length - 10);
                     }
                     
-                    localStorage.setItem('backups', JSON.stringify(backups));
-                    
-                    console.log('✅ Backup salvo. Total de backups:', backups.length);
+                    try {
+                        localStorage.setItem('backups', JSON.stringify(backups));
+                        console.log('✅ Backup salvo. Total de backups:', backups.length);
+                    } catch (quotaError) {
+                        if (quotaError.name === 'QuotaExceededError') {
+                            console.warn('⚠️ Espaço insuficiente, mantendo apenas 5 backups');
+                            // Reduzir drasticamente
+                            backups = backups.slice(-5);
+                            localStorage.setItem('backups', JSON.stringify(backups));
+                            console.log('✅ Backup salvo com limite reduzido:', backups.length);
+                        } else {
+                            throw quotaError;
+                        }
+                    }
                     
                     // Se Firebase conectado, enviar backup para nuvem também
                     if (isFirebaseConnected) {
@@ -15448,8 +15485,48 @@ ${eventosNuvemInfo}
                                 <!-- LINHA 3: Valores -->
                                 <div style="display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 0; align-items: center;">
                                     <div style="display: flex; align-items: center; gap: 6px;">
-                                        💰 <strong>${formatMoney(e.valor)}</strong>
+                                        💰 Valor Total: <strong>${formatMoney(e.valor)}</strong>
                                     </div>
+                                    ${(() => {
+                                        // Buscar dados financeiros do cliente
+                                        const clientes = DB.get('clientes');
+                                        const cliente = clientes.find(c => c.nome === e.cliente);
+                                        
+                                        if (cliente && cliente.financeiro) {
+                                            const f = cliente.financeiro;
+                                            const sinalRecebido = f.sinalValor || 0;
+                                            const totalPago = f.totalPago || 0;
+                                            const valorTotal = f.valorTotal || e.valor || 0;
+                                            const valorAPagar = valorTotal - totalPago;
+                                            
+                                            let html = '';
+                                            
+                                            if (sinalRecebido > 0) {
+                                                html += `
+                                                    <div style="display: flex; align-items: center; gap: 6px; color: var(--success);">
+                                                        ✅ Sinal: <strong>${formatMoney(sinalRecebido)}</strong>
+                                                    </div>
+                                                `;
+                                            }
+                                            
+                                            if (valorAPagar > 0) {
+                                                html += `
+                                                    <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
+                                                        ⏳ A Receber: <strong>${formatMoney(valorAPagar)}</strong>
+                                                    </div>
+                                                `;
+                                            } else if (totalPago >= valorTotal && valorTotal > 0) {
+                                                html += `
+                                                    <div style="display: flex; align-items: center; gap: 6px; color: var(--success);">
+                                                        ✅ Pago Completo
+                                                    </div>
+                                                `;
+                                            }
+                                            
+                                            return html;
+                                        }
+                                        return '';
+                                    })()}
                                     ${e.desconto && e.desconto.valor > 0 ? `
                                         <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
                                             🏷️ Desconto: <strong>${e.desconto.tipo === 'percentual' ? e.desconto.valor + '%' : formatMoney(e.desconto.valor)}</strong>
@@ -15457,7 +15534,7 @@ ${eventosNuvemInfo}
                                     ` : ''}
                                     ${temCustos ? `
                                         <div style="display: flex; align-items: center; gap: 6px; color: var(--danger);">
-                                            💸 <strong>${formatMoney(totalCustos)}</strong> em custos
+                                            💸 Custos: <strong>${formatMoney(totalCustos)}</strong>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 6px; color: var(--success);">
                                             📊 Lucro: <strong>${formatMoney(e.valor - totalCustos)}</strong>
