@@ -12260,20 +12260,81 @@ if (!DB.get('configuracoes')) {
                 const dadosLimpos = limparUndefined(optimized.data);
                 console.log('🧹 Valores undefined removidos');
                 
-                // Enviar com retry
-                await RetrySystem.executeWithRetry(
-                    async () => {
-                        if (optimized.type === 'compressed') {
-                            // Salvar metadados de compressão
-                            await firebaseDatabase.ref('eventprodj_metadata').set(optimized.metadata);
-                            // Salvar dados comprimidos
-                            await firebaseDatabase.ref('eventprodj_compressed').set(dadosLimpos);
-                        } else {
-                            await firebaseDatabase.ref('eventprodj').set(dadosLimpos);
+                // CALCULAR TAMANHO E DIVIDIR SE NECESSÁRIO
+                const tamanhoTotal = JSON.stringify(dadosLimpos).length;
+                const limiteFirebase = 10 * 1024 * 1024; // 10MB (seguro, limite real é 16MB)
+                
+                console.log(`📊 Tamanho total: ${(tamanhoTotal / 1024 / 1024).toFixed(2)}MB`);
+                
+                if (tamanhoTotal > limiteFirebase) {
+                    console.warn('⚠️ Dados muito grandes, enviando em lotes...');
+                    
+                    // ESTRATÉGIA: Enviar cada tabela separadamente
+                    try {
+                        await firebaseDatabase.ref('eventprodj/lastSync').set(dadosLimpos.lastSync);
+                        await firebaseDatabase.ref('eventprodj/deviceId').set(dadosLimpos.deviceId);
+                        
+                        // Enviar cada tabela individualmente
+                        const tabelas = ['eventos', 'clientes', 'receitas', 'despesas', 'contas', 
+                                        'servicos', 'custosGerais', 'custosEventos', 'receitasPessoais',
+                                        'despesasPessoais', 'contasPessoais', 'contasPagar', 'configuracoes'];
+                        
+                        for (const tabela of tabelas) {
+                            if (dadosLimpos[tabela]) {
+                                const tamanhoTabela = JSON.stringify(dadosLimpos[tabela]).length;
+                                console.log(`📤 Enviando ${tabela}: ${(tamanhoTabela / 1024).toFixed(1)}KB`);
+                                
+                                // Se tabela ainda for muito grande, dividir em chunks
+                                if (Array.isArray(dadosLimpos[tabela]) && tamanhoTabela > limiteFirebase) {
+                                    console.warn(`⚠️ ${tabela} muito grande, dividindo em chunks...`);
+                                    
+                                    const chunkSize = 50; // 50 itens por vez
+                                    const arr = dadosLimpos[tabela];
+                                    
+                                    for (let i = 0; i < arr.length; i += chunkSize) {
+                                        const chunk = arr.slice(i, i + chunkSize);
+                                        console.log(`📤 Enviando chunk ${Math.floor(i/chunkSize) + 1}: ${i}-${i + chunk.length}`);
+                                        
+                                        // Merge com existente
+                                        const existente = (await firebaseDatabase.ref(`eventprodj/${tabela}`).once('value')).val() || [];
+                                        const merged = [...existente, ...chunk];
+                                        
+                                        // Remove duplicatas
+                                        const unicos = merged.reduce((acc, item) => {
+                                            if (!acc.find(x => x.id === item.id)) acc.push(item);
+                                            return acc;
+                                        }, []);
+                                        
+                                        await firebaseDatabase.ref(`eventprodj/${tabela}`).set(unicos);
+                                        await new Promise(resolve => setTimeout(resolve, 1000)); // Pausa entre chunks
+                                    }
+                                } else {
+                                    await firebaseDatabase.ref(`eventprodj/${tabela}`).set(dadosLimpos[tabela]);
+                                }
+                            }
                         }
-                    },
-                    { maxRetries: 3, baseDelay: 2000 }
-                );
+                        
+                        console.log('✅ Todos os lotes enviados com sucesso');
+                        
+                    } catch (chunkError) {
+                        console.error('❌ Erro ao enviar em lotes:', chunkError);
+                        throw chunkError;
+                    }
+                    
+                } else {
+                    // Dados pequenos suficiente, enviar tudo de uma vez
+                    await RetrySystem.executeWithRetry(
+                        async () => {
+                            if (optimized.type === 'compressed') {
+                                await firebaseDatabase.ref('eventprodj_metadata').set(optimized.metadata);
+                                await firebaseDatabase.ref('eventprodj_compressed').set(dadosLimpos);
+                            } else {
+                                await firebaseDatabase.ref('eventprodj').set(dadosLimpos);
+                            }
+                        },
+                        { maxRetries: 3, baseDelay: 2000 }
+                    );
+                }
                 
                 // Registrar chamada no rate limiter
                 RateLimiter.register('sync');
@@ -13759,26 +13820,78 @@ if (!DB.get('configuracoes')) {
                 
                 // LIMPAR ESPAÇO ANTES DE SALVAR
                 try {
-                    // Limpar backups antigos para liberar espaço
+                    console.log('🧹 Limpando espaço no localStorage...');
+                    
+                    // 1. Limpar backups antigos
                     const backups = JSON.parse(localStorage.getItem('backups') || '[]');
                     if (backups.length > 3) {
-                        console.log('🧹 Limpando backups antigos para liberar espaço...');
+                        console.log(`🧹 Limpando ${backups.length - 3} backups antigos...`);
                         localStorage.setItem('backups', JSON.stringify(backups.slice(-3)));
                     }
                     
-                    // Limpar histórico de mudanças antigo
+                    // 2. Limpar histórico de mudanças
                     const historico = JSON.parse(localStorage.getItem('changeHistory') || '[]');
-                    if (historico.length > 50) {
-                        console.log('🧹 Limpando histórico antigo...');
-                        localStorage.setItem('changeHistory', JSON.stringify(historico.slice(-50)));
+                    if (historico.length > 30) {
+                        console.log(`🧹 Limpando ${historico.length - 30} entradas de histórico...`);
+                        localStorage.setItem('changeHistory', JSON.stringify(historico.slice(-30)));
                     }
                     
-                    // Limpar sync queue processada
+                    // 3. Limpar sync queue
                     const syncQueue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
                     if (syncQueue.length > 0) {
-                        console.log('🧹 Limpando fila de sync processada...');
+                        console.log(`🧹 Limpando ${syncQueue.length} itens da fila de sync...`);
                         localStorage.setItem('syncQueue', JSON.stringify([]));
                     }
+                    
+                    // 4. Limpar erros de sync antigos
+                    const syncErros = JSON.parse(localStorage.getItem('syncErros') || '[]');
+                    if (syncErros.length > 10) {
+                        console.log(`🧹 Limpando ${syncErros.length - 10} erros antigos...`);
+                        localStorage.setItem('syncErros', JSON.stringify(syncErros.slice(-10)));
+                    }
+                    
+                    // 5. Limpar relatórios MEI antigos (mais de 6 meses)
+                    const allKeys = Object.keys(localStorage);
+                    const meiKeys = allKeys.filter(k => k.startsWith('mei_'));
+                    const anoAtual = new Date().getFullYear();
+                    const mesAtual = new Date().getMonth() + 1;
+                    
+                    meiKeys.forEach(key => {
+                        // Formato: mei_2026_1_1234567890
+                        const parts = key.split('_');
+                        const ano = parseInt(parts[1]);
+                        const mes = parseInt(parts[2]);
+                        
+                        // Se for mais de 6 meses atrás, remove
+                        const mesesDiferenca = (anoAtual - ano) * 12 + (mesAtual - mes);
+                        if (mesesDiferenca > 6) {
+                            console.log(`🧹 Removendo MEI antigo: ${key}`);
+                            localStorage.removeItem(key);
+                        }
+                    });
+                    
+                    // 6. EMERGENCIAL: Se ainda estiver cheio, limpar TUDO exceto essencial
+                    try {
+                        // Testar se consegue salvar algo
+                        localStorage.setItem('__test__', 'test');
+                        localStorage.removeItem('__test__');
+                    } catch (testError) {
+                        console.warn('⚠️ EMERGENCIAL: localStorage cheio, limpando dados não-essenciais...');
+                        
+                        // Remove tudo exceto dados principais
+                        const essenciais = ['clientes', 'eventos', 'receitas', 'despesas', 'contas', 
+                                          'servicos', 'custosGerais', 'custosEventos', 'configuracoes',
+                                          'firebaseConfig', 'lastSyncLocal', 'deviceId'];
+                        
+                        allKeys.forEach(key => {
+                            if (!essenciais.includes(key)) {
+                                localStorage.removeItem(key);
+                                console.log(`🧹 Removido: ${key}`);
+                            }
+                        });
+                    }
+                    
+                    console.log('✅ Limpeza concluída');
                     
                 } catch (cleanError) {
                     console.warn('Erro ao limpar espaço:', cleanError);
@@ -13787,20 +13900,100 @@ if (!DB.get('configuracoes')) {
                 // Restaurar todos os dados COM TRATAMENTO DE QUOTA
                 const salvarComTratamento = (key, value) => {
                     try {
-                        DB.set(key, value);
+                        // Tentar limpar dados antes de salvar
+                        let dadosLimpos = value;
+                        
+                        // Se for array, remover duplicatas e limpar campos desnecessários
+                        if (Array.isArray(dadosLimpos)) {
+                            // Remover duplicatas por ID
+                            const idsVistos = new Set();
+                            dadosLimpos = dadosLimpos.filter(item => {
+                                if (idsVistos.has(item.id)) {
+                                    console.log(`🧹 Removendo duplicata: ${key} ID ${item.id}`);
+                                    return false;
+                                }
+                                idsVistos.add(item.id);
+                                return true;
+                            });
+                            
+                            // Limpar campos que podem estar inchados
+                            dadosLimpos = dadosLimpos.map(item => {
+                                const limpo = {...item};
+                                
+                                // Remover campos de versionamento desnecessários para storage
+                                delete limpo.modifiedTable;
+                                
+                                // Se for cliente, limpar campos vazios
+                                if (key === 'clientes') {
+                                    if (!limpo.observacoes || limpo.observacoes === '') delete limpo.observacoes;
+                                    if (!limpo.endereco || limpo.endereco === '') delete limpo.endereco;
+                                }
+                                
+                                // Se for configurações, limpar templates muito grandes
+                                if (key === 'configuracoes' && limpo.templates) {
+                                    // Limitar tamanho de templates
+                                    if (limpo.templates.contrato && limpo.templates.contrato.length > 50000) {
+                                        console.log('🧹 Template de contrato muito grande, reduzindo...');
+                                        limpo.templates.contrato = limpo.templates.contrato.substring(0, 50000);
+                                    }
+                                }
+                                
+                                return limpo;
+                            });
+                        }
+                        
+                        // Tentar salvar dados limpos
+                        DB.set(key, dadosLimpos);
+                        console.log(`✅ ${key} salvo: ${dadosLimpos.length || 0} itens`);
                         return true;
+                        
                     } catch (quotaError) {
                         if (quotaError.name === 'QuotaExceededError') {
-                            console.error(`❌ Quota excedida ao salvar ${key}. Tamanho: ${JSON.stringify(value).length} bytes`);
+                            const tamanho = JSON.stringify(value).length;
+                            console.error(`❌ Quota excedida ao salvar ${key}. Tamanho: ${tamanho} bytes`);
                             
-                            // Tentar salvar versão reduzida (só IDs essenciais)
-                            if (Array.isArray(value) && value.length > 100) {
-                                console.log(`⚠️ Salvando apenas últimos 100 itens de ${key}...`);
-                                DB.set(key, value.slice(-100));
-                                return true;
+                            // ESTRATÉGIA 1: Tentar salvar só metade mais recente
+                            if (Array.isArray(value) && value.length > 50) {
+                                try {
+                                    console.log(`⚠️ Salvando apenas últimos 50 itens de ${key}...`);
+                                    const reduzido = value.slice(-50);
+                                    DB.set(key, reduzido);
+                                    console.log(`✅ ${key} salvo com 50 itens`);
+                                    return true;
+                                } catch (e2) {
+                                    console.error(`❌ Ainda não coube com 50 itens`);
+                                }
                             }
                             
-                            alert(`⚠️ Espaço insuficiente para baixar todos os dados.\n\nAlguns dados de ${key} não foram salvos.\n\nLibere espaço no navegador ou use outro dispositivo.`);
+                            // ESTRATÉGIA 2: Tentar salvar só últimos 20
+                            if (Array.isArray(value) && value.length > 20) {
+                                try {
+                                    console.log(`⚠️ Salvando apenas últimos 20 itens de ${key}...`);
+                                    const reduzido = value.slice(-20);
+                                    DB.set(key, reduzido);
+                                    console.log(`✅ ${key} salvo com 20 itens`);
+                                    return true;
+                                } catch (e3) {
+                                    console.error(`❌ Ainda não coube com 20 itens`);
+                                }
+                            }
+                            
+                            // ESTRATÉGIA 3: Se for configurações, não salvar templates
+                            if (key === 'configuracoes' && value.templates) {
+                                try {
+                                    console.log(`⚠️ Salvando configurações sem templates...`);
+                                    const semTemplates = {...value};
+                                    delete semTemplates.templates;
+                                    DB.set(key, semTemplates);
+                                    console.log(`✅ Configurações salvas sem templates`);
+                                    return true;
+                                } catch (e4) {
+                                    console.error(`❌ Ainda não coube sem templates`);
+                                }
+                            }
+                            
+                            // ESTRATÉGIA 4: Desistir e avisar
+                            alert(`⚠️ ESPAÇO INSUFICIENTE\n\nNão foi possível salvar ${key} (${(tamanho/1024).toFixed(0)}KB).\n\n💡 SOLUÇÃO: Use o computador ou limpe o cache do navegador.`);
                             return false;
                         }
                         throw quotaError;
