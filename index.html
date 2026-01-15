@@ -3110,7 +3110,8 @@
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button class="sync-button" onclick="mostrarStatusSync()" title="Ver status da sincronização">📊</button>
-                    <button class="sync-button" onclick="sincronizarAgora('manual')" title="Sincronizar agora">🔄</button>
+                    <button class="sync-button" onclick="sincronizarAgora('forcar')" title="Forçar envio (sem merge)" style="background: rgba(255, 107, 53, 0.3);">⬆️</button>
+                    <button class="sync-button" onclick="sincronizarAgora('manual')" title="Sincronizar normal">🔄</button>
                 </div>
             </div>
         </div>
@@ -12164,11 +12165,93 @@ if (!DB.get('configuracoes')) {
             async executarOperacao(op) {
                 if (op.tipo === 'full_sync') {
                     await this.fullSync(op.dados);
+                } else if (op.tipo === 'forcar_upload') {
+                    await this.forcarUpload(op.dados);
                 } else if (op.tipo === 'incremental') {
                     await IncrementalSync.syncAll();
                 } else if (op.tipo === 'backup') {
                     await this.backup(op.dados);
                 }
+            },
+            
+            // Forçar upload SEM MERGE (usado quando muda algo manualmente)
+            async forcarUpload(dados) {
+                console.log('⚡ FORÇANDO UPLOAD - Dados locais terão prioridade');
+                
+                if (!dados) {
+                    dados = {
+                        eventos: DB.get('eventos') || [],
+                        clientes: DB.get('clientes') || [],
+                        receitas: DB.get('receitas') || [],
+                        despesas: DB.get('despesas') || [],
+                        contas: DB.get('contas') || [],
+                        servicos: DB.get('servicos') || [],
+                        custosGerais: DB.get('custosGerais') || [],
+                        custosEventos: DB.get('custosEventos') || [],
+                        receitasPessoais: DB.get('receitasPessoais') || [],
+                        despesasPessoais: DB.get('despesasPessoais') || [],
+                        contasPessoais: DB.get('contasPessoais') || [],
+                        contasPagar: DB.get('contasPagar') || [],
+                        configuracoes: DB.get('configuracoes') || {}
+                    };
+                }
+                
+                dados.lastSync = new Date().toISOString();
+                dados.deviceId = getDeviceId();
+                
+                // Aplicar sync seletiva
+                const dadosFiltrados = SelectiveSync.filterData(dados);
+                
+                // Limpar undefined
+                const limparUndefined = (obj) => {
+                    if (Array.isArray(obj)) {
+                        return obj.map(item => limparUndefined(item)).filter(item => item !== undefined);
+                    } else if (obj && typeof obj === 'object') {
+                        const limpo = {};
+                        for (let key in obj) {
+                            const valor = limparUndefined(obj[key]);
+                            if (valor !== undefined) {
+                                limpo[key] = valor;
+                            }
+                        }
+                        return limpo;
+                    }
+                    return obj;
+                };
+                
+                const dadosLimpos = limparUndefined(dadosFiltrados);
+                console.log('🧹 Valores undefined removidos');
+                
+                const tamanhoTotal = JSON.stringify(dadosLimpos).length;
+                console.log(`📊 Tamanho total: ${(tamanhoTotal / 1024 / 1024).toFixed(2)}MB`);
+                
+                // Enviar tabela por tabela para evitar WRITE_TOO_BIG
+                const tabelas = ['eventos', 'clientes', 'receitas', 'despesas', 'contas', 
+                                'servicos', 'custosGerais', 'custosEventos', 'receitasPessoais',
+                                'despesasPessoais', 'contasPessoais', 'contasPagar', 'configuracoes',
+                                'lastSync', 'deviceId'];
+                
+                console.log('📤 Enviando dados locais DIRETAMENTE (sem merge)...');
+                
+                for (const tabela of tabelas) {
+                    if (dadosLimpos[tabela]) {
+                        try {
+                            await firebaseDatabase.ref(`eventprodj/${tabela}`).set(dadosLimpos[tabela]);
+                            console.log(`✅ ${tabela} enviado`);
+                        } catch (error) {
+                            console.error(`❌ Erro ao enviar ${tabela}:`, error.message);
+                            throw error;
+                        }
+                    }
+                }
+                
+                // Salvar hash
+                const dadosString = JSON.stringify(dados);
+                const hash = simpleHash(dadosString);
+                localStorage.setItem('lastSyncHash', hash);
+                localStorage.setItem('lastSyncLocal', dados.lastSync);
+                
+                console.log('✅ Upload forçado concluído - Dados locais agora estão na nuvem');
             },
             
             // Sincronização completa
@@ -12284,31 +12367,75 @@ if (!DB.get('configuracoes')) {
                                 const tamanhoTabela = JSON.stringify(dadosLimpos[tabela]).length;
                                 console.log(`📤 Enviando ${tabela}: ${(tamanhoTabela / 1024).toFixed(1)}KB`);
                                 
-                                // Se tabela ainda for muito grande, dividir em chunks
-                                if (Array.isArray(dadosLimpos[tabela]) && tamanhoTabela > limiteFirebase) {
-                                    console.warn(`⚠️ ${tabela} muito grande, dividindo em chunks...`);
-                                    
-                                    const chunkSize = 50; // 50 itens por vez
+                                // Se tabela for muito grande OU for array, sempre dividir em chunks
+                                if (Array.isArray(dadosLimpos[tabela])) {
                                     const arr = dadosLimpos[tabela];
                                     
+                                    // Calcular tamanho de chunk baseado no tamanho médio dos itens
+                                    const tamanhoMedioPorItem = tamanhoTabela / arr.length;
+                                    const limiteSeguro = 5 * 1024 * 1024; // 5MB seguro
+                                    let chunkSize = Math.max(1, Math.floor(limiteSeguro / tamanhoMedioPorItem));
+                                    
+                                    // Limitar chunk size
+                                    if (chunkSize > 20) chunkSize = 20; // Máximo 20 itens por vez
+                                    if (chunkSize < 1) chunkSize = 1;   // Mínimo 1 item
+                                    
+                                    console.log(`📦 Dividindo ${arr.length} itens em chunks de ${chunkSize}`);
+                                    
+                                    // Limpar tabela primeiro
+                                    await firebaseDatabase.ref(`eventprodj/${tabela}`).set([]);
+                                    
+                                    // Enviar em chunks
                                     for (let i = 0; i < arr.length; i += chunkSize) {
                                         const chunk = arr.slice(i, i + chunkSize);
-                                        console.log(`📤 Enviando chunk ${Math.floor(i/chunkSize) + 1}: ${i}-${i + chunk.length}`);
+                                        const chunkNum = Math.floor(i/chunkSize) + 1;
+                                        const totalChunks = Math.ceil(arr.length / chunkSize);
                                         
-                                        // Merge com existente
+                                        console.log(`📤 Enviando chunk ${chunkNum}/${totalChunks}: itens ${i}-${i + chunk.length - 1}`);
+                                        
+                                        // Pegar existente e adicionar chunk
                                         const existente = (await firebaseDatabase.ref(`eventprodj/${tabela}`).once('value')).val() || [];
                                         const merged = [...existente, ...chunk];
                                         
-                                        // Remove duplicatas
+                                        // Remove duplicatas por ID
                                         const unicos = merged.reduce((acc, item) => {
                                             if (!acc.find(x => x.id === item.id)) acc.push(item);
                                             return acc;
                                         }, []);
                                         
-                                        await firebaseDatabase.ref(`eventprodj/${tabela}`).set(unicos);
-                                        await new Promise(resolve => setTimeout(resolve, 1000)); // Pausa entre chunks
+                                        try {
+                                            await firebaseDatabase.ref(`eventprodj/${tabela}`).set(unicos);
+                                            console.log(`✅ Chunk ${chunkNum}/${totalChunks} enviado`);
+                                        } catch (chunkError) {
+                                            console.error(`❌ Erro no chunk ${chunkNum}:`, chunkError.message);
+                                            
+                                            // Se AINDA for muito grande, tentar item por item
+                                            if (chunkError.message.includes('WRITE_TOO_BIG')) {
+                                                console.warn('⚠️ Chunk muito grande, enviando item por item...');
+                                                
+                                                for (const item of chunk) {
+                                                    const existente2 = (await firebaseDatabase.ref(`eventprodj/${tabela}`).once('value')).val() || [];
+                                                    const merged2 = [...existente2, item];
+                                                    const unicos2 = merged2.reduce((acc, it) => {
+                                                        if (!acc.find(x => x.id === it.id)) acc.push(it);
+                                                        return acc;
+                                                    }, []);
+                                                    
+                                                    await firebaseDatabase.ref(`eventprodj/${tabela}`).set(unicos2);
+                                                }
+                                                console.log('✅ Itens enviados individualmente');
+                                            } else {
+                                                throw chunkError;
+                                            }
+                                        }
+                                        
+                                        // Pausa entre chunks para não sobrecarregar
+                                        if (i + chunkSize < arr.length) {
+                                            await new Promise(resolve => setTimeout(resolve, 500));
+                                        }
                                     }
                                 } else {
+                                    // Não é array, envia direto
                                     await firebaseDatabase.ref(`eventprodj/${tabela}`).set(dadosLimpos[tabela]);
                                 }
                             }
@@ -12657,6 +12784,95 @@ if (!DB.get('configuracoes')) {
                 localStorage.setItem('deviceId', deviceId);
             }
             return deviceId;
+        }
+        
+        // FUNÇÃO DE LIMPEZA DE DADOS DUPLICADOS
+        function limparDadosDuplicados() {
+            console.log('🧹 INICIANDO LIMPEZA DE DADOS DUPLICADOS...\n');
+            
+            let totalLiberado = 0;
+            
+            // Limpar eventos
+            const eventos = DB.get('eventos');
+            const eventosTamanhoAntes = JSON.stringify(eventos).length;
+            
+            const eventosLimpos = eventos.map(e => {
+                const limpo = {...e};
+                
+                // Remover campos desnecessários
+                delete limpo.modifiedTable;
+                
+                // Limitar observações
+                if (limpo.observacoes && limpo.observacoes.length > 1000) {
+                    limpo.observacoes = limpo.observacoes.substring(0, 1000);
+                }
+                
+                return limpo;
+            });
+            
+            DB.set('eventos', eventosLimpos);
+            const eventosTamanhoDepois = JSON.stringify(eventosLimpos).length;
+            const eventosLiberado = eventosTamanhoAntes - eventosTamanhoDepois;
+            totalLiberado += eventosLiberado;
+            console.log(`✅ Eventos: liberado ${(eventosLiberado / 1024).toFixed(1)}KB`);
+            
+            // Limpar clientes
+            const clientes = DB.get('clientes');
+            const clientesTamanhoAntes = JSON.stringify(clientes).length;
+            
+            const clientesLimpos = clientes.map(c => {
+                const limpo = {...c};
+                
+                // Remover campos desnecessários
+                delete limpo.modifiedTable;
+                
+                // Limpar campos vazios
+                if (!limpo.observacoes || limpo.observacoes === '') delete limpo.observacoes;
+                if (!limpo.endereco || limpo.endereco === '') delete limpo.endereco;
+                if (!limpo.complemento || limpo.complemento === '') delete limpo.complemento;
+                if (!limpo.bairro || limpo.bairro === '') delete limpo.bairro;
+                
+                // Limitar observações
+                if (limpo.observacoes && limpo.observacoes.length > 1000) {
+                    limpo.observacoes = limpo.observacoes.substring(0, 1000);
+                }
+                
+                return limpo;
+            });
+            
+            DB.set('clientes', clientesLimpos);
+            const clientesTamanhoDepois = JSON.stringify(clientesLimpos).length;
+            const clientesLiberado = clientesTamanhoAntes - clientesTamanhoDepois;
+            totalLiberado += clientesLiberado;
+            console.log(`✅ Clientes: liberado ${(clientesLiberado / 1024).toFixed(1)}KB`);
+            
+            // Limpar configurações
+            const config = DB.get('configuracoes');
+            const configTamanhoAntes = JSON.stringify(config).length;
+            
+            if (config.templates && config.templates.contrato) {
+                // Limitar template de contrato a 50KB
+                if (config.templates.contrato.length > 50000) {
+                    config.templates.contrato = config.templates.contrato.substring(0, 50000);
+                    console.log('✂️ Template de contrato reduzido para 50KB');
+                }
+            }
+            
+            DB.set('configuracoes', config);
+            const configTamanhoDepois = JSON.stringify(config).length;
+            const configLiberado = configTamanhoAntes - configTamanhoDepois;
+            totalLiberado += configLiberado;
+            console.log(`✅ Configurações: liberado ${(configLiberado / 1024).toFixed(1)}KB`);
+            
+            console.log(`\n✅ TOTAL LIBERADO: ${(totalLiberado / 1024).toFixed(1)}KB\n`);
+            
+            // Sincronizar com nuvem
+            if (isFirebaseConnected) {
+                console.log('📤 Sincronizando dados limpos com a nuvem...');
+                sincronizarAgora('manual');
+            }
+            
+            alert(`✅ LIMPEZA CONCLUÍDA!\n\n${(totalLiberado / 1024).toFixed(1)}KB liberado\n\nDados sincronizados com a nuvem.`);
         }
         
         // ============================================
@@ -13717,7 +13933,7 @@ if (!DB.get('configuracoes')) {
         }
         
         // Sincronizar todos os dados
-        async function sincronizarAgora() {
+        async function sincronizarAgora(opcao) {
             if (!firebaseDatabase || !isFirebaseConnected) {
                 alert('⚠️ Firebase não está conectado!\n\nConfigure o Firebase em Configurações → Sincronização');
                 return;
@@ -13725,9 +13941,16 @@ if (!DB.get('configuracoes')) {
             
             console.log('🚀 Sincronização manual iniciada');
             
+            // Se for 'forcar', não faz merge, só envia
+            const forcarUpload = (opcao === 'forcar');
+            
+            if (forcarUpload) {
+                console.log('⚡ FORÇANDO UPLOAD - Sem merge, enviando dados locais direto');
+            }
+            
             // Adicionar à fila com prioridade alta
             SyncQueue.adicionar({
-                tipo: 'full_sync',
+                tipo: forcarUpload ? 'forcar_upload' : 'full_sync',
                 prioridade: 'alta',
                 dados: null // Será coletado na execução
             });
@@ -13737,7 +13960,7 @@ if (!DB.get('configuracoes')) {
             await SyncQueue.processar();
             
             // Mostrar feedback se for manual
-            if (arguments[0] === 'manual' && SyncQueue.pendentes.length === 0) {
+            if ((opcao === 'manual' || opcao === 'forcar') && SyncQueue.pendentes.length === 0) {
                 setTimeout(() => {
                     alert('✅ Dados sincronizados com sucesso!');
                 }, 100);
