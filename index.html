@@ -12432,16 +12432,30 @@ if (!DB.get('configuracoes')) {
         const BackupSystem = {
             intervalo: null,
             
-            iniciar() {
-                // Backup a cada hora
-                this.intervalo = setInterval(() => {
-                    this.fazerBackup();
-                }, 3600000); // 1 hora
-                
-                console.log('💾 Sistema de backup iniciado (a cada 1 hora)');
-                
-                // Fazer backup inicial
-                setTimeout(() => this.fazerBackup(), 60000); // 1 minuto após iniciar
+            init() {
+                // Verificar se há espaço antes de iniciar
+                try {
+                    const teste = 'x'.repeat(100000); // 100KB
+                    localStorage.setItem('__space_test__', teste);
+                    localStorage.removeItem('__space_test__');
+                    
+                    // Tem espaço, pode fazer backup
+                    this.intervalo = setInterval(() => {
+                        this.fazerBackup();
+                    }, 3600000); // 1 hora
+                    
+                    console.log('💾 Sistema de backup iniciado (a cada 1 hora)');
+                    
+                    // Fazer backup inicial após 1 minuto
+                    setTimeout(() => this.fazerBackup(), 60000);
+                    
+                } catch (e) {
+                    console.warn('⚠️ Espaço insuficiente, backup automático desabilitado');
+                    console.warn('💡 Dados serão salvos apenas na nuvem (Firebase)');
+                    
+                    // Fazer limpeza emergencial
+                    this.limpezaEmergencial();
+                }
             },
             
             parar() {
@@ -12493,12 +12507,27 @@ if (!DB.get('configuracoes')) {
                         localStorage.setItem('backups', JSON.stringify(backups));
                         console.log('✅ Backup salvo. Total de backups:', backups.length);
                     } catch (quotaError) {
-                        if (quotaError.name === 'QuotaExceededError') {
+                        if (quotaError.name === 'QuotaExceededError' || quotaError.name === 'DOMException') {
                             console.warn('⚠️ Espaço insuficiente, mantendo apenas 5 backups');
                             // Reduzir drasticamente
                             backups = backups.slice(-5);
-                            localStorage.setItem('backups', JSON.stringify(backups));
-                            console.log('✅ Backup salvo com limite reduzido:', backups.length);
+                            
+                            try {
+                                localStorage.setItem('backups', JSON.stringify(backups));
+                                console.log('✅ Backup salvo com limite reduzido:', backups.length);
+                            } catch (e2) {
+                                // AINDA não coube, fazer limpeza emergencial
+                                console.error('🚨 LIMPEZA EMERGENCIAL ATIVADA!');
+                                this.limpezaEmergencial();
+                                
+                                // Tentar novamente SEM backups
+                                try {
+                                    localStorage.setItem('backups', JSON.stringify([]));
+                                    console.log('⚠️ Backups desabilitados temporariamente por falta de espaço');
+                                } catch (e3) {
+                                    console.error('❌ Impossível salvar backup mesmo após limpeza');
+                                }
+                            }
                         } else {
                             throw quotaError;
                         }
@@ -12515,6 +12544,65 @@ if (!DB.get('configuracoes')) {
                     
                 } catch (error) {
                     console.error('❌ Erro ao fazer backup:', error);
+                }
+            },
+            
+            // Limpeza emergencial quando espaço está completamente cheio
+            limpezaEmergencial() {
+                console.log('🚨 INICIANDO LIMPEZA EMERGENCIAL...');
+                
+                try {
+                    const allKeys = Object.keys(localStorage);
+                    let espacoLiberado = 0;
+                    
+                    // 1. Remover TODOS os backups
+                    localStorage.removeItem('backups');
+                    console.log('🗑️ Backups removidos');
+                    espacoLiberado++;
+                    
+                    // 2. Remover TODO o histórico de mudanças
+                    localStorage.removeItem('changeHistory');
+                    console.log('🗑️ Histórico de mudanças removido');
+                    espacoLiberado++;
+                    
+                    // 3. Remover TODA a fila de sync
+                    localStorage.removeItem('syncQueue');
+                    console.log('🗑️ Fila de sync removida');
+                    espacoLiberado++;
+                    
+                    // 4. Remover TODOS os erros de sync
+                    localStorage.removeItem('syncErros');
+                    console.log('🗑️ Erros de sync removidos');
+                    espacoLiberado++;
+                    
+                    // 5. Remover TODOS os relatórios MEI
+                    allKeys.filter(k => k.startsWith('mei_')).forEach(key => {
+                        localStorage.removeItem(key);
+                        espacoLiberado++;
+                    });
+                    console.log('🗑️ Relatórios MEI removidos');
+                    
+                    // 6. Remover snapshots de sync incremental
+                    allKeys.filter(k => k.includes('Snapshot')).forEach(key => {
+                        localStorage.removeItem(key);
+                        espacoLiberado++;
+                    });
+                    console.log('🗑️ Snapshots removidos');
+                    
+                    // 7. Remover hashes de sync
+                    localStorage.removeItem('lastSyncHash');
+                    espacoLiberado++;
+                    
+                    console.log(`✅ Limpeza emergencial concluída. ${espacoLiberado} itens removidos.`);
+                    console.log('⚠️ IMPORTANTE: Apenas dados essenciais foram mantidos (clientes, eventos, receitas, despesas)');
+                    
+                    // Avisar usuário
+                    setTimeout(() => {
+                        alert('🚨 ESPAÇO CHEIO!\n\nFoi necessário limpar backups e histórico para liberar espaço.\n\nSeus dados principais (clientes, eventos, finanças) estão seguros.\n\n💡 Recomendação: Use o sistema no computador ou limpe o cache do navegador.');
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('❌ Erro na limpeza emergencial:', error);
                 }
             },
             
@@ -13590,7 +13678,7 @@ if (!DB.get('configuracoes')) {
                         }
                         
                         // Iniciar sistema de backup
-                        BackupSystem.iniciar();
+                        BackupSystem.init();
                         
                         // Iniciar sincronização automática
                         iniciarSincronizacaoAutomatica();
