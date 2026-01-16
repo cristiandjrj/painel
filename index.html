@@ -12056,7 +12056,25 @@ if (!DB.get('configuracoes')) {
                     localStorage.setItem('syncQueue', JSON.stringify(this.pendentes));
                     this.atualizarIndicador();
                 } catch (error) {
-                    console.error('❌ Erro ao salvar fila:', error);
+                    if (error.name === 'QuotaExceededError') {
+                        console.warn('⚠️ Quota excedida ao salvar fila');
+                        
+                        // Tentar salvar só operações de alta prioridade
+                        try {
+                            const altaPrioridade = this.pendentes.filter(op => op.prioridade === 'alta');
+                            localStorage.setItem('syncQueue', JSON.stringify(altaPrioridade));
+                            console.log(`💾 Fila salva (apenas ${altaPrioridade.length} ops de alta prioridade)`);
+                            this.atualizarIndicador();
+                        } catch (e2) {
+                            // Se ainda não couber, limpar fila
+                            console.error('❌ Impossível salvar fila, limpando...');
+                            localStorage.removeItem('syncQueue');
+                            this.pendentes = [];
+                            this.atualizarIndicador();
+                        }
+                    } else {
+                        console.error('❌ Erro ao salvar fila:', error);
+                    }
                 }
             },
             
@@ -12662,11 +12680,17 @@ if (!DB.get('configuracoes')) {
                     
                     // Se Firebase conectado, enviar backup para nuvem também
                     if (isFirebaseConnected) {
-                        SyncQueue.adicionar({
-                            tipo: 'backup',
-                            dados: backup.dados,
-                            prioridade: 'baixa'
-                        });
+                        try {
+                            SyncQueue.adicionar({
+                                tipo: 'backup',
+                                dados: backup.dados,
+                                prioridade: 'baixa'
+                            });
+                        } catch (queueError) {
+                            // Se quota excedida, não adiciona na fila
+                            // Backup local já foi salvo, isso é apenas envio pra nuvem
+                            console.warn('⚠️ Não foi possível adicionar backup à fila (quota), mas backup local salvo');
+                        }
                     }
                     
                 } catch (error) {
