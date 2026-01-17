@@ -7530,8 +7530,13 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             // Calcular valores a receber APENAS do mês atual
             let valoresAReceber = 0;
             let clientesPendentes = 0;
+            
+            console.log('💰 CALCULANDO VALORES A RECEBER:');
+            console.log(`   Mês atual: ${mesAtual + 1}/${anoAtual}`);
+            
             clientes.forEach(cliente => {
                 // Verificar se tem evento NÃO concluído no mês atual
+                const eventosDoCliente = eventos.filter(e => e.cliente === cliente.nome);
                 const temEventoAtivoMes = eventos.some(e => {
                     if (e.cliente !== cliente.nome) return false;
                     if (e.status === 'concluido' || e.status === 'cancelado') return false;
@@ -7545,11 +7550,17 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                     const saldo = valorTotal - totalPago;
                     
                     if (saldo > 0) {
+                        console.log(`   ✓ ${cliente.nome}: R$ ${saldo.toFixed(2)} a receber`);
                         valoresAReceber += saldo;
                         clientesPendentes++;
                     }
+                } else if (eventosDoCliente.length > 0) {
+                    const statusEventos = eventosDoCliente.map(e => `${e.status} (${e.data})`).join(', ');
+                    console.log(`   ✗ ${cliente.nome}: Evento não ativo no mês - Status: ${statusEventos}`);
                 }
             });
+            
+            console.log(`💰 TOTAL A RECEBER DO MÊS: R$ ${valoresAReceber.toFixed(2)} (${clientesPendentes} clientes)`);
             
             // Custos com eventos APENAS do mês atual
             const custosEventosMes = custosEventos.filter(c => {
@@ -7695,11 +7706,11 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 return `
                 <div class="event-card" onclick="irParaEvento(${e.id})" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                     <div class="event-header">
-                        <div>
-                            <div class="event-title">${e.nome}</div>
-                            <div class="event-client">${e.cliente}</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="event-title" style="word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">${e.nome}</div>
+                            <div class="event-client" style="word-wrap: break-word; overflow-wrap: break-word;">${e.cliente}</div>
                         </div>
-                        <div class="event-status ${statusClass}">
+                        <div class="event-status ${statusClass}" style="flex-shrink: 0; white-space: nowrap;">
                             ${statusText}
                         </div>
                     </div>
@@ -10714,17 +10725,24 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             const clientes = DB.get('clientes');
             const eventos = DB.get('eventos');
             const hoje = new Date();
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
             
-            // Filtrar clientes com pagamentos pendentes E eventos NÃO concluídos
+            // Filtrar clientes com pagamentos pendentes E eventos NÃO concluídos DO MÊS ATUAL
             const clientesPendentes = clientes.filter(c => {
-                // Verificar se tem evento NÃO concluído
-                const temEventoAtivo = eventos.some(e => 
-                    e.cliente === c.nome && 
-                    e.status !== 'concluido' && 
-                    e.status !== 'cancelado'
-                );
+                // Verificar se tem evento NÃO concluído DO MÊS ATUAL
+                const temEventoAtivoMes = eventos.some(e => {
+                    if (e.cliente !== c.nome) return false;
+                    if (e.status === 'concluido' || e.status === 'cancelado') return false;
+                    
+                    const dataEvento = new Date(e.data);
+                    const mesEvento = dataEvento.getMonth();
+                    const anoEvento = dataEvento.getFullYear();
+                    
+                    return mesEvento === mesAtual && anoEvento === anoAtual;
+                });
                 
-                if (!temEventoAtivo) return false;
+                if (!temEventoAtivoMes) return false;
                 
                 const valorTotal = c.financeiro?.valorTotal || 0;
                 const totalPago = c.financeiro?.totalPago || 0;
@@ -14428,29 +14446,43 @@ if (!DB.get('configuracoes')) {
                         await baixarDaNuvemSilencioso();
                     } else {
                         // Tem dados locais e na nuvem
-                        // Verificar qual é mais recente
                         const lastSyncLocal = localStorage.getItem('lastSyncLocal');
-                        const lastSyncCheck = localStorage.getItem('lastSyncCheck');
+                        const lastSyncModalShown = localStorage.getItem('lastSyncModalShown');
                         
                         if (!lastSyncLocal) {
                             // Primeira sincronização - sempre mostrar
                             mostrarDialogoSincronizacao();
+                            localStorage.setItem('lastSyncModalShown', lastSync);
                         } else {
-                            // Verificar diferença de tempo entre nuvem e local
-                            const diffMinutos = (new Date(lastSync) - new Date(lastSyncLocal)) / 1000 / 60;
+                            // Verificar se já mostrou modal para esta versão da nuvem
+                            if (lastSyncModalShown === lastSync) {
+                                console.log('✅ Modal já foi mostrado para esta versão, pulando...');
+                                return;
+                            }
+                            
+                            // Calcular diferença de tempo
+                            const timestampNuvem = new Date(lastSync).getTime();
+                            const timestampLocal = new Date(lastSyncLocal).getTime();
+                            const diffMinutos = (timestampNuvem - timestampLocal) / 1000 / 60;
                             
                             console.log('🔍 Diferença de sincronização:', Math.round(diffMinutos), 'minutos');
                             console.log('   Nuvem:', new Date(lastSync).toLocaleString());
                             console.log('   Local:', new Date(lastSyncLocal).toLocaleString());
                             
-                            if (diffMinutos > 0.1) {
-                                // Há mudanças na nuvem (diferença > 6 segundos)
+                            // Só mostrar modal se:
+                            // 1. Nuvem for mais recente (diffMinutos > 0)
+                            // 2. Diferença for significativa (> 2 minutos)
+                            // 3. Ainda não mostrou modal para esta versão
+                            if (timestampNuvem > timestampLocal && diffMinutos > 2) {
                                 console.log('📢 Mudanças detectadas! Mostrando modal...');
                                 mostrarDialogoSincronizacao();
+                                localStorage.setItem('lastSyncModalShown', lastSync);
+                            } else if (timestampNuvem > timestampLocal && diffMinutos > 0.1) {
+                                // Mudança pequena - baixar silenciosamente
+                                console.log('📥 Pequena mudança detectada, baixando silenciosamente...');
+                                await baixarDaNuvemSilencioso();
                             } else {
-                                // Dados estão sincronizados (diferença < 6 segundos)
                                 console.log('✅ Dados estão sincronizados');
-                                localStorage.setItem('lastSyncCheck', new Date().toISOString());
                             }
                         }
                     }
@@ -16574,6 +16606,14 @@ ${eventosNuvemInfo}
                                             
                                             let html = '';
                                             
+                                            // Sempre mostrar Valor Total
+                                            html += `
+                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                    💰 Valor Total: <strong>${formatMoney(valorTotal)}</strong>
+                                                </div>
+                                            `;
+                                            
+                                            // Mostrar Sinal se recebido
                                             if (sinalRecebido > 0) {
                                                 html += `
                                                     <div style="display: flex; align-items: center; gap: 6px; color: var(--success);">
@@ -16582,6 +16622,7 @@ ${eventosNuvemInfo}
                                                 `;
                                             }
                                             
+                                            // Mostrar A Receber ou Pago Completo
                                             if (valorAPagar > 0) {
                                                 html += `
                                                     <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
