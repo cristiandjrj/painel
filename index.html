@@ -7446,23 +7446,44 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             let valoresAReceber = 0;
             let clientesPendentes = 0;
             clientes.forEach(cliente => {
-                if (cliente.financeiro && cliente.financeiro.valorPagar > 0) {
-                    // Verificar se o vencimento é do mês atual
-                    if (cliente.financeiro.vencimento) {
-                        const dataVenc = new Date(cliente.financeiro.vencimento + 'T00:00:00');
-                        if (dataVenc.getMonth() === mesAtual && dataVenc.getFullYear() === anoAtual) {
-                            valoresAReceber += cliente.financeiro.valorPagar;
-                            clientesPendentes++;
-                        }
+                // Verificar se tem evento NÃO concluído no mês atual
+                const temEventoAtivoMes = eventos.some(e => {
+                    if (e.cliente !== cliente.nome) return false;
+                    if (e.status === 'concluido' || e.status === 'cancelado') return false;
+                    const dataEvento = new Date(e.data);
+                    return dataEvento.getMonth() === mesAtual && dataEvento.getFullYear() === anoAtual;
+                });
+                
+                if (temEventoAtivoMes && cliente.financeiro) {
+                    const valorTotal = cliente.financeiro.valorTotal || 0;
+                    const totalPago = cliente.financeiro.totalPago || 0;
+                    const saldo = valorTotal - totalPago;
+                    
+                    if (saldo > 0) {
+                        valoresAReceber += saldo;
+                        clientesPendentes++;
                     }
                 }
             });
             
-            // Lucro = Receitas - Despesas - Custos Eventos
-            // IMPORTANTE: Não subtrair custosGerais separadamente pois eles já viraram despesas
-            // quando foram pagos por uma conta (evita duplicação)
-            const lucro = totalReceitas - totalDespesas - totalCustosEventos;
-            const margemLucro = totalReceitas > 0 ? ((lucro / totalReceitas) * 100).toFixed(1) : 0;
+            // Custos com eventos APENAS do mês atual
+            const custosEventosMes = custosEventos.filter(c => {
+                const dataCusto = new Date(c.data);
+                return dataCusto.getMonth() === mesAtual && dataCusto.getFullYear() === anoAtual;
+            });
+            const totalCustosEventosMes = custosEventosMes.reduce((sum, c) => sum + parseFloat(c.valor || 0), 0);
+            
+            // Lucro do mês = Receitas do mês - Despesas do mês - Custos Eventos do mês
+            const lucroMes = totalReceitas - totalDespesas - totalCustosEventosMes;
+            const margemLucro = totalReceitas > 0 ? ((lucroMes / totalReceitas) * 100).toFixed(1) : 0;
+            
+            console.log('📊 DEBUG Dashboard (Mês Atual):');
+            console.log(`Receitas do Mês: ${totalReceitas} (${receitas.length} itens)`);
+            console.log(`Despesas do Mês: ${totalDespesas} (${despesas.length} itens)`);
+            console.log(`Custos Eventos do Mês: ${totalCustosEventosMes} (${custosEventosMes.length} itens)`);
+            console.log(`Valores a Receber do Mês: ${valoresAReceber} (${clientesPendentes} clientes)`);
+            console.log(`Lucro do Mês: ${lucroMes}`);
+            console.log(`Fórmula: ${totalReceitas} - ${totalDespesas} - ${totalCustosEventosMes} = ${lucroMes}`);
             
             // Eventos em andamento (aguardando + em andamento)
             const eventosAndamento = eventos.filter(e => e.status === 'aguardando' || e.status === 'andamento');
@@ -7481,11 +7502,10 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             const el = (id) => document.getElementById(id);
             
             if (el('totalReceitas')) el('totalReceitas').textContent = formatMoney(totalReceitas);
-            // Despesas do mês = apenas despesas (custos gerais com conta já viraram despesas)
             if (el('totalDespesas')) el('totalDespesas').textContent = formatMoney(totalDespesas);
-            if (el('totalCustosEventos')) el('totalCustosEventos').textContent = formatMoney(totalCustosEventos);
-            if (el('numeroCustosEventos')) el('numeroCustosEventos').textContent = custosEventos.length;
-            if (el('lucroLiquido')) el('lucroLiquido').textContent = formatMoney(lucro);
+            if (el('totalCustosEventos')) el('totalCustosEventos').textContent = formatMoney(totalCustosEventosMes);
+            if (el('numeroCustosEventos')) el('numeroCustosEventos').textContent = custosEventosMes.length;
+            if (el('lucroLiquido')) el('lucroLiquido').textContent = formatMoney(lucroMes);
             if (el('percentLucro')) el('percentLucro').textContent = margemLucro;
             
             // Atualizar novos cards de eventos
@@ -7494,7 +7514,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             if (el('totalEventosConcluidos')) el('totalEventosConcluidos').textContent = eventosConcluidos.length;
             if (el('eventosConcluidosAno')) el('eventosConcluidosAno').textContent = eventosConcluidos.length;
             
-            // Atualizar valores a receber
+            // Atualizar valores a receber DO MÊS
             if (document.getElementById('valoresAReceberDashboard')) {
                 document.getElementById('valoresAReceberDashboard').textContent = formatMoney(valoresAReceber);
             }
@@ -14035,6 +14055,7 @@ if (!DB.get('configuracoes')) {
         
         // Sincronização automática a cada 2 minutos
         let autoSyncInterval = null;
+        let lastSyncDataHash = null; // Hash dos dados na última sync
         
         function iniciarSincronizacaoAutomatica() {
             // Limpar intervalo anterior se existir
@@ -14042,15 +14063,75 @@ if (!DB.get('configuracoes')) {
                 clearInterval(autoSyncInterval);
             }
             
+            // Salvar hash inicial dos dados
+            const dadosAtuais = {
+                eventos: DB.get('eventos') || [],
+                clientes: DB.get('clientes') || [],
+                receitas: DB.get('receitas') || [],
+                despesas: DB.get('despesas') || [],
+                contas: DB.get('contas') || [],
+                servicos: DB.get('servicos') || [],
+                custosGerais: DB.get('custosGerais') || [],
+                custosEventos: DB.get('custosEventos') || [],
+                contasPagar: DB.get('contasPagar') || []
+            };
+            lastSyncDataHash = simpleHash(JSON.stringify(dadosAtuais));
+            console.log(`📝 Hash inicial dos dados: ${lastSyncDataHash}`);
+            
             // Sincronizar a cada 2 minutos (120000 ms)
-            autoSyncInterval = setInterval(() => {
+            autoSyncInterval = setInterval(async () => {
                 if (isFirebaseConnected && autoSyncEnabled) {
-                    console.log('🔄 Sincronização automática...');
+                    // Verificar se houve mudanças
+                    const dadosAtuaisAgora = {
+                        eventos: DB.get('eventos') || [],
+                        clientes: DB.get('clientes') || [],
+                        receitas: DB.get('receitas') || [],
+                        despesas: DB.get('despesas') || [],
+                        contas: DB.get('contas') || [],
+                        servicos: DB.get('servicos') || [],
+                        custosGerais: DB.get('custosGerais') || [],
+                        custosEventos: DB.get('custosEventos') || [],
+                        contasPagar: DB.get('contasPagar') || []
+                    };
+                    const hashAtual = simpleHash(JSON.stringify(dadosAtuaisAgora));
+                    
+                    if (hashAtual === lastSyncDataHash) {
+                        console.log('⏭️ Sync automática: Sem mudanças detectadas, pulando sync');
+                        return;
+                    }
+                    
+                    console.log('🔄 Sync automática: Mudanças detectadas, sincronizando...');
+                    console.log(`   Hash anterior: ${lastSyncDataHash}`);
+                    console.log(`   Hash atual: ${hashAtual}`);
+                    
+                    // Comparar com nuvem ANTES de enviar
+                    const snapshot = await firebaseDatabase.ref('eventprodj/lastSync').once('value');
+                    const lastSyncNuvem = snapshot.val();
+                    const lastSyncLocal = localStorage.getItem('lastSyncLocal');
+                    
+                    if (lastSyncNuvem && lastSyncLocal) {
+                        const timestampNuvem = new Date(lastSyncNuvem).getTime();
+                        const timestampLocal = new Date(lastSyncLocal).getTime();
+                        
+                        // Se nuvem for mais recente, NÃO sobrescrever
+                        if (timestampNuvem > timestampLocal) {
+                            console.warn('⚠️ Dados na nuvem são mais recentes! Não sobrescrevendo.');
+                            console.warn(`   Nuvem: ${lastSyncNuvem}`);
+                            console.warn(`   Local: ${lastSyncLocal}`);
+                            console.warn('💡 Baixe os dados da nuvem primeiro.');
+                            return;
+                        }
+                    }
+                    
+                    // OK para sincronizar
                     sincronizarAgora(); // Sem parâmetro = silenciosa
+                    lastSyncDataHash = hashAtual; // Atualizar hash
                 }
             }, 120000); // 2 minutos
             
             console.log('✅ Sincronização automática ativada (a cada 2 minutos)');
+            console.log('   → Só envia se houver mudanças reais');
+            console.log('   → Compara timestamps antes de sobrescrever');
         }
         
         function pararSincronizacaoAutomatica() {
@@ -14100,6 +14181,21 @@ if (!DB.get('configuracoes')) {
                 console.warn('⚠️ Firebase não conectado, sincronização cancelada');
                 return;
             }
+            
+            // Atualizar hash dos dados (mudança detectada)
+            const dadosAtuais = {
+                eventos: DB.get('eventos') || [],
+                clientes: DB.get('clientes') || [],
+                receitas: DB.get('receitas') || [],
+                despesas: DB.get('despesas') || [],
+                contas: DB.get('contas') || [],
+                servicos: DB.get('servicos') || [],
+                custosGerais: DB.get('custosGerais') || [],
+                custosEventos: DB.get('custosEventos') || [],
+                contasPagar: DB.get('contasPagar') || []
+            };
+            lastSyncDataHash = simpleHash(JSON.stringify(dadosAtuais));
+            console.log(`📝 Hash atualizado após mudança: ${lastSyncDataHash}`);
             
             // Verificar se configuração "Sempre forçar upload" está ativa
             const config = DB.get('configuracoes') || {};
