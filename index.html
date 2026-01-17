@@ -1736,6 +1736,14 @@
                 order: 4;
             }
             
+            #tiposEventosStats {
+                order: 5;
+            }
+            
+            #birthdayAlertsCompact {
+                order: 6;
+            }
+            
             .dashboard-column-actions {
                 display: contents; /* Permite que os filhos sejam reordenados individualmente */
             }
@@ -3273,7 +3281,17 @@
                         </div>
                     </div>
 
-                    <!-- Aniversariantes Card Compacto -->
+                    <!-- Tipos de Eventos -->
+                    <div class="card card-origem-clientes" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <h2 class="card-title">Tipos de Eventos</h2>
+                        </div>
+                        <div id="tiposEventosStats">
+                            <!-- Tipos de eventos stats will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Aniversariantes Card Compacto - Movido para o final -->
                     <div id="birthdayAlertsCompact" style="margin-top: 20px;"></div>
                 </div>
                 
@@ -3298,6 +3316,73 @@
                 <div class="dashboard-header">
                     <h1 class="dashboard-title">Gestão de Eventos</h1>
                     <p class="dashboard-subtitle">Organize e gerencie todos os seus eventos</p>
+                </div>
+
+                <!-- Cards de Estatísticas -->
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total de Eventos</div>
+                            <div class="stat-value" id="totalEventosGestao">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">🔄</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Em Andamento</div>
+                            <div class="stat-value" id="eventosEmAndamentoGestao">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Concluídos</div>
+                            <div class="stat-value" id="eventosConcluidosGestao">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">🏆</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Evento Mais Popular</div>
+                            <div class="stat-value" style="font-size: 16px;" id="eventoMaisPopularGestao">-</div>
+                            <div class="stat-change" id="eventoMaisPopularCount">0 eventos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros de Período -->
+                <div class="period-filters" style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <select id="eventosMesFilter" onchange="atualizarEstatisticasEventos()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 14px;">
+                        <option value="todos">Todos os Meses</option>
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                    
+                    <select id="eventosAnoFilter" onchange="atualizarEstatisticasEventos()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 14px;">
+                        <option value="todos">Todos os Anos</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                    
+                    <button onclick="limparFiltrosEventos()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 14px; cursor: pointer;">
+                        🔄 Limpar Filtros
+                    </button>
                 </div>
 
                 <div class="events-header">
@@ -7696,6 +7781,88 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             container.innerHTML = html || '<p style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 13px;">Nenhuma origem registrada.</p>';
         }
 
+        // Renderizar tipos de eventos
+        function renderTiposEventos() {
+            const eventos = DB.get('eventos');
+            const container = document.getElementById('tiposEventosStats');
+            
+            if (!container) return;
+            
+            if (eventos.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 13px;">Nenhum evento cadastrado ainda.</p>';
+                return;
+            }
+
+            // Contar tipos de eventos
+            const tipos = {};
+            const cores = [
+                'rgba(102, 126, 234, 0.15)',  // Roxo
+                'rgba(240, 147, 251, 0.15)',  // Rosa
+                'rgba(79, 172, 254, 0.15)',   // Azul
+                'rgba(67, 233, 123, 0.15)',   // Verde
+                'rgba(255, 210, 63, 0.15)',   // Amarelo
+                'rgba(255, 107, 53, 0.15)',   // Laranja
+                'rgba(160, 174, 192, 0.15)'   // Cinza
+            ];
+            
+            const icons = {
+                'casamento': '💒',
+                'aniversário': '🎂',
+                'aniversario': '🎂',
+                'aniversário 15 anos': '👑',
+                'aniversario 15 anos': '👑',
+                'formatura': '🎓',
+                'corporativo': '🏢',
+                'infantil': '🎈'
+            };
+
+            eventos.forEach(evento => {
+                const tipo = evento.tipo || evento.nome || 'Outros';
+                if (!tipos[tipo]) {
+                    tipos[tipo] = { count: 0 };
+                }
+                tipos[tipo].count++;
+            });
+
+            const total = eventos.length;
+            const tiposArray = Object.entries(tipos)
+                .sort((a, b) => b[1].count - a[1].count)
+                .map(([tipo, data], index) => ({
+                    tipo,
+                    count: data.count,
+                    color: cores[index % cores.length],
+                    icon: icons[tipo.toLowerCase()] || '📅'
+                }));
+
+            const html = tiposArray
+                .map((data) => {
+                    const percentage = ((data.count / total) * 100).toFixed(1);
+                    return `
+                        <div class="origem-item">
+                            <div class="origem-info">
+                                <div class="origem-icon" style="background: ${data.color};">
+                                    ${data.icon}
+                                </div>
+                                <div>
+                                    <div class="origem-label">${data.tipo}</div>
+                                    <div class="origem-bar" style="width: 150px;">
+                                        <div class="origem-bar-fill" style="width: ${percentage}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="origem-count">${data.count}</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); text-align: right;">
+                                    ${percentage}%
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            container.innerHTML = html;
+        }
+
         // Modal functions
         // Add receita
         function addReceita(e) {
@@ -10748,6 +10915,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 renderEvents();
                 checkBirthdays();
                 updateOrigemStats();
+                renderTiposEventos();
             } catch (error) {
                 console.error('Erro ao atualizar dashboard:', error);
             }
@@ -16164,6 +16332,81 @@ ${eventosNuvemInfo}
         }
 
         // Filter events
+        // Atualizar estatísticas de eventos
+        function atualizarEstatisticasEventos() {
+            const eventos = DB.get('eventos') || [];
+            const mesFilter = document.getElementById('eventosMesFilter')?.value || 'todos';
+            const anoFilter = document.getElementById('eventosAnoFilter')?.value || 'todos';
+            
+            // Filtrar eventos por período
+            const eventosFiltrados = eventos.filter(e => {
+                const dataEvento = new Date(e.data);
+                const mesEvento = dataEvento.getMonth() + 1;
+                const anoEvento = dataEvento.getFullYear();
+                
+                const matchMes = mesFilter === 'todos' || parseInt(mesFilter) === mesEvento;
+                const matchAno = anoFilter === 'todos' || parseInt(anoFilter) === anoEvento;
+                
+                return matchMes && matchAno;
+            });
+            
+            // Total de eventos
+            const total = eventosFiltrados.length;
+            
+            // Em andamento (aguardando + andamento)
+            const emAndamento = eventosFiltrados.filter(e => 
+                e.status === 'aguardando' || e.status === 'andamento'
+            ).length;
+            
+            // Concluídos
+            const concluidos = eventosFiltrados.filter(e => e.status === 'concluido').length;
+            
+            // Evento mais popular
+            const tiposContagem = {};
+            eventosFiltrados.forEach(e => {
+                const tipo = e.tipo || e.nome || 'Sem tipo';
+                tiposContagem[tipo] = (tiposContagem[tipo] || 0) + 1;
+            });
+            
+            let maisPopular = '-';
+            let maisPopularCount = 0;
+            
+            for (const tipo in tiposContagem) {
+                if (tiposContagem[tipo] > maisPopularCount) {
+                    maisPopularCount = tiposContagem[tipo];
+                    maisPopular = tipo;
+                }
+            }
+            
+            // Atualizar DOM
+            if (document.getElementById('totalEventosGestao')) {
+                document.getElementById('totalEventosGestao').textContent = total;
+            }
+            if (document.getElementById('eventosEmAndamentoGestao')) {
+                document.getElementById('eventosEmAndamentoGestao').textContent = emAndamento;
+            }
+            if (document.getElementById('eventosConcluidosGestao')) {
+                document.getElementById('eventosConcluidosGestao').textContent = concluidos;
+            }
+            if (document.getElementById('eventoMaisPopularGestao')) {
+                document.getElementById('eventoMaisPopularGestao').textContent = maisPopular;
+            }
+            if (document.getElementById('eventoMaisPopularCount')) {
+                document.getElementById('eventoMaisPopularCount').textContent = maisPopularCount > 0 ? `${maisPopularCount} evento${maisPopularCount > 1 ? 's' : ''}` : '0 eventos';
+            }
+        }
+        
+        // Limpar filtros de eventos
+        function limparFiltrosEventos() {
+            const mesSelect = document.getElementById('eventosMesFilter');
+            const anoSelect = document.getElementById('eventosAnoFilter');
+            
+            if (mesSelect) mesSelect.value = 'todos';
+            if (anoSelect) anoSelect.value = new Date().getFullYear().toString();
+            
+            atualizarEstatisticasEventos();
+        }
+        
         function filterEvents(status) {
             currentFilter = status;
             
@@ -16231,6 +16474,9 @@ ${eventosNuvemInfo}
         function renderEventsList() {
             const eventos = DB.get('eventos');
             const container = document.getElementById('eventsListFull');
+            
+            // Atualizar estatísticas
+            atualizarEstatisticasEventos();
             
             const filteredEvents = currentFilter === 'todos' 
                 ? eventos 
