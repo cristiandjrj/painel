@@ -10525,10 +10525,20 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         // Mostrar modal de Valores a Receber
         function mostrarValoresAReceber() {
             const clientes = DB.get('clientes');
+            const eventos = DB.get('eventos');
             const hoje = new Date();
             
-            // Filtrar clientes com pagamentos pendentes
+            // Filtrar clientes com pagamentos pendentes E eventos NÃO concluídos
             const clientesPendentes = clientes.filter(c => {
+                // Verificar se tem evento NÃO concluído
+                const temEventoAtivo = eventos.some(e => 
+                    e.cliente === c.nome && 
+                    e.status !== 'concluido' && 
+                    e.status !== 'cancelado'
+                );
+                
+                if (!temEventoAtivo) return false;
+                
                 const valorTotal = c.financeiro?.valorTotal || 0;
                 const totalPago = c.financeiro?.totalPago || 0;
                 const saldo = valorTotal - totalPago;
@@ -10537,7 +10547,15 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 const valorTotal = c.financeiro?.valorTotal || 0;
                 const totalPago = c.financeiro?.totalPago || 0;
                 const saldo = valorTotal - totalPago;
-                const vencimento = c.financeiro?.dataVencimento ? new Date(c.financeiro.dataVencimento) : null;
+                
+                // Buscar vencimento no financeiro do cliente
+                let vencimento = null;
+                if (c.financeiro?.vencimento) {
+                    vencimento = new Date(c.financeiro.vencimento);
+                } else if (c.financeiro?.dataVencimento) {
+                    vencimento = new Date(c.financeiro.dataVencimento);
+                }
+                
                 const atrasado = vencimento && vencimento < hoje;
                 
                 return {
@@ -10553,7 +10571,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             });
             
             if (clientesPendentes.length === 0) {
-                alert('✅ Não há valores a receber!\n\nTodos os clientes estão em dia.');
+                alert('✅ Não há valores a receber!\n\nTodos os clientes estão em dia ou com eventos concluídos.');
                 return;
             }
             
@@ -10566,10 +10584,10 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 return a.vencimento - b.vencimento;
             });
             
-            // Criar HTML do modal
+            // Criar HTML do modal - VERSÃO SIMPLIFICADA
             let html = `
                 <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
-                    <div style="background: var(--bg-card); border-radius: 12px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 24px;" onclick="event.stopPropagation()">
+                    <div style="background: var(--bg-card); border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 24px;" onclick="event.stopPropagation()">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h2 style="margin: 0; font-size: 24px;">⏳ Valores a Receber</h2>
                             <button onclick="this.closest('div[style*=fixed]').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">×</button>
@@ -10581,14 +10599,11 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                         
                         ${clientesPendentes.map(c => `
                             <div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; ${c.atrasado ? 'background: rgba(239, 71, 111, 0.1); border-color: var(--danger);' : ''}">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <div>
-                                        <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">
+                                        <div style="font-weight: 700; font-size: 16px;">
                                             ${c.nome}
                                             ${c.atrasado ? '<span style="background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">ATRASADO</span>' : ''}
-                                        </div>
-                                        <div style="font-size: 13px; color: var(--text-secondary);">
-                                            ${c.telefone ? '📱 ' + c.telefone : ''} ${c.email ? '📧 ' + c.email : ''}
                                         </div>
                                     </div>
                                     <div style="text-align: right;">
@@ -10597,20 +10612,11 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                                         </div>
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-secondary);">
                                     <div>
-                                        <div style="color: var(--text-secondary);">Valor Total</div>
-                                        <div style="font-weight: 600;">${formatMoney(c.valorTotal)}</div>
-                                    </div>
-                                    <div>
-                                        <div style="color: var(--text-secondary);">Valor Pago</div>
-                                        <div style="font-weight: 600; color: var(--success);">${formatMoney(c.valorPago)}</div>
-                                    </div>
-                                    <div>
-                                        <div style="color: var(--text-secondary);">Vencimento</div>
-                                        <div style="font-weight: 600; color: ${c.atrasado ? 'var(--danger)' : 'inherit'};">
-                                            ${c.vencimento ? formatDate(c.vencimento.toISOString().split('T')[0]) : 'Não definido'}
-                                        </div>
+                                        📅 Vencimento: <strong style="color: ${c.atrasado ? 'var(--danger)' : 'var(--text-primary)'};">
+                                            ${c.vencimento ? formatDate(c.vencimento.toISOString().split('T')[0]) : 'A definir'}
+                                        </strong>
                                     </div>
                                 </div>
                             </div>
