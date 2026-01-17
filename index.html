@@ -3103,15 +3103,30 @@
         </div>
         
         <div class="mobile-sync">
-            <div class="sync-status" style="width: 100%; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div class="sync-indicator" id="syncIndicatorMobile"></div>
-                    <span class="sync-text" id="syncTextMobile">Offline</span>
+            <div class="sync-status" style="width: 100%; flex-direction: column; gap: 12px;">
+                <div style="display: flex; width: 100%; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="sync-indicator" id="syncIndicatorMobile"></div>
+                        <span class="sync-text" id="syncTextMobile">Offline</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="sync-button" onclick="mostrarStatusSync()" title="Ver status da sincronização">📊</button>
+                        <button class="sync-button" onclick="sincronizarAgora('forcar')" title="Forçar envio (sem merge)" style="background: rgba(255, 107, 53, 0.3);">⬆️</button>
+                        <button class="sync-button" onclick="sincronizarAgora('manual')" title="Sincronizar normal">🔄</button>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="sync-button" onclick="mostrarStatusSync()" title="Ver status da sincronização">📊</button>
-                    <button class="sync-button" onclick="sincronizarAgora('forcar')" title="Forçar envio (sem merge)" style="background: rgba(255, 107, 53, 0.3);">⬆️</button>
-                    <button class="sync-button" onclick="sincronizarAgora('manual')" title="Sincronizar normal">🔄</button>
+                
+                <!-- Toggle sempre forçar upload -->
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 8px 12px; background: rgba(255, 107, 53, 0.1); border-radius: 8px; border: 1px solid rgba(255, 107, 53, 0.3);">
+                    <label style="font-size: 13px; color: var(--text-primary); cursor: pointer; user-select: none;" for="toggleSempreForcar">
+                        ⚡ Sempre forçar upload automático
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                            Recomendado para mobile
+                        </div>
+                    </label>
+                    <input type="checkbox" id="toggleSempreForcar" checked 
+                           onchange="toggleSempreForcarUpload(this.checked)"
+                           style="width: 20px; height: 20px; cursor: pointer;">
                 </div>
             </div>
         </div>
@@ -14042,6 +14057,35 @@ if (!DB.get('configuracoes')) {
         
         // Sincronizar após uma ação do usuário - AGORA INSTANTÂNEO!
         let syncDebounceTimer = null;
+        // Toggle para sempre forçar upload
+        function toggleSempreForcarUpload(ativado) {
+            const config = DB.get('configuracoes') || {};
+            config.sempreForcarUpload = ativado;
+            DB.set('configuracoes', config);
+            
+            if (ativado) {
+                console.log('⚡ MODO FORÇAR UPLOAD ATIVADO - Todas as mudanças serão enviadas direto sem merge');
+                alert('⚡ ATIVADO!\n\nTodas suas mudanças serão enviadas automaticamente SEM merge.\n\nRecomendado para mobile! ✅');
+            } else {
+                console.log('🔄 MODO SYNC NORMAL ATIVADO - Mudanças farão merge inteligente');
+                alert('🔄 Desativado\n\nMudanças farão merge inteligente com a nuvem.\n\nUse o botão ⬆️ quando precisar forçar.');
+            }
+            
+            // Sincronizar configuração
+            if (isFirebaseConnected) {
+                sincronizarAgora('forcar');
+            }
+        }
+        
+        // Carregar estado do toggle ao iniciar
+        function carregarEstadoToggle() {
+            const config = DB.get('configuracoes') || {};
+            const toggle = document.getElementById('toggleSempreForcar');
+            if (toggle) {
+                toggle.checked = config.sempreForcarUpload !== false; // Padrão: true
+            }
+        }
+        
         function sincronizarAposMudanca() {
             console.log('🔔 sincronizarAposMudanca() chamada');
             console.log('   Firebase conectado?', isFirebaseConnected);
@@ -14051,11 +14095,23 @@ if (!DB.get('configuracoes')) {
                 return;
             }
             
+            // Verificar se configuração "Sempre forçar upload" está ativa
+            const config = DB.get('configuracoes') || {};
+            const sempreForcarUpload = config.sempreForcarUpload !== false; // Padrão: true
+            
+            const tipoSync = sempreForcarUpload ? 'forcar_upload' : 'full_sync';
+            
+            if (sempreForcarUpload) {
+                console.log('⚡ Modo FORÇAR UPLOAD ativo - Enviando direto sem merge');
+            } else {
+                console.log('⚡ Modo SYNC NORMAL - Fazendo merge inteligente');
+            }
+            
             // NOVO: Adiciona à fila IMEDIATAMENTE (não espera 3 segundos)
-            console.log('⚡ Adicionando à fila de sincronização AGORA');
+            console.log(`⚡ Adicionando à fila de sincronização: ${tipoSync}`);
             
             SyncQueue.adicionar({
-                tipo: 'full_sync',
+                tipo: tipoSync,
                 prioridade: 'normal',
                 dados: null
             });
@@ -15078,6 +15134,9 @@ ${eventosNuvemInfo}
                 initFirebase();
                 
                 console.log('✅ EventProDJ inicializado com sucesso!');
+                
+                // Carregar estado do toggle "sempre forçar upload"
+                carregarEstadoToggle();
                 
                 // Inicializar MEI
                 initMeiAnoSelector();
