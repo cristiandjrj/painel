@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Site Simples</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .test-box { border: 2px solid #333; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        button { padding: 10px 20px; cursor: pointer; }
+        #status { font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Ambiente de Teste</h1>
+    <p>Script JS embutido para validar carregamento.</p>
+
+    <div class="test-box">
+        <h3>1. Teste de Interação</h3>
+        <button id="btnTeste">Clique para Testar JS</button>
+        <p id="output"></p>
+    </div>
+
+    <div class="test-box">
+        <h3>2. Teste de Carregamento</h3>
+        <p id="loadTime"></p>
+    </div>
+
+    <script>
+        // --- JS EMBUTIDO (Sem arquivos externos) ---
+
+        // Teste 1: Interação (Clique)
+        document.getElementById('btnTeste').addEventListener('click', function() {
+            document.getElementById('output').innerText = "✅ JS funcionou! Clique detectado.";
+            document.getElementById('output').style.color = "green";
+        });
+
+        // Teste 2: Tempo de carregamento
+        window.onload = function() {
+            // Calcula o tempo após carregar
+            let tempoLoad = window.performance.timing.domContentLoadedEventEnd - window.performance.timing.navigationStart;
+            document.getElementById('loadTime').innerText = "⏱️ Tempo de carregamento: " + tempoLoad + "ms";
+        };
+    </script>
+
+</body>
+</html>
