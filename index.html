@@ -3507,6 +3507,34 @@
                 <div class="clients-grid" id="clientsList">
                     <!-- Clients will be rendered here -->
                 </div>
+
+                <!-- Ranking de Melhores Clientes -->
+                <div style="margin-top: 40px;">
+                    <h2 style="font-family: 'Syne', sans-serif; font-size: 24px; margin-bottom: 24px; color: var(--primary);">
+                        📊 Performance dos Clientes
+                    </h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px;">
+                        <!-- Top 5 por Quantidade de Eventos -->
+                        <div class="card" style="padding: 24px;">
+                            <h3 style="margin: 0 0 20px 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                                🏆 Top 5 Clientes por Eventos
+                            </h3>
+                            <div id="topClientesPorEventos" style="display: flex; flex-direction: column; gap: 12px;">
+                                <!-- Será preenchido por JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Top 5 por Valor Total -->
+                        <div class="card" style="padding: 24px;">
+                            <h3 style="margin: 0 0 20px 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                                💎 Top 5 Clientes por Valor
+                            </h3>
+                            <div id="topClientesPorValor" style="display: flex; flex-direction: column; gap: 12px;">
+                                <!-- Será preenchido por JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- End Clientes Tab -->
@@ -3838,25 +3866,104 @@
 
                 <!-- Custos por Evento View -->
                 <div id="custosEventosView" style="display: none;">
-                    <!-- Card de Total Geral -->
-                    <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.05));">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h3 style="font-family: 'Syne', sans-serif; font-size: 18px; margin-bottom: 4px; color: var(--primary);">
-                                    📊 Total Geral de Custos
-                                </h3>
-                                <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
-                                    Soma de todos os custos de eventos
-                                </p>
+                    <!-- Cards de Resumo -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <!-- Card de Total Geral -->
+                        <div class="card" style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.05));">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3 style="font-family: 'Syne', sans-serif; font-size: 18px; margin-bottom: 4px; color: var(--primary);">
+                                        📊 Total Geral de Custos
+                                    </h3>
+                                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                                        Soma de todos os custos de eventos
+                                    </p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 28px; font-weight: 700; color: var(--primary);" id="totalGeralCustosEventos">
+                                        R$ 0,00
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);" id="quantidadeEventosComCustos">
+                                        0 eventos com custos
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Card de Custos do Mês -->
+                        <div class="card" style="background: linear-gradient(135deg, rgba(239, 71, 111, 0.2), rgba(239, 71, 111, 0.05));">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3 style="font-family: 'Syne', sans-serif; font-size: 18px; margin-bottom: 4px; color: var(--danger);">
+                                        📅 Custos do Mês
+                                    </h3>
+                                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                                        Custos de eventos deste mês
+                                    </p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 28px; font-weight: 700; color: var(--danger);" id="custosEventosMes">
+                                        R$ 0,00
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);" id="quantidadeEventosMes">
+                                        0 eventos
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Análise por Categoria -->
+                    <div class="card" style="margin-bottom: 30px; padding: 0; overflow: hidden;">
+                        <!-- Header -->
+                        <div style="padding: 20px; background: linear-gradient(135deg, rgba(106, 90, 205, 0.1), rgba(106, 90, 205, 0.05)); border-bottom: 1px solid rgba(106, 90, 205, 0.2);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;">
+                                <div>
+                                    <h3 style="font-family: 'Syne', sans-serif; font-size: 20px; margin: 0 0 4px 0; color: #6A5ACD;">
+                                        📊 Análise Detalhada por Categoria
+                                    </h3>
+                                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                                        Visualize gastos agrupados por tipo de custo
+                                    </p>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <select id="categoriaControle" class="form-select" onchange="atualizarControleCategoria()" style="min-width: 200px; background: var(--bg-dark);">
+                                        <option value="ajudantes">👷 Ajudantes</option>
+                                        <option value="equipamentos">📦 Equipamentos</option>
+                                        <option value="materiais">🛠️ Materiais</option>
+                                        <option value="transporte">🚚 Transporte</option>
+                                        <option value="alimentacao">🍽️ Alimentação</option>
+                                        <option value="decoracao">🎨 Decoração</option>
+                                        <option value="terceiros">🤝 Terceiros</option>
+                                        <option value="outros">📌 Outros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumo da Categoria -->
+                        <div style="padding: 16px 20px; background: var(--bg-card); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="font-size: 32px;" id="iconeCategoriaAtual">👷</div>
+                                <div>
+                                    <div style="font-size: 15px; font-weight: 600; margin-bottom: 2px;" id="tituloCategoriaAtual">
+                                        Ajudantes
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);" id="subtituloCategoriaAtual">
+                                        0 registros
+                                    </div>
+                                </div>
                             </div>
                             <div style="text-align: right;">
-                                <div style="font-size: 28px; font-weight: 700; color: var(--primary);" id="totalGeralCustosEventos">
+                                <div style="font-size: 24px; font-weight: 700; color: #6A5ACD;" id="totalCategoriaAtual">
                                     R$ 0,00
                                 </div>
-                                <div style="font-size: 12px; color: var(--text-secondary);" id="quantidadeEventosComCustos">
-                                    0 eventos com custos
-                                </div>
                             </div>
+                        </div>
+
+                        <!-- Lista de Itens -->
+                        <div id="conteudoListaCategoria" style="padding: 20px; max-height: 500px; overflow-y: auto;">
+                            <!-- Será preenchido dinamicamente -->
                         </div>
                     </div>
                     
@@ -7581,8 +7688,8 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             console.log(`Lucro do Mês: ${lucroMes}`);
             console.log(`Fórmula: ${totalReceitas} - ${totalDespesas} - ${totalCustosEventosMes} = ${lucroMes}`);
             
-            // Eventos em andamento (aguardando + em andamento)
-            const eventosAndamento = eventos.filter(e => e.status === 'aguardando' || e.status === 'andamento');
+            // Eventos em andamento (APENAS status andamento, não aguardando)
+            const eventosAndamento = eventos.filter(e => e.status === 'andamento');
             const eventosAndamentoMes = eventosAndamento.filter(e => {
                 const dataEvento = new Date(e.data);
                 return dataEvento.getMonth() === mesAtual && dataEvento.getFullYear() === anoAtual;
@@ -7950,6 +8057,10 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 if (cidade && estado) enderecoCompleto += ' - ' + cidade + '/' + estado;
             }
             
+            // Coletar serviços e taxas (se houver no modal de evento simples)
+            const servicos = [];
+            const taxas = [];
+            
             const evento = {
                 tipo: document.getElementById('eventoTipo').value,
                 nome: document.getElementById('eventoTipo').value, // Manter compatibilidade
@@ -7968,11 +8079,26 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 cidade: cidade,
                 estado: estado,
                 valor: parseFloat(document.getElementById('eventoValor').value),
+                servicos: servicos,
+                outrasTaxas: taxas,
                 status: document.getElementById('eventoStatus').value,
                 observacoes: document.getElementById('eventoObservacoes').value
             };
             
-            DB.add('eventos', evento);
+            const novoEvento = DB.add('eventos', evento);
+            
+            // Registrar serviços utilizados (incrementar contador de vezes contratadas)
+            if (servicos && servicos.length > 0) {
+                const servicosDB = DB.get('servicos');
+                servicos.forEach(servicoEvento => {
+                    const servicoDB = servicosDB.find(s => s.nome === servicoEvento.nome || s.id === servicoEvento.id);
+                    if (servicoDB) {
+                        servicoDB.vezesContratadas = (servicoDB.vezesContratadas || 0) + 1;
+                    }
+                });
+                DB.set('servicos', servicosDB);
+            }
+            
             e.target.reset();
             limparCamposEnderecoEvento();
             document.getElementById('valorClienteInfo').style.display = 'none';
@@ -7989,6 +8115,11 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
         // Add orçamento
         function addOrcamento(e) {
             e.preventDefault();
+            
+            console.log('');
+            console.log('═══════════════════════════════════════');
+            console.log('🚀 GERAR ORÇAMENTO INICIADO');
+            console.log('═══════════════════════════════════════');
             
             // Verificar se está editando
             const form = e.target;
@@ -8107,6 +8238,10 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 const index = eventos.findIndex(ev => ev.id == editingEventId);
                 
                 if (index !== -1) {
+                    // Obter serviços antigos para decrementar
+                    const eventoAntigo = eventos[index];
+                    const servicosAntigos = eventoAntigo.servicos || [];
+                    
                     // Manter ID e data de criação
                     evento.id = eventos[index].id;
                     evento.dataCadastro = eventos[index].dataCadastro;
@@ -8116,6 +8251,27 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                     DB.set('eventos', eventos);
                     
                     console.log('✓ Evento atualizado:', evento.tipo);
+                    
+                    // Atualizar contadores de serviços
+                    const servicosDB = DB.get('servicos');
+                    
+                    // Decrementar serviços antigos
+                    servicosAntigos.forEach(servicoAntigo => {
+                        const servicoDB = servicosDB.find(s => s.nome === servicoAntigo.nome || s.id === servicoAntigo.id);
+                        if (servicoDB && servicoDB.vezesContratadas > 0) {
+                            servicoDB.vezesContratadas = (servicoDB.vezesContratadas || 1) - 1;
+                        }
+                    });
+                    
+                    // Incrementar novos serviços
+                    todosServicos.forEach(servicoNovo => {
+                        const servicoDB = servicosDB.find(s => s.nome === servicoNovo.nome || s.id === servicoNovo.id);
+                        if (servicoDB) {
+                            servicoDB.vezesContratadas = (servicoDB.vezesContratadas || 0) + 1;
+                        }
+                    });
+                    
+                    DB.set('servicos', servicosDB);
                     
                     // Limpar atributo de edição
                     form.removeAttribute('data-editing-event-id');
@@ -8153,13 +8309,45 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                     
                     switchTabProgramatically('eventos');
                     renderEventsList();
+                    renderServicos(); // ✅ ATUALIZAR GESTÃO DE SERVIÇOS
                     updateDashboard();
                     return; // Importante: sair da função aqui
                 }
             } else {
                 // CRIANDO novo evento
-                DB.add('eventos', evento);
+                const novoEvento = DB.add('eventos', evento);
                 console.log('✓ Novo evento criado:', evento.tipo);
+                console.log('  ID:', novoEvento.id);
+                console.log('  Cliente:', cliente);
+                console.log('  Serviços no evento:', todosServicos);
+                
+                // Registrar serviços utilizados (incrementar contador de vezes contratadas)
+                if (todosServicos && todosServicos.length > 0) {
+                    const servicosDB = DB.get('servicos');
+                    console.log('📊 Serviços no banco ANTES:', servicosDB.map(s => `${s.nome}: ${s.vezesContratadas || 0}`));
+                    
+                    let servicosAtualizados = 0;
+                    todosServicos.forEach(servicoEvento => {
+                        console.log(`  🔍 Procurando serviço: "${servicoEvento.nome}" (ID: ${servicoEvento.id || 'sem ID'})`);
+                        const servicoDB = servicosDB.find(s => s.nome === servicoEvento.nome || s.id === servicoEvento.id);
+                        if (servicoDB) {
+                            const antes = servicoDB.vezesContratadas || 0;
+                            servicoDB.vezesContratadas = (servicoDB.vezesContratadas || 0) + 1;
+                            console.log(`  ✓ "${servicoDB.nome}": ${antes} → ${servicoDB.vezesContratadas}`);
+                            servicosAtualizados++;
+                        } else {
+                            console.warn(`  ⚠️ Serviço "${servicoEvento.nome}" NÃO encontrado no banco!`);
+                            console.warn(`     Serviços disponíveis:`, servicosDB.map(s => s.nome));
+                        }
+                    });
+                    
+                    DB.set('servicos', servicosDB);
+                    console.log('📊 Serviços no banco DEPOIS:', servicosDB.map(s => `${s.nome}: ${s.vezesContratadas || 0}`));
+                    console.log(`✅ ${servicosAtualizados}/${todosServicos.length} serviços contabilizados`);
+                } else {
+                    console.warn('⚠️ Evento criado SEM serviços! Array todosServicos está vazio.');
+                    console.warn('   servicosSelecionados:', servicosSelecionados);
+                }
             }
             
             // Atualizar dados financeiros do cliente se já existir (apenas para CRIAÇÃO)
@@ -8196,6 +8384,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             
             switchTabProgramatically('eventos');
             renderEventsList();
+            renderServicos(); // ✅ ATUALIZAR GESTÃO DE SERVIÇOS
             updateDashboard();
         }
 
@@ -8262,6 +8451,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                     cliente.financeiro = clientes[index].financeiro || {
                         valorTotal: 0,
                         sinalValor: 0,
+                        totalPago: 0,
                         sinalData: '',
                         valorPagar: 0,
                         vencimento: ''
@@ -8276,6 +8466,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 cliente.financeiro = {
                     valorTotal: 0,
                     sinalValor: 0,
+                    totalPago: 0,
                     sinalData: '',
                     valorPagar: 0,
                     vencimento: ''
@@ -8297,7 +8488,8 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             checkBirthdays();
             updateOrigemStats();
             updateDashboard(); // ✅ Atualizar dashboard
-            renderClientsList(); // ✅ Atualizar lista de clientes
+            renderClientsList();
+            renderRankingClientes(); // ✅ Atualizar lista de clientes
             updateClientsStats(); // ✅ Atualizar stats
             
             // Sincronizar após mudança
@@ -8339,6 +8531,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
                 renderKanbanView();
             } else if (tabName === 'clientes') {
                 renderClientsList();
+            renderRankingClientes();
                 updateClientsStats();
             } else if (tabName === 'custos') {
                 toggleCustosView('gerais');
@@ -9263,6 +9456,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             
             // Atualizar visualização
             renderClientsList();
+            renderRankingClientes();
             updateClientsStats();
             updateDashboard();
             atualizarFinanceiroPorPeriodo();
@@ -9305,7 +9499,8 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             
             // Recalcular valor a pagar considerando pagamentos adicionais
             const totalPagamentosAdicionais = pagamentosAdicionais.reduce((sum, p) => sum + p.valor, 0);
-            const valorPagar = valorTotal - sinalValor - totalPagamentosAdicionais;
+            const totalPago = sinalValor + totalPagamentosAdicionais;
+            const valorPagar = valorTotal - totalPago;
             
             // Verificar se o sinal mudou (novo sinal ou valor diferente)
             const sinalAnterior = cliente.financeiro && cliente.financeiro.sinalValor ? cliente.financeiro.sinalValor : 0;
@@ -9314,6 +9509,7 @@ O presente contrato tem por objeto a prestação de serviços de [TIPO DE SERVI�
             cliente.financeiro = {
                 valorTotal: valorTotal,
                 sinalValor: sinalValor,
+                totalPago: totalPago, // CAMPO ADICIONADO!
                 sinalData: document.getElementById('financeiroSinalData').value,
                 sinalFormaPagamento: sinalFormaPagamento,
                 sinalConta: sinalConta,
@@ -14716,6 +14912,7 @@ if (!DB.get('configuracoes')) {
                 // Atualizar interface
                 updateDashboard();
                 renderClientsList();
+            renderRankingClientes();
                 renderEventsList();
                 atualizarFinanceiroPorPeriodo();
                 
@@ -14861,6 +15058,7 @@ if (!DB.get('configuracoes')) {
                 // Atualizar interface
                 updateDashboard();
                 renderClientsList();
+            renderRankingClientes();
                 renderEventsList();
                 atualizarFinanceiroPorPeriodo();
                 
@@ -15380,6 +15578,7 @@ ${eventosNuvemInfo}
                 
                 // Renderizar clientes inicialmente
                 renderClientsList();
+            renderRankingClientes();
                 updateClientsStats();
                 
                 // Event listeners para cálculo de duração
@@ -15468,6 +15667,7 @@ ${eventosNuvemInfo}
             if (removidos > 0) {
                 DB.set('clientes', clientesUnicos);
                 renderClientsList();
+            renderRankingClientes();
                 updateClientsStats();
                 checkBirthdays();
                 updateOrigemStats();
@@ -15514,6 +15714,7 @@ ${eventosNuvemInfo}
                 updateCustosGeraisStats();
             } else {
                 populateEventosSelect();
+                renderCustosEvento(); // ✅ CALCULAR TOTAL GERAL
             }
         }
 
@@ -15522,10 +15723,219 @@ ${eventosNuvemInfo}
             const eventos = DB.get('eventos');
             const select = document.getElementById('eventoSelecionado');
             
-            select.innerHTML = '<option value="">Selecione um evento...</option>';
-            eventos.forEach(e => {
+            // Obter filtros de período
+            const mesFilter = document.getElementById('filtroMesCustos').value;
+            const anoFilter = parseInt(document.getElementById('filtroAnoCustos').value);
+            const tipoVisualizacao = document.getElementById('tipoVisualizacaoCustos').value;
+            
+            // Filtrar eventos por período
+            let eventosFiltrados = eventos;
+            
+            if (tipoVisualizacao === 'mensal') {
+                if (mesFilter !== 'todos') {
+                    const mesSelecionado = parseInt(mesFilter) - 1; // 0-based
+                    eventosFiltrados = eventos.filter(e => {
+                        const dataEvento = new Date(e.data);
+                        return dataEvento.getMonth() === mesSelecionado && dataEvento.getFullYear() === anoFilter;
+                    });
+                } else {
+                    // Todos os meses do ano selecionado
+                    eventosFiltrados = eventos.filter(e => {
+                        const dataEvento = new Date(e.data);
+                        return dataEvento.getFullYear() === anoFilter;
+                    });
+                }
+            } else {
+                // Visualização anual - apenas filtrar por ano
+                eventosFiltrados = eventos.filter(e => {
+                    const dataEvento = new Date(e.data);
+                    return dataEvento.getFullYear() === anoFilter;
+                });
+            }
+            
+            select.innerHTML = '<option value="todos" selected>📊 Todos os Eventos</option><option value="">Selecione um evento específico...</option>';
+            eventosFiltrados.forEach(e => {
                 select.innerHTML += `<option value="${e.id}">${e.nome} - ${formatDate(e.data)}</option>`;
             });
+        }
+
+        // Toggle lista de controle de categoria
+        // Atualizar controle de categoria
+        function atualizarControleCategoria() {
+            const categoriaSelect = document.getElementById('categoriaControle');
+            const categoria = categoriaSelect.value;
+            const todosCustosEventos = DB.get('custosEventos');
+            
+            // Filtrar custos da categoria selecionada
+            const custosCategoria = todosCustosEventos.filter(c => c.categoria === categoria);
+            
+            // Mapear ícones e nomes (simplificado)
+            const categoriaInfo = {
+                'ajudantes': { icone: '👷', nome: 'Ajudantes' },
+                'equipamentos': { icone: '📦', nome: 'Equipamentos' },
+                'materiais': { icone: '🛠️', nome: 'Materiais' },
+                'transporte': { icone: '🚚', nome: 'Transporte' },
+                'alimentacao': { icone: '🍽️', nome: 'Alimentação' },
+                'decoracao': { icone: '🎨', nome: 'Decoração' },
+                'terceiros': { icone: '🤝', nome: 'Terceiros' },
+                'outros': { icone: '📌', nome: 'Outros' }
+            };
+            
+            const info = categoriaInfo[categoria];
+            
+            // Atualizar resumo
+            document.getElementById('iconeCategoriaAtual').textContent = info.icone;
+            document.getElementById('tituloCategoriaAtual').textContent = info.nome;
+            
+            // Calcular total
+            const totalCategoria = custosCategoria.reduce((sum, c) => sum + c.valor, 0);
+            document.getElementById('totalCategoriaAtual').textContent = formatMoney(totalCategoria);
+            
+            // Atualizar subtítulo
+            if (custosCategoria.length === 0) {
+                document.getElementById('subtituloCategoriaAtual').textContent = 'Nenhum registro';
+            } else {
+                document.getElementById('subtituloCategoriaAtual').textContent = `${custosCategoria.length} registro${custosCategoria.length !== 1 ? 's' : ''}`;
+            }
+            
+            // Renderizar conteúdo específico
+            if (categoria === 'ajudantes') {
+                renderControleAjudantes(custosCategoria);
+            } else {
+                renderControleGenerico(custosCategoria, categoria);
+            }
+        }
+        
+        // Renderizar controle de ajudantes (agrupado por nome)
+        function renderControleAjudantes(custos) {
+            const container = document.getElementById('conteudoListaCategoria');
+            
+            if (custos.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                        <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;">👷</div>
+                        <h3 style="font-size: 16px; margin-bottom: 8px; color: var(--text-primary);">Nenhum ajudante registrado</h3>
+                        <p style="font-size: 13px;">Adicione custos com categoria "Ajudantes" para começar</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Agrupar por nome (descrição)
+            const ajudantesPorNome = {};
+            custos.forEach(c => {
+                const nome = c.descricao || 'Sem nome';
+                if (!ajudantesPorNome[nome]) {
+                    ajudantesPorNome[nome] = {
+                        nome: nome,
+                        totalMensal: 0,
+                        totalAnual: 0,
+                        vezes: 0
+                    };
+                }
+                ajudantesPorNome[nome].totalAnual += c.valor;
+                ajudantesPorNome[nome].vezes++;
+                
+                // Calcular total do mês atual
+                const dataCusto = new Date(c.data);
+                const hoje = new Date();
+                if (dataCusto.getMonth() === hoje.getMonth() && 
+                    dataCusto.getFullYear() === hoje.getFullYear()) {
+                    ajudantesPorNome[nome].totalMensal += c.valor;
+                }
+            });
+            
+            // Converter para array e ordenar por total anual
+            const ajudantesArray = Object.values(ajudantesPorNome)
+                .sort((a, b) => b.totalAnual - a.totalAnual);
+            
+            // Renderizar com visual melhorado
+            const html = ajudantesArray.map((ajudante, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-card); border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #6A5ACD; transition: transform 0.2s; cursor: default;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <div style="font-size: 24px;">👤</div>
+                            <div style="font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                ${ajudante.nome}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary);">
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span>🎯</span>
+                                <span>${ajudante.vezes} evento${ajudante.vezes !== 1 ? 's' : ''}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span>📅</span>
+                                <span>Mês: <strong style="color: var(--primary);">${formatMoney(ajudante.totalMensal)}</strong></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span>📊</span>
+                                <span>Ano: <strong style="color: var(--success);">${formatMoney(ajudante.totalAnual)}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right; padding-left: 16px;">
+                        <div style="font-size: 20px; font-weight: 700; color: #6A5ACD;">
+                            ${formatMoney(ajudante.totalAnual)}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                            Total Anual
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+            document.getElementById('subtituloCategoriaAtual').textContent = `${ajudantesArray.length} ajudante${ajudantesArray.length !== 1 ? 's' : ''} • Clique para ver`;
+        }
+        
+        // Renderizar controle genérico (outras categorias)
+        function renderControleGenerico(custos, categoria) {
+            const container = document.getElementById('conteudoListaCategoria');
+            
+            if (custos.length === 0) {
+                const icones = {
+                    'equipamentos': '📦',
+                    'materiais': '🛠️',
+                    'transporte': '🚚',
+                    'alimentacao': '🍽️',
+                    'decoracao': '🎨',
+                    'terceiros': '🤝',
+                    'outros': '📌'
+                };
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                        <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;">${icones[categoria]}</div>
+                        <h3 style="font-size: 16px; margin-bottom: 8px; color: var(--text-primary);">Nenhum registro nesta categoria</h3>
+                        <p style="font-size: 13px;">Adicione custos com esta categoria para começar</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ordenar por data (mais recente primeiro)
+            const custosOrdenados = [...custos].sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            // Renderizar lista com visual melhorado
+            const html = custosOrdenados.map(c => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--bg-card); border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #6A5ACD; transition: transform 0.2s; cursor: default;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${c.descricao}
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            📅 ${formatDate(c.data)}
+                        </div>
+                    </div>
+                    <div style="font-size: 16px; font-weight: 700; color: #6A5ACD; padding-left: 16px; white-space: nowrap;">
+                        ${formatMoney(c.valor)}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
         }
 
         // Render custos do evento
@@ -15537,6 +15947,29 @@ ${eventosNuvemInfo}
             
             document.getElementById('totalGeralCustosEventos').textContent = formatMoney(totalGeral);
             document.getElementById('quantidadeEventosComCustos').textContent = `${eventosComCustos} evento${eventosComCustos !== 1 ? 's' : ''} com custos`;
+            
+            // ✅ CALCULAR CUSTOS DO MÊS ATUAL
+            const hoje = new Date();
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
+            const eventos = DB.get('eventos');
+            
+            // Filtrar eventos do mês
+            const eventosDoMes = eventos.filter(e => {
+                const dataEvento = new Date(e.data);
+                return dataEvento.getMonth() === mesAtual && dataEvento.getFullYear() === anoAtual;
+            });
+            
+            const idsEventosDoMes = eventosDoMes.map(e => e.id);
+            const custosDoMes = todosCustosEventos.filter(c => idsEventosDoMes.includes(c.eventoId));
+            const totalCustosDoMes = custosDoMes.reduce((sum, c) => sum + c.valor, 0);
+            const eventosComCustosDoMes = [...new Set(custosDoMes.map(c => c.eventoId))].length;
+            
+            document.getElementById('custosEventosMes').textContent = formatMoney(totalCustosDoMes);
+            document.getElementById('quantidadeEventosMes').textContent = `${eventosComCustosDoMes} evento${eventosComCustosDoMes !== 1 ? 's' : ''}`;
+            
+            // ✅ ATUALIZAR CONTROLE DE CATEGORIAS
+            atualizarControleCategoria();
             
             const valorSelect = document.getElementById('eventoSelecionado').value;
             
@@ -15623,24 +16056,59 @@ ${eventosNuvemInfo}
             const eventos = DB.get('eventos');
             const custosEventos = DB.get('custosEventos');
             
+            // Obter filtros de período
+            const mesFilter = document.getElementById('filtroMesCustos').value;
+            const anoFilter = parseInt(document.getElementById('filtroAnoCustos').value);
+            const tipoVisualizacao = document.getElementById('tipoVisualizacaoCustos').value;
+            
+            // Filtrar eventos por período
+            let eventosFiltrados = eventos;
+            
+            if (tipoVisualizacao === 'mensal') {
+                if (mesFilter !== 'todos') {
+                    const mesSelecionado = parseInt(mesFilter) - 1; // 0-based
+                    eventosFiltrados = eventos.filter(e => {
+                        const dataEvento = new Date(e.data);
+                        return dataEvento.getMonth() === mesSelecionado && dataEvento.getFullYear() === anoFilter;
+                    });
+                } else {
+                    // Todos os meses do ano selecionado
+                    eventosFiltrados = eventos.filter(e => {
+                        const dataEvento = new Date(e.data);
+                        return dataEvento.getFullYear() === anoFilter;
+                    });
+                }
+            } else {
+                // Visualização anual - apenas filtrar por ano
+                eventosFiltrados = eventos.filter(e => {
+                    const dataEvento = new Date(e.data);
+                    return dataEvento.getFullYear() === anoFilter;
+                });
+            }
+            
             document.getElementById('custoEventoContent').style.display = 'none';
             document.getElementById('custoEventoEmpty').style.display = 'block';
             
-            // Agrupar custos por evento
+            // Agrupar custos por evento (apenas dos eventos filtrados)
             const eventosPorId = {};
+            const idsEventosFiltrados = eventosFiltrados.map(e => e.id);
+            
             custosEventos.forEach(custo => {
-                if (!eventosPorId[custo.eventoId]) {
-                    eventosPorId[custo.eventoId] = {
-                        custos: [],
-                        total: 0
-                    };
+                // Só incluir custos de eventos que estão no período filtrado
+                if (idsEventosFiltrados.includes(custo.eventoId)) {
+                    if (!eventosPorId[custo.eventoId]) {
+                        eventosPorId[custo.eventoId] = {
+                            custos: [],
+                            total: 0
+                        };
+                    }
+                    eventosPorId[custo.eventoId].custos.push(custo);
+                    eventosPorId[custo.eventoId].total += custo.valor;
                 }
-                eventosPorId[custo.eventoId].custos.push(custo);
-                eventosPorId[custo.eventoId].total += custo.valor;
             });
             
             const html = Object.keys(eventosPorId).map(eventoId => {
-                const evento = eventos.find(e => e.id === parseInt(eventoId));
+                const evento = eventosFiltrados.find(e => e.id === parseInt(eventoId));
                 if (!evento) return '';
                 
                 const totalCustos = eventosPorId[eventoId].total;
@@ -15695,8 +16163,37 @@ ${eventosNuvemInfo}
             const custosGerais = DB.get('custosGerais');
             const container = document.getElementById('custosGeraisList');
             
-            if (custosGerais.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Nenhum custo geral registrado.</p>';
+            // Ler filtros selecionados
+            const mesFilter = document.getElementById('filtroMesCustos').value;
+            const anoFilter = parseInt(document.getElementById('filtroAnoCustos').value);
+            const tipoVisualizacao = document.getElementById('tipoVisualizacaoCustos').value;
+            
+            let custosFiltrados = custosGerais;
+            
+            if (tipoVisualizacao === 'mensal') {
+                if (mesFilter !== 'todos') {
+                    const mesSelecionado = parseInt(mesFilter) - 1; // 0-based
+                    custosFiltrados = custosGerais.filter(c => {
+                        const data = new Date(c.data);
+                        return data.getMonth() === mesSelecionado && data.getFullYear() === anoFilter;
+                    });
+                } else {
+                    // Todos os meses do ano selecionado
+                    custosFiltrados = custosGerais.filter(c => {
+                        const data = new Date(c.data);
+                        return data.getFullYear() === anoFilter;
+                    });
+                }
+            } else {
+                // Visualização anual - apenas filtrar por ano
+                custosFiltrados = custosGerais.filter(c => {
+                    const data = new Date(c.data);
+                    return data.getFullYear() === anoFilter;
+                });
+            }
+            
+            if (custosFiltrados.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Nenhum custo geral registrado neste período.</p>';
                 return;
             }
             
@@ -15712,7 +16209,7 @@ ${eventosNuvemInfo}
                 'outros': '📌'
             };
             
-            const html = custosGerais.sort((a, b) => new Date(b.data) - new Date(a.data)).map(c => `
+            const html = custosFiltrados.sort((a, b) => new Date(b.data) - new Date(a.data)).map(c => `
                 <div class="transaction-item">
                     <div class="transaction-info">
                         <div class="transaction-icon bg-danger">
@@ -15741,19 +16238,40 @@ ${eventosNuvemInfo}
         // Update custos gerais stats
         function updateCustosGeraisStats() {
             const custosGerais = DB.get('custosGerais');
-            const hoje = new Date();
-            const mesAtual = hoje.getMonth();
-            const anoAtual = hoje.getFullYear();
             
-            const custosMes = custosGerais.filter(c => {
-                const data = new Date(c.data);
-                return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-            });
+            // Ler filtros selecionados
+            const mesFilter = document.getElementById('filtroMesCustos').value;
+            const anoFilter = parseInt(document.getElementById('filtroAnoCustos').value);
+            const tipoVisualizacao = document.getElementById('tipoVisualizacaoCustos').value;
             
-            const total = custosMes.reduce((sum, c) => sum + c.valor, 0);
-            const combustivel = custosMes.filter(c => c.categoria === 'combustivel').reduce((sum, c) => sum + c.valor, 0);
-            const impostos = custosMes.filter(c => c.categoria === 'impostos').reduce((sum, c) => sum + c.valor, 0);
-            const marketing = custosMes.filter(c => c.categoria === 'marketing').reduce((sum, c) => sum + c.valor, 0);
+            let custosFiltrados = custosGerais;
+            
+            if (tipoVisualizacao === 'mensal') {
+                if (mesFilter !== 'todos') {
+                    const mesSelecionado = parseInt(mesFilter) - 1; // 0-based
+                    custosFiltrados = custosGerais.filter(c => {
+                        const data = new Date(c.data);
+                        return data.getMonth() === mesSelecionado && data.getFullYear() === anoFilter;
+                    });
+                } else {
+                    // Todos os meses do ano selecionado
+                    custosFiltrados = custosGerais.filter(c => {
+                        const data = new Date(c.data);
+                        return data.getFullYear() === anoFilter;
+                    });
+                }
+            } else {
+                // Visualização anual - apenas filtrar por ano
+                custosFiltrados = custosGerais.filter(c => {
+                    const data = new Date(c.data);
+                    return data.getFullYear() === anoFilter;
+                });
+            }
+            
+            const total = custosFiltrados.reduce((sum, c) => sum + c.valor, 0);
+            const combustivel = custosFiltrados.filter(c => c.categoria === 'combustivel').reduce((sum, c) => sum + c.valor, 0);
+            const impostos = custosFiltrados.filter(c => c.categoria === 'impostos').reduce((sum, c) => sum + c.valor, 0);
+            const marketing = custosFiltrados.filter(c => c.categoria === 'marketing').reduce((sum, c) => sum + c.valor, 0);
             const outros = total - combustivel - impostos - marketing;
             
             document.getElementById('totalCustosGeraisMes').textContent = formatMoney(total);
@@ -16306,6 +16824,7 @@ ${eventosNuvemInfo}
                 renderKanbanView();
             } else if (tabName === 'clientes') {
                 renderClientsList();
+            renderRankingClientes();
                 updateClientsStats();
                 checkBirthdays();
                 updateOrigemStats();
@@ -16385,9 +16904,9 @@ ${eventosNuvemInfo}
             // Total de eventos
             const total = eventosFiltrados.length;
             
-            // Em andamento (aguardando + andamento)
+            // Em andamento (APENAS andamento, não aguardando)
             const emAndamento = eventosFiltrados.filter(e => 
-                e.status === 'aguardando' || e.status === 'andamento'
+                e.status === 'andamento'
             ).length;
             
             // Concluídos
@@ -16589,9 +17108,6 @@ ${eventosNuvemInfo}
                                 
                                 <!-- LINHA 3: Valores -->
                                 <div style="display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 0; align-items: center;">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        💰 Valor Total: <strong>${formatMoney(e.valor)}</strong>
-                                    </div>
                                     ${(() => {
                                         // Buscar dados financeiros do cliente
                                         const clientes = DB.get('clientes');
@@ -16606,14 +17122,14 @@ ${eventosNuvemInfo}
                                             
                                             let html = '';
                                             
-                                            // Sempre mostrar Valor Total
+                                            // 1. Valor Total
                                             html += `
                                                 <div style="display: flex; align-items: center; gap: 6px;">
                                                     💰 Valor Total: <strong>${formatMoney(valorTotal)}</strong>
                                                 </div>
                                             `;
                                             
-                                            // Mostrar Sinal se recebido
+                                            // 2. Sinal (se recebido)
                                             if (sinalRecebido > 0) {
                                                 html += `
                                                     <div style="display: flex; align-items: center; gap: 6px; color: var(--success);">
@@ -16622,7 +17138,16 @@ ${eventosNuvemInfo}
                                                 `;
                                             }
                                             
-                                            // Mostrar A Receber ou Pago Completo
+                                            // 3. Desconto (se houver)
+                                            if (e.desconto && e.desconto.valor > 0) {
+                                                html += `
+                                                    <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
+                                                        🏷️ Desconto: <strong>${e.desconto.tipo === 'percentual' ? e.desconto.valor + '%' : formatMoney(e.desconto.valor)}</strong>
+                                                    </div>
+                                                `;
+                                            }
+                                            
+                                            // 4. A Receber ou Pago Completo
                                             if (valorAPagar > 0) {
                                                 html += `
                                                     <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
@@ -16638,14 +17163,25 @@ ${eventosNuvemInfo}
                                             }
                                             
                                             return html;
+                                        } else {
+                                            // Sem dados financeiros, mostrar apenas valor do evento e desconto
+                                            let html = `
+                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                    💰 Valor Total: <strong>${formatMoney(e.valor)}</strong>
+                                                </div>
+                                            `;
+                                            
+                                            if (e.desconto && e.desconto.valor > 0) {
+                                                html += `
+                                                    <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
+                                                        🏷️ Desconto: <strong>${e.desconto.tipo === 'percentual' ? e.desconto.valor + '%' : formatMoney(e.desconto.valor)}</strong>
+                                                    </div>
+                                                `;
+                                            }
+                                            
+                                            return html;
                                         }
-                                        return '';
                                     })()}
-                                    ${e.desconto && e.desconto.valor > 0 ? `
-                                        <div style="display: flex; align-items: center; gap: 6px; color: var(--warning);">
-                                            🏷️ Desconto: <strong>${e.desconto.tipo === 'percentual' ? e.desconto.valor + '%' : formatMoney(e.desconto.valor)}</strong>
-                                        </div>
-                                    ` : ''}
                                     ${temCustos ? `
                                         <div style="display: flex; align-items: center; gap: 6px; color: var(--danger);">
                                             💸 Custos: <strong>${formatMoney(totalCustos)}</strong>
@@ -17126,10 +17662,28 @@ ${eventosNuvemInfo}
 
         function deleteEvent(id) {
             if (confirm('Deseja realmente excluir este evento?')) {
-                const eventos = DB.get('eventos').filter(e => e.id !== id);
-                DB.set('eventos', eventos);
+                const eventos = DB.get('eventos');
+                const eventoRemover = eventos.find(e => e.id === id);
+                
+                // Decrementar contador de serviços
+                if (eventoRemover && eventoRemover.servicos && eventoRemover.servicos.length > 0) {
+                    const servicosDB = DB.get('servicos');
+                    eventoRemover.servicos.forEach(servicoEvento => {
+                        const servicoDB = servicosDB.find(s => s.nome === servicoEvento.nome || s.id === servicoEvento.id);
+                        if (servicoDB && servicoDB.vezesContratadas > 0) {
+                            servicoDB.vezesContratadas = (servicoDB.vezesContratadas || 1) - 1;
+                            console.log(`✓ Serviço "${servicoDB.nome}" removido: ${servicoDB.vezesContratadas} vezes`);
+                        }
+                    });
+                    DB.set('servicos', servicosDB);
+                }
+                
+                // Remover evento
+                const eventosAtualizados = eventos.filter(e => e.id !== id);
+                DB.set('eventos', eventosAtualizados);
                 renderEventsList();
                 renderKanbanView();
+                renderServicos(); // ✅ ATUALIZAR GESTÃO DE SERVIÇOS
                 updateDashboard();
                 
                 // Sincronizar após mudança
@@ -17156,6 +17710,91 @@ ${eventosNuvemInfo}
         let currentClientSearch = '';
 
         // Render clients list
+        // Renderizar ranking de melhores clientes
+        function renderRankingClientes() {
+            const clientes = DB.get('clientes');
+            const eventos = DB.get('eventos');
+            
+            // Calcular estatísticas por cliente
+            const statsClientes = clientes.map(cliente => {
+                const eventosCliente = eventos.filter(e => e.cliente === cliente.nome);
+                const totalEventos = eventosCliente.length;
+                const valorTotal = eventosCliente.reduce((sum, e) => sum + (e.valor || 0), 0);
+                
+                return {
+                    nome: cliente.nome,
+                    totalEventos,
+                    valorTotal,
+                    telefone: cliente.telefone,
+                    email: cliente.email
+                };
+            }).filter(c => c.totalEventos > 0); // Apenas clientes com eventos
+            
+            // Top 5 por quantidade de eventos
+            const topPorEventos = [...statsClientes]
+                .sort((a, b) => b.totalEventos - a.totalEventos)
+                .slice(0, 5);
+            
+            // Top 5 por valor total
+            const topPorValor = [...statsClientes]
+                .sort((a, b) => b.valorTotal - a.valorTotal)
+                .slice(0, 5);
+            
+            // Renderizar Top por Eventos
+            const containerEventos = document.getElementById('topClientesPorEventos');
+            if (topPorEventos.length === 0) {
+                containerEventos.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📊</div>
+                        <p>Nenhum evento cadastrado ainda</p>
+                    </div>
+                `;
+            } else {
+                containerEventos.innerHTML = topPorEventos.map((cliente, index) => {
+                    const medalhas = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+                    return `
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-card); border-radius: 8px; border-left: 3px solid ${index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : 'var(--primary)'};">
+                            <div style="font-size: 24px; min-width: 32px;">${medalhas[index]}</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${cliente.nome}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                                    ${cliente.totalEventos} evento${cliente.totalEventos !== 1 ? 's' : ''} • ${formatMoney(cliente.valorTotal)}
+                                </div>
+                            </div>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--primary);">${cliente.totalEventos}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Renderizar Top por Valor
+            const containerValor = document.getElementById('topClientesPorValor');
+            if (topPorValor.length === 0) {
+                containerValor.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">💰</div>
+                        <p>Nenhum evento cadastrado ainda</p>
+                    </div>
+                `;
+            } else {
+                containerValor.innerHTML = topPorValor.map((cliente, index) => {
+                    const medalhas = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+                    return `
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-card); border-radius: 8px; border-left: 3px solid ${index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : 'var(--primary)'};">
+                            <div style="font-size: 24px; min-width: 32px;">${medalhas[index]}</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${cliente.nome}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                                    ${cliente.totalEventos} evento${cliente.totalEventos !== 1 ? 's' : ''}
+                                </div>
+                            </div>
+                            <div style="font-size: 16px; font-weight: 700; color: var(--success);">${formatMoney(cliente.valorTotal)}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
         function renderClientsList(searchTerm = '') {
             const clientes = DB.get('clientes');
             const container = document.getElementById('clientsList');
