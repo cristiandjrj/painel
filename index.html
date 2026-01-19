@@ -11598,8 +11598,12 @@ function renderServicosPerformance() {
         eventos.forEach(evento => {
             if (evento.servicos && Array.isArray(evento.servicos)) {
                 evento.servicos.forEach(s => {
-                    // Comparar por nome (mais confiável) ou ID
-                    if (s.nome === servico.nome || s.id === servico.id) {
+                    // Normalizar nomes para comparação (remove espaços extras, lowercase)
+                    const nomeServicoNormalizado = servico.nome.trim().toLowerCase();
+                    const nomeEventoNormalizado = (s.nome || '').trim().toLowerCase();
+                    
+                    // Comparar por nome normalizado (mais confiável) ou ID
+                    if (nomeEventoNormalizado === nomeServicoNormalizado || s.id === servico.id) {
                         vezesContratado++;
                         receitaTotal += (s.valor || servico.valor);
                     }
@@ -11630,7 +11634,11 @@ function renderServicosPerformance() {
                 
                 if (incluirCliente) {
                     cliente.orcamento.servicos.forEach(s => {
-                        if (s.nome === servico.nome || s.id === servico.id) {
+                        // Normalizar nomes para comparação
+                        const nomeServicoNormalizado = servico.nome.trim().toLowerCase();
+                        const nomeOrcamentoNormalizado = (s.nome || '').trim().toLowerCase();
+                        
+                        if (nomeOrcamentoNormalizado === nomeServicoNormalizado || s.id === servico.id) {
                             vezesContratado++;
                             receitaTotal += (s.valor || servico.valor);
                         }
@@ -14887,8 +14895,28 @@ if (!DB.get('configuracoes')) {
                             dadosLimpos = dadosLimpos.map(evento => {
                                 let migrou = false;
                                 
+                                // CORRIGIR DESCONTO (deve ser número, não objeto!)
+                                if (typeof evento.desconto === 'object' || typeof evento.desconto === 'undefined') {
+                                    evento.desconto = 0;
+                                    migrou = true;
+                                }
+                                if (typeof evento.desconto !== 'number' || isNaN(evento.desconto)) {
+                                    evento.desconto = 0;
+                                    migrou = true;
+                                }
+                                
+                                // CORRIGIR TODOS OS CAMPOS NUMÉRICOS
+                                if (typeof evento.valor !== 'number' || isNaN(evento.valor)) {
+                                    evento.valor = parseFloat(evento.valor) || 0;
+                                    migrou = true;
+                                }
+                                if (typeof evento.sinalRecebido !== 'number' || isNaN(evento.sinalRecebido)) {
+                                    evento.sinalRecebido = parseFloat(evento.sinalRecebido) || 0;
+                                    migrou = true;
+                                }
+                                
                                 // Adicionar totalPago
-                                if (typeof evento.totalPago === 'undefined') {
+                                if (typeof evento.totalPago === 'undefined' || isNaN(evento.totalPago)) {
                                     evento.totalPago = evento.sinalRecebido || 0;
                                     migrou = true;
                                 }
@@ -14903,9 +14931,11 @@ if (!DB.get('configuracoes')) {
                                     migrou = true;
                                 }
                                 
-                                // Recalcular saldo
-                                if (evento.valor) {
-                                    evento.saldo = evento.valor - evento.totalPago;
+                                // Recalcular saldo (garantir número válido)
+                                const saldoCalculado = (evento.valor || 0) - (evento.totalPago || 0);
+                                if (typeof evento.saldo !== 'number' || isNaN(evento.saldo) || evento.saldo !== saldoCalculado) {
+                                    evento.saldo = saldoCalculado;
+                                    migrou = true;
                                 }
                                 
                                 // Garantir desconto
