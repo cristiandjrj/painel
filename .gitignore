@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+Bot/
+Bot.zip
+.claude/
+config/database.php
+*.md
